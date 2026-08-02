@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@variant dark (.dark &);
+
+@layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+    html {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    body, aside, header, main, div, nav, table, tr, td, th, input, select, textarea, button, span, p, h1, h2, h3, h4, h5, h6 {
+        transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                    color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                    border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    :root {
+        /* Deep Navy bg */
+        --bg-color: #0f172a;
+        /* Electric Blue */
+        --primary: #3b82f6;
+        /* Emerald */
+        --success: #10b981;
+        /* Amber */
+        --warning: #f59e0b;
+        /* Rose */
+        --danger: #f43f5e;
+    }
+}
+
+@layer components {
+    .glassmorphism {
+        @apply bg-slate-900/60 backdrop-blur-xl;
+    }
+    .glassmorphism-sidebar {
+        @apply bg-slate-900/90 backdrop-blur-2xl;
+    }
+}
+
+@layer utilities {
+    .animate-count-up {
+        animation: countUp 2s ease-out forwards;
+    }
+
+    .animate-slide-in-left {
+        animation: slideInLeft 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-slate-700/50 rounded-full;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        @apply bg-slate-600;
+    }
+
+    /* Staggered Animations */
+    .stagger-1 { animation: fadeInUp 0.5s ease-out 0.1s forwards; opacity: 0; }
+    .stagger-2 { animation: fadeInUp 0.5s ease-out 0.2s forwards; opacity: 0; }
+    .stagger-3 { animation: fadeInUp 0.5s ease-out 0.3s forwards; opacity: 0; }
+    .stagger-4 { animation: fadeInUp 0.5s ease-out 0.4s forwards; opacity: 0; }
+    .stagger-5 { animation: fadeInUp 0.5s ease-out 0.5s forwards; opacity: 0; }
+    .stagger-6 { animation: fadeInUp 0.5s ease-out 0.6s forwards; opacity: 0; }
+    .stagger-7 { animation: fadeInUp 0.5s ease-out 0.7s forwards; opacity: 0; }
+    .stagger-8 { animation: fadeInUp 0.5s ease-out 0.8s forwards; opacity: 0; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
