@@ -73,6 +73,15 @@
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Event Cover Image</label>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                             <div class="w-full sm:w-48 h-32 rounded-xl bg-slate-200 dark:bg-slate-800 overflow-hidden relative group shrink-0 border border-slate-300 dark:border-white/10 flex items-center justify-center">
+                                <!-- Loading Spinner during upload -->
+                                <div wire:loading wire:target="cover_image" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-2 p-2">
+                                    <svg class="animate-spin h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-[10px] text-blue-300 font-bold uppercase tracking-wider">Uploading...</span>
+                                </div>
+
                                 @if ($cover_image)
                                     @php
                                         $tempUrl = null;
@@ -83,15 +92,25 @@
                                         }
                                     @endphp
                                     @if ($tempUrl)
-                                        <img src="{{ $tempUrl }}" onerror="this.onerror=null; this.style.display='none';" class="w-full h-full object-cover">
+                                        <img src="{{ $tempUrl }}" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" class="w-full h-full object-cover">
+                                        <div class="hidden text-center p-3">
+                                            <span class="text-xl">🖼️</span>
+                                            <span class="text-[11px] text-emerald-400 font-bold block mt-1">Image Selected</span>
+                                            <span class="text-[9px] text-slate-400 block font-medium">Ready to save</span>
+                                        </div>
                                     @else
                                         <div class="text-center p-3">
-                                            <svg class="w-8 h-8 text-slate-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                            <span class="text-[11px] text-slate-400 font-medium">No Image Uploaded</span>
+                                            <span class="text-xl">🖼️</span>
+                                            <span class="text-[11px] text-emerald-400 font-bold block mt-1">Image Selected</span>
+                                            <span class="text-[9px] text-slate-400 block font-medium">Ready to save</span>
                                         </div>
                                     @endif
                                 @elseif ($existing_cover_image_path)
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($existing_cover_image_path) }}" onerror="this.onerror=null; this.style.display='none';" class="w-full h-full object-cover">
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($existing_cover_image_path) }}" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" class="w-full h-full object-cover">
+                                    <div class="hidden text-center p-3">
+                                        <svg class="w-8 h-8 text-slate-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span class="text-[11px] text-slate-400 font-medium">No Image Uploaded</span>
+                                    </div>
                                 @else
                                     <div class="text-center p-3">
                                         <svg class="w-8 h-8 text-slate-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
