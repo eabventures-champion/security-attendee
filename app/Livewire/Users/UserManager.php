@@ -63,6 +63,11 @@ class UserManager extends Component
 
     public function openCreateModal(): void
     {
+        if (auth()->user()->invitation_status !== 'confirmed') {
+            session()->flash('error', "⚠️ Action Locked: Please confirm receipt of your workspace invitation via your email inbox (" . auth()->user()->email . ") before adding team members.");
+            return;
+        }
+
         $this->reset(['editingUserId', 'name', 'email', 'phone', 'password', 'selectedRole', 'assigned_gate_id', 'is_active']);
         $this->selectedRole = 'event_manager';
         $this->showModal = true;
@@ -90,6 +95,11 @@ class UserManager extends Component
 
     public function saveUser(): void
     {
+        if (auth()->user()->invitation_status !== 'confirmed') {
+            session()->flash('error', "⚠️ Action Locked: Please confirm receipt of your workspace invitation via your email inbox (" . auth()->user()->email . ") before adding team members.");
+            return;
+        }
+
         $this->validate();
 
         $currentUser = auth()->user();

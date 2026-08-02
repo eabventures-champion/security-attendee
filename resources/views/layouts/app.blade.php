@@ -294,6 +294,31 @@
 
             <!-- Main Content Area -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
+                @if(auth()->check() && auth()->user()->invitation_status !== 'confirmed')
+                    <div class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg animate-pulse">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <div class="text-xs sm:text-sm">
+                                <span class="font-extrabold text-amber-200">Workspace Pending Email Confirmation:</span>
+                                Please check your email inbox (<span class="font-bold underline text-amber-100">{{ auth()->user()->email }}</span>) and click <strong>"Confirm Receipt & Accept Workspace"</strong> to unlock event creation & team management.
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if(session()->has('error'))
+                    <div class="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center justify-between gap-4 shadow-lg">
+                        <div class="flex items-center gap-3 text-xs sm:text-sm font-semibold">
+                            <svg class="w-5 h-5 text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>{{ session('error') }}</span>
+                        </div>
+                    </div>
+                @endif
+
                 @yield('content')
                 {{ $slot ?? '' }}
             </main>

@@ -53,6 +53,11 @@ class EventForm extends Component
 
     public function mount($uuid = null)
     {
+        if (auth()->check() && auth()->user()->invitation_status !== 'confirmed') {
+            session()->flash('error', "⚠️ Action Locked: Please confirm receipt of your workspace invitation via your email inbox (" . auth()->user()->email . ") before creating or editing events.");
+            return redirect()->route('events.index');
+        }
+
         if (request()->has('fresh')) {
             session()->forget('active_event_draft_uuid');
             session()->forget('active_event_draft_step');
@@ -210,6 +215,11 @@ class EventForm extends Component
 
     public function save(): mixed
     {
+        if (auth()->check() && auth()->user()->invitation_status !== 'confirmed') {
+            session()->flash('error', "⚠️ Action Locked: Please confirm receipt of your workspace invitation via your email inbox (" . auth()->user()->email . ") before creating or saving events.");
+            return null;
+        }
+
         $this->validate();
 
         $data = [

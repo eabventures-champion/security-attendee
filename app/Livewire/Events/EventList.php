@@ -51,6 +51,16 @@ class EventList extends Component
         $this->groupedView = false;
     }
 
+    public function createEvent(): mixed
+    {
+        if (auth()->check() && auth()->user()->invitation_status !== 'confirmed') {
+            session()->flash('error', "⚠️ Action Locked: Please confirm receipt of your workspace invitation via your email inbox (" . auth()->user()->email . ") before creating events.");
+            return null;
+        }
+
+        return redirect()->route('events.create', ['fresh' => 1]);
+    }
+
     public function setGridMode(): void
     {
         $this->viewMode = 'grid';
