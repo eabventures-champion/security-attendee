@@ -5,6 +5,27 @@
         <p class="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1 font-medium">Manage your brand preferences, domain settings, and API access.</p>
     </div>
 
+    @if (session()->has('reset_success') || session()->has('message'))
+        <div class="p-5 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl text-emerald-700 dark:text-emerald-400 text-sm font-medium flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl animate-fadeInUp">
+            <span class="flex items-center gap-3">
+                <span class="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 font-extrabold text-lg">🚀</span>
+                <span class="font-bold">{{ session('reset_success') ?? session('message') }}</span>
+            </span>
+            <a href="{{ route('dashboard') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all shrink-0">
+                Go to Dashboard →
+            </a>
+        </div>
+    @endif
+
+    @if (session()->has('reset_error'))
+        <div class="p-5 bg-rose-500/10 border-2 border-rose-500/30 rounded-2xl text-rose-700 dark:text-rose-400 text-sm font-medium flex items-center justify-between shadow-2xl animate-fadeInUp">
+            <span class="flex items-center gap-3">
+                <span class="p-2 rounded-xl bg-rose-500/20 text-rose-400 font-extrabold text-lg">⚠️</span>
+                <span class="font-bold">{{ session('reset_error') }}</span>
+            </span>
+        </div>
+    @endif
+
     <!-- Active Subscription Banner -->
     <div class="bg-gradient-to-r from-blue-900/10 via-indigo-900/10 to-purple-900/10 dark:from-blue-900/40 dark:via-purple-900/40 dark:to-slate-900/60 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-4 sm:p-6 shadow-sm dark:shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-start sm:items-center gap-3 sm:gap-4">
@@ -277,7 +298,7 @@
                     <label class="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">
                         To confirm, please type <span class="text-rose-400 select-all font-mono font-black">RESET PROJECT</span> below:
                     </label>
-                    <input wire:model="resetConfirmationText" type="text" placeholder="RESET PROJECT" class="w-full px-4 py-3 bg-slate-950 border border-rose-500/40 rounded-xl text-rose-300 font-mono text-sm font-black focus:ring-2 focus:ring-rose-500 focus:outline-none placeholder-slate-600">
+                    <input wire:model.live="resetConfirmationText" type="text" placeholder="RESET PROJECT" class="w-full px-4 py-3 bg-slate-950 border border-rose-500/40 rounded-xl text-rose-300 font-mono text-sm font-black focus:ring-2 focus:ring-rose-500 focus:outline-none placeholder-slate-600">
                     @error('resetConfirmationText')
                         <p class="text-xs text-rose-400 font-bold mt-1.5 flex items-center gap-1">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

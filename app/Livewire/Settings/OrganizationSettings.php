@@ -170,12 +170,13 @@ class OrganizationSettings extends Component
             // 4. Clear Events
             \Illuminate\Support\Facades\DB::table('events')->truncate();
 
-            // 5. Clear Audit & Notification Logs
-            \Illuminate\Support\Facades\DB::table('audit_logs')->truncate();
+            // 5. Clear Audit, Notifications & System Logs
+            \Illuminate\Support\Facades\DB::table('notifications')->truncate();
             \Illuminate\Support\Facades\DB::table('notification_logs')->truncate();
+            \Illuminate\Support\Facades\DB::table('audit_logs')->truncate();
+            \Illuminate\Support\Facades\DB::table('system_feedbacks')->truncate();
             \Illuminate\Support\Facades\DB::table('organization_subscriptions')->truncate();
-
-            \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            \Illuminate\Support\Facades\DB::table('password_reset_tokens')->truncate();
 
             // 6. Delete Non-SuperAdmin Users
             \App\Models\User::whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'))
@@ -183,22 +184,38 @@ class OrganizationSettings extends Component
                 ->where('id', '!=', $currentUser->id)
                 ->forceDelete();
 
-            // 7. Delete Non-Master Organizations
-            $masterOrgId = $currentUser->organization_id ?? 1;
-            \App\Models\Organization::where('id', '!=', $masterOrgId)->forceDelete();
+            // 7. Reset Organizations Table & Create Fresh Master Organization
+            \Illuminate\Support\Facades\DB::table('organizations')->truncate();
 
-            // 8. Ensure Super Admin remains active & approved
+            $freshOrg = \App\Models\Organization::create([
+                'uuid' => (string) Str::uuid(),
+                'name' => 'Main Workspace',
+                'slug' => 'main-workspace',
+                'description' => 'Primary Organization Workspace',
+                'brand_color' => '#3b82f6',
+                'timezone' => 'UTC',
+                'is_active' => true,
+            ]);
+
+            // 8. Ensure Super Admin remains active & linked to fresh master organization
+            $currentUser->organization_id = $freshOrg->id;
             $currentUser->is_active = true;
             $currentUser->approval_status = 'approved';
             $currentUser->approved_at = now();
             $currentUser->save();
 
+            \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
             \Illuminate\Support\Facades\DB::commit();
 
-            $this->closeResetModal();
-            session()->flash('message', '🚀 System successfully reset! All data (events, attendees, gates, reports, teams) cleared. System is fresh and ready for production.');
+            // Clear cache and session notifications
+            \Illuminate\Support\Facades\Artisan::call('cache:clear');
+            \Illuminate\Support\Facades\Artisan::call('view:clear');
 
-            return redirect()->route('dashboard');
+            $this->closeResetModal();
+            session()->flash('reset_success', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared. Clean fresh master workspace initialized.');
+            session()->flash('message', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared.');
+
+            return redirect()->route('dashboard')->with('message', '🚀 System factory reset complete! All data cleared.');
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
