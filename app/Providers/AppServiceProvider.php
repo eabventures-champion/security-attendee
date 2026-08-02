@@ -22,5 +22,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::defaultView('vendor.pagination.tailwind');
         Paginator::defaultSimpleView('vendor.pagination.tailwind');
+
+        if (config('app.env') === 'production' || str_contains(config('app.url'), 'https://') || request()->secure() || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }

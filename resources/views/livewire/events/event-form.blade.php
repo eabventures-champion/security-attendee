@@ -92,12 +92,7 @@
                                         }
                                     @endphp
                                     @if ($tempUrl)
-                                        <img src="{{ $tempUrl }}" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" class="w-full h-full object-cover">
-                                        <div class="hidden text-center p-3">
-                                            <span class="text-xl">🖼️</span>
-                                            <span class="text-[11px] text-emerald-400 font-bold block mt-1">Image Selected</span>
-                                            <span class="text-[9px] text-slate-400 block font-medium">Ready to save</span>
-                                        </div>
+                                        <img src="{{ $tempUrl }}" onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=Preview+Error';" class="w-full h-full object-cover rounded-xl">
                                     @else
                                         <div class="text-center p-3">
                                             <span class="text-xl">🖼️</span>
