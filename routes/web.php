@@ -48,6 +48,9 @@ Route::get('/team/accept-invite/{token}', [App\Http\Controllers\TeamInvitationCo
 Route::get('/superadmin/approve-org/{token}', [App\Http\Controllers\SuperAdminApprovalController::class, 'approveOrg'])
     ->name('superadmin.approve_org');
 
+Route::get('/invitation/accept/{token}', [App\Http\Controllers\AcceptInvitationController::class, 'accept'])
+    ->name('invitation.accept');
+
 Route::middleware('auth')->group(function () {
     Route::get('/superadmin/impersonate/{userId}', [App\Http\Controllers\SuperAdmin\ImpersonationController::class, 'impersonate'])
         ->name('superadmin.impersonate');

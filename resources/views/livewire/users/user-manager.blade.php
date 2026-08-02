@@ -280,7 +280,7 @@
                                                                 </div>
                                                             </td>
                                                             <td class="py-3 px-3">
-                                                                 @if($member->invitation_status === 'confirmed' || $member->hasRole('organization_admin'))
+                                                                 @if($member->invitation_status === 'confirmed')
                                                                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                                                                          Confirmed
                                                                      </span>
@@ -397,7 +397,7 @@
                                     </div>
                                 </td>
                                 <td class="py-4 px-6">
-                                    @if($user->invitation_status === 'confirmed' || $user->hasRole('organization_admin'))
+                                    @if($user->invitation_status === 'confirmed')
                                         <div class="flex flex-col gap-0.5" title="Confirmed {{ $user->invitation_accepted_at ? $user->invitation_accepted_at->format('M j, Y @ g:i A') : '' }}">
                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 w-max">
                                                 <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>

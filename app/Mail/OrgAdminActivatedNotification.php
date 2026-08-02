@@ -15,7 +15,7 @@ class OrgAdminActivatedNotification extends Mailable
     use Queueable, SerializesModels;
 
     public User $orgAdmin;
-    public string $loginUrl;
+    public string $confirmUrl;
 
     /**
      * Create a new message instance.
@@ -23,7 +23,13 @@ class OrgAdminActivatedNotification extends Mailable
     public function __construct(User $orgAdmin)
     {
         $this->orgAdmin = $orgAdmin;
-        $this->loginUrl = route('login');
+        $token = $orgAdmin->approval_token ?: $orgAdmin->invitation_token;
+        if (!$token) {
+            $token = (string) \Illuminate\Support\Str::uuid();
+            $orgAdmin->approval_token = $token;
+            $orgAdmin->save();
+        }
+        $this->confirmUrl = route('invitation.accept', ['token' => $token]);
     }
 
     /**

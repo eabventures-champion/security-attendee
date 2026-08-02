@@ -135,11 +135,11 @@
                     </table>
                 </div>
 
-                <p style="font-size: 13px; color: #94a3b8; text-align: center; margin-top: 10px;">
-                    You can now sign in to start managing events, setting up entry gates, and issuing digital QR passes.
+                <p style="font-size: 13px; color: #a7f3d0; text-align: center; margin-top: 16px; font-weight: 600;">
+                    Please click the button below to confirm receipt of your workspace approval and activate your access.
                 </p>
 
-                <a href="{{ $loginUrl }}" class="button">Sign In to Dashboard</a>
+                <a href="{{ $confirmUrl }}" class="button">Confirm Receipt & Accept Workspace</a>
             </div>
 
             <div class="footer">
