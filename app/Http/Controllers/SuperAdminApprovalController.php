@@ -24,6 +24,7 @@ class SuperAdminApprovalController extends Controller
         // Approve user
         $user->approval_status = 'approved';
         $user->is_active = true;
+        $user->invitation_status = 'confirmed';
         $user->approved_at = now();
         $user->save();
 

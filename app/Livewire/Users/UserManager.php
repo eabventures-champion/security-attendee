@@ -156,9 +156,14 @@ class UserManager extends Component
         }
 
         try {
-            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\TeamMemberInvitation($user));
+            if ($user->hasRole('organization_admin')) {
+                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\OrgAdminActivatedNotification($user));
+            } else {
+                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\TeamMemberInvitation($user));
+            }
+
             $this->resentUserId = $userId;
-            session()->flash('message', "✉️ Invitation email with access link has been sent to {$user->email}.");
+            session()->flash('message', "✉️ Activation / invitation email has been resent to {$user->email}.");
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Failed to resend invitation email to {$user->email}: " . $e->getMessage());
             session()->flash('error', "Could not send email to {$user->email}. Please verify mail settings.");

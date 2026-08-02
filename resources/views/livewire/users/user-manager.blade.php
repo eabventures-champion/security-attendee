@@ -310,18 +310,25 @@
                                                                 @endif
                                                             </td>
                                                             <td class="py-3 px-3">
-                                                                @if($member->invitation_status === 'pending')
+                                                                @if($member->approval_status === 'approved' && $member->is_active)
+                                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                                                        Active
+                                                                    </span>
+                                                                @elseif($member->invitation_status === 'pending')
                                                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
                                                                         Pending Invite
                                                                     </span>
                                                                 @elseif($member->is_active)
-                                                                    <span class="text-emerald-400 font-medium">Active</span>
+                                                                    <span class="text-emerald-400 font-medium text-xs">Active</span>
                                                                 @else
-                                                                    <span class="text-rose-400 font-medium">Disabled</span>
+                                                                    <span class="text-rose-400 font-medium text-xs">Disabled</span>
                                                                 @endif
                                                             </td>
                                                             <td class="py-3 px-3 whitespace-nowrap">
                                                                 <div class="flex items-center justify-end gap-1">
+                                                                    <button type="button" wire:click="resendInvitation({{ $member->id }})" class="p-1 text-slate-400 hover:text-indigo-400 cursor-pointer" title="Resend Activation / Invitation Email">
+                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                                                    </button>
                                                                     <button type="button" wire:click="openEditModal({{ $member->id }})" class="p-1 text-slate-400 hover:text-blue-400 cursor-pointer" title="Edit Member">
                                                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                                     </button>
@@ -432,7 +439,11 @@
                                     @endif
                                 </td>
                                 <td class="py-4 px-6">
-                                    @if($user->invitation_status === 'pending')
+                                    @if($user->approval_status === 'approved' && $user->is_active)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                            Active
+                                        </span>
+                                    @elseif($user->invitation_status === 'pending')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                                             Pending Invite
                                         </span>
@@ -445,12 +456,15 @@
                                             Disabled
                                         </span>
                                     @endif
-                                </td></td>
+                                </td>
                                 <td class="py-4 px-6 text-slate-500 dark:text-slate-400 text-xs font-medium">
                                     {{ $user->last_login_at ? $user->last_login_at->diffForHumans() : 'Never logged in' }}
                                 </td>
                                 <td class="py-4 px-6 whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-1 sm:gap-2">
+                                        <button type="button" wire:click="resendInvitation({{ $user->id }})" class="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors cursor-pointer" title="Resend Activation / Invitation Email">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                        </button>
                                         <button type="button" wire:click="openEditModal({{ $user->id }})" class="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors cursor-pointer" title="Edit User">
                                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         </button>
