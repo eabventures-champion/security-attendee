@@ -294,7 +294,7 @@
 
             <!-- Main Content Area -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
-                @if(auth()->check() && auth()->user()->invitation_status !== 'confirmed')
+                @if(auth()->check() && !auth()->user()->isSuperAdmin() && auth()->user()->hasRole('organization_admin') && auth()->user()->invitation_status !== 'confirmed')
                     <div class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg animate-pulse">
                         <div class="flex items-center gap-3">
                             <div class="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">

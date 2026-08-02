@@ -53,7 +53,7 @@ class EventForm extends Component
 
     public function mount($uuid = null)
     {
-        if (auth()->check() && auth()->user()->invitation_status !== 'confirmed') {
+        if (auth()->check() && !auth()->user()->isSuperAdmin() && auth()->user()->hasRole('organization_admin') && auth()->user()->invitation_status !== 'confirmed') {
             session()->flash('error', "⚠️ Action Locked: Please confirm receipt of your workspace invitation via your email inbox (" . auth()->user()->email . ") before creating or editing events.");
             return redirect()->route('events.index');
         }
@@ -215,7 +215,7 @@ class EventForm extends Component
 
     public function save(): mixed
     {
-        if (auth()->check() && auth()->user()->invitation_status !== 'confirmed') {
+        if (auth()->check() && !auth()->user()->isSuperAdmin() && auth()->user()->hasRole('organization_admin') && auth()->user()->invitation_status !== 'confirmed') {
             session()->flash('error', "⚠️ Action Locked: Please confirm receipt of your workspace invitation via your email inbox (" . auth()->user()->email . ") before creating or saving events.");
             return null;
         }

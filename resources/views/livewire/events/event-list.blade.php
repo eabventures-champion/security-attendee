@@ -5,10 +5,13 @@
             <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Events</h1>
             <p class="text-slate-600 dark:text-slate-400 mt-1 font-medium text-sm">Manage all your upcoming and past events.</p>
         </div>
-            <button type="button" wire:click="createEvent" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all flex items-center gap-2 cursor-pointer {{ auth()->check() && auth()->user()->invitation_status !== 'confirmed' ? 'opacity-60' : '' }}">
+            @php
+                $isOrgAdminUnconfirmed = auth()->check() && !auth()->user()->isSuperAdmin() && auth()->user()->hasRole('organization_admin') && auth()->user()->invitation_status !== 'confirmed';
+            @endphp
+            <button type="button" wire:click="createEvent" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all flex items-center gap-2 cursor-pointer {{ $isOrgAdminUnconfirmed ? 'opacity-60' : '' }}">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Create Event
-                @if(auth()->check() && auth()->user()->invitation_status !== 'confirmed')
+                @if($isOrgAdminUnconfirmed)
                     <svg class="w-4 h-4 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" title="Requires Email Confirmation"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 @endif
             </button>

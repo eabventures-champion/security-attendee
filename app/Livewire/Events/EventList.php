@@ -53,7 +53,7 @@ class EventList extends Component
 
     public function createEvent(): mixed
     {
-        if (auth()->check() && auth()->user()->invitation_status !== 'confirmed') {
+        if (auth()->check() && !auth()->user()->isSuperAdmin() && auth()->user()->hasRole('organization_admin') && auth()->user()->invitation_status !== 'confirmed') {
             session()->flash('error', "⚠️ Action Locked: Please confirm receipt of your workspace invitation via your email inbox (" . auth()->user()->email . ") before creating events.");
             return null;
         }
