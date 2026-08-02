@@ -71,7 +71,20 @@
                     <!-- Cover Image Upload Box -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Event Cover Image</label>
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                        <div x-data="{
+                            imageUrl: @js($cover_image ? null : ($existing_cover_image_path ? \Illuminate\Support\Facades\Storage::url($existing_cover_image_path) : null)),
+                            handleFileSelect(e) {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (evt) => {
+                                        this.imageUrl = evt.target.result;
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            }
+                        }" class="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+
                             <div class="w-full sm:w-48 h-32 rounded-xl bg-slate-200 dark:bg-slate-800 overflow-hidden relative group shrink-0 border border-slate-300 dark:border-white/10 flex items-center justify-center">
                                 <!-- Loading Spinner during upload -->
                                 <div wire:loading wire:target="cover_image" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-2 p-2">
@@ -79,49 +92,28 @@
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    <span class="text-[10px] text-blue-300 font-bold uppercase tracking-wider">Uploading...</span>
+                                    <span class="text-[10px] text-blue-300 font-bold uppercase tracking-wider">Processing...</span>
                                 </div>
 
-                                @if ($cover_image)
-                                    @php
-                                        $tempUrl = null;
-                                        try {
-                                            $tempUrl = $cover_image->temporaryUrl();
-                                        } catch (\Exception $e) {
-                                            $tempUrl = null;
-                                        }
-                                    @endphp
-                                    @if ($tempUrl)
-                                        <img src="{{ $tempUrl }}" onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=Preview+Error';" class="w-full h-full object-cover rounded-xl">
-                                    @else
-                                        <div class="text-center p-3">
-                                            <span class="text-xl">🖼️</span>
-                                            <span class="text-[11px] text-emerald-400 font-bold block mt-1">Image Selected</span>
-                                            <span class="text-[9px] text-slate-400 block font-medium">Ready to save</span>
-                                        </div>
-                                    @endif
-                                @elseif ($existing_cover_image_path)
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($existing_cover_image_path) }}" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" class="w-full h-full object-cover">
-                                    <div class="hidden text-center p-3">
-                                        <svg class="w-8 h-8 text-slate-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <span class="text-[11px] text-slate-400 font-medium">No Image Uploaded</span>
-                                    </div>
-                                @else
+                                <template x-if="imageUrl">
+                                    <img :src="imageUrl" class="w-full h-full object-cover rounded-xl">
+                                </template>
+
+                                <template x-if="!imageUrl">
                                     <div class="text-center p-3">
                                         <svg class="w-8 h-8 text-slate-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         <span class="text-[11px] text-slate-400 font-medium">No Image Uploaded</span>
                                     </div>
-                                @endif
+                                </template>
                             </div>
 
                             <div class="space-y-2 flex-1">
-                                <input type="file" wire:model="cover_image" accept="image/*" id="cover_image_input" class="hidden">
+                                <input type="file" wire:model="cover_image" @change="handleFileSelect($event)" accept="image/*" id="cover_image_input" class="hidden">
                                 <label for="cover_image_input" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs shadow-md shadow-blue-500/25 transition-all inline-flex items-center gap-2 cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                     Choose Cover Image
                                 </label>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">PNG, JPG, or WEBP up to 3MB. Recommended resolution: 1200x630.</p>
-                                <div wire:loading wire:target="cover_image" class="text-xs text-blue-400 font-medium animate-pulse">Uploading image preview...</div>
                                 @error('cover_image') <span class="text-rose-500 text-xs block font-semibold">{{ $message }}</span> @enderror
                             </div>
                         </div>
