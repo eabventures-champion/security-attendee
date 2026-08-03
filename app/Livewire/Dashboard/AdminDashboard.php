@@ -57,7 +57,7 @@ class AdminDashboard extends Component
     public function openBreakdown(string $metric): void
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin') || $user->email === 'superadmin@attendflow.com';
+        $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
 
         $this->breakdownMetric = $metric;
         $this->breakdownData = [];
@@ -158,7 +158,7 @@ class AdminDashboard extends Component
     public function loadStats(): void
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin') || $user->email === 'superadmin@attendflow.com';
+        $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
 
         $eventQuery = Event::query();
         $attendeeQuery = Attendee::query();
@@ -188,7 +188,7 @@ class AdminDashboard extends Component
     public function pricingWaitlistSubscribers()
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin') || $user->email === 'superadmin@attendflow.com';
+        $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
 
         if (!$isSuperAdmin) {
             return collect();
@@ -332,7 +332,7 @@ class AdminDashboard extends Component
     public function upcomingEvents()
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin') || $user->email === 'superadmin@attendflow.com';
+        $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
 
         $query = Event::query();
         if (!$isSuperAdmin && $user->organization_id) {
@@ -351,7 +351,7 @@ class AdminDashboard extends Component
     public function getRegistrationChartData(): array
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin') || $user->email === 'superadmin@attendflow.com';
+        $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
 
         $labels = collect(range(0, 14))->map(fn ($day) => now()->subDays(14 - $day)->format('M d'));
         $data = collect(range(0, 14))->map(function ($day) use ($user, $isSuperAdmin) {
