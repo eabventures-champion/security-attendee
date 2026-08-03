@@ -212,10 +212,10 @@ class OrganizationSettings extends Component
             \Illuminate\Support\Facades\Artisan::call('view:clear');
 
             $this->closeResetModal();
-            session()->flash('reset_success', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared. Clean fresh master workspace initialized.');
-            session()->flash('message', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared.');
+            session()->flash('message', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared. Master workspace initialized.');
 
-            return redirect()->route('dashboard')->with('message', '🚀 System factory reset complete! All data cleared.');
+            $this->redirect(route('dashboard'), navigate: true);
+            return;
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();

@@ -34,6 +34,29 @@
         </div>
     </div>
 
+    <!-- Flash Notifications (Factory Reset / System Messages) -->
+    @if (session()->has('message') || session()->has('reset_success') || session()->has('success'))
+        <div x-data="{ show: true }" 
+             x-show="show" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform -translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm font-semibold flex items-center justify-between shadow-xl shadow-emerald-500/10 animate-fadeInUp">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-white text-sm">System Reset Complete</h4>
+                    <p class="text-xs text-emerald-300/90 font-medium">{{ session('message') ?? session('reset_success') ?? session('success') }}</p>
+                </div>
+            </div>
+            <button type="button" @click="show = false" class="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 transition-colors cursor-pointer">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    @endif
+
     @php
         $isOrgAdmin = auth()->user()->hasRole('organization_admin');
         $org = auth()->user()->organization;
