@@ -179,8 +179,8 @@
 
     @php
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin') || $user->email === 'superadmin@attendflow.com';
-        $isSecurity = $user->hasRole('security') || $user->hasRole('gate_security') || $user->hasRole('security_officer');
+        $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
+        $isSecurity = $user ? ($user->hasRole('security') || $user->hasRole('gate_security') || $user->hasRole('security_officer')) : false;
         $breakdownBtnLabel = $isSuperAdmin ? 'Org Breakdown ➔' : 'Event Breakdown ➔';
     @endphp
 

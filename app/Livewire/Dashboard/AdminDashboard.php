@@ -379,6 +379,8 @@ class AdminDashboard extends Component
 
     public function render()
     {
+        $this->loadStats();
+
         return view('livewire.dashboard.admin-dashboard', [
             'totalEvents' => $this->totalEvents,
             'totalRegistrations' => $this->totalRegistrations,
