@@ -143,8 +143,9 @@ class OrganizationSettings extends Component
             return;
         }
 
-        if (trim($this->resetConfirmationText) !== 'RESET PROJECT') {
-            $this->addError('resetConfirmationText', 'Please type RESET PROJECT exactly as shown to confirm.');
+        $normalizedText = strtoupper(preg_replace('/\s+/', ' ', trim((string) $this->resetConfirmationText)));
+        if ($normalizedText !== 'RESET PROJECT') {
+            $this->addError('resetConfirmationText', 'Please type RESET PROJECT to confirm.');
             return;
         }
 
@@ -211,11 +212,13 @@ class OrganizationSettings extends Component
             \Illuminate\Support\Facades\Artisan::call('cache:clear');
             \Illuminate\Support\Facades\Artisan::call('view:clear');
 
-            $this->closeResetModal();
-            session()->flash('message', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared. Master workspace initialized.');
+            $this->showResetModal = false;
+            $this->resetConfirmationText = '';
 
-            $this->redirect(route('dashboard'), navigate: true);
-            return;
+            session()->flash('message', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared. Master workspace initialized.');
+            session()->flash('success', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared.');
+
+            return redirect()->route('dashboard')->with('message', '🚀 System factory reset complete! All data cleared.');
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
