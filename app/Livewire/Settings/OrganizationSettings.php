@@ -208,17 +208,14 @@ class OrganizationSettings extends Component
             \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
             \Illuminate\Support\Facades\DB::commit();
 
-            // Clear cache and session notifications
-            \Illuminate\Support\Facades\Artisan::call('cache:clear');
-            \Illuminate\Support\Facades\Artisan::call('view:clear');
-
             $this->showResetModal = false;
             $this->resetConfirmationText = '';
 
             session()->flash('message', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared. Master workspace initialized.');
             session()->flash('success', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared.');
 
-            return redirect()->route('dashboard')->with('message', '🚀 System factory reset complete! All data cleared.');
+            $this->js("window.location.href = '" . route('dashboard') . "';");
+            return $this->redirect(route('dashboard'), navigate: true);
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
