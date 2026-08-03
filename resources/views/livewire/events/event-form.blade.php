@@ -470,7 +470,7 @@
                         </button>
                     @else
                         <!-- Final Step (Step 4): Primary Save Button -->
-                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                        <button type="button" wire:click="save" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer active:scale-95">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                             <span wire:loading.remove>{{ $eventUuid ? 'Save Changes' : 'Save Event' }}</span>
                             <span wire:loading class="flex items-center gap-2">
