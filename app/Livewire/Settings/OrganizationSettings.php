@@ -214,14 +214,13 @@ class OrganizationSettings extends Component
             session()->flash('message', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared. Master workspace initialized.');
             session()->flash('success', '🚀 System factory reset complete! All events, attendees, notifications, gates, and organizations cleared.');
 
-            $this->js("window.location.href = '" . route('dashboard') . "';");
-            return $this->redirect(route('dashboard'), navigate: true);
+            return redirect()->to('/dashboard');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\DB::rollBack();
             \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-            \Illuminate\Support\Facades\Log::error("System Reset Failed: " . $e->getMessage());
-            session()->flash('reset_error', 'System reset failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("System Reset Failed: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            $this->addError('resetConfirmationText', 'System reset error: ' . $e->getMessage());
         }
     }
 
