@@ -63,11 +63,17 @@ class AdminDashboard extends Component
         $this->breakdownData = [];
 
         if ($isSuperAdmin) {
-            // Super Admin: Breakdown by Organization Admin
-            $organizations = \App\Models\Organization::with(['users'])->get();
+            // Super Admin: Breakdown by Organization Admin (excluding Super Admin personal/master workspace)
+            $organizations = \App\Models\Organization::with(['users.roles'])->get();
 
             foreach ($organizations as $org) {
-                $orgAdmin = $org->users->firstWhere(fn($u) => $u->hasRole('organization_admin')) ?? $org->users->first();
+                $orgAdmin = $org->users->firstWhere(fn($u) => $u->hasRole('organization_admin'));
+
+                // Skip workspaces without an Organization Admin or owned by Super Admin
+                if (!$orgAdmin || $orgAdmin->hasRole('super_admin') || $orgAdmin->email === 'superadmin@attendflow.com') {
+                    continue;
+                }
+
                 $val = 0;
 
                 if ($metric === 'events') {
