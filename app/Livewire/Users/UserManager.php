@@ -324,14 +324,10 @@ class UserManager extends Component
             $isSuperAdmin = $currentUser->hasRole('super_admin') || $currentUser->email === 'superadmin@attendflow.com';
 
             if ($isSuperAdmin) {
-                $this->selectedUsers = User::where(function ($q) {
-                    $q->whereHas('roles', fn($r) => $r->where('name', 'organization_admin'))
-                      ->orWhereNotNull('organization_id');
-                })
-                ->whereDoesntHave('roles', fn($r) => $r->where('name', 'super_admin'))
-                ->pluck('id')
-                ->map(fn($id) => (string) $id)
-                ->toArray();
+                $this->selectedUsers = User::whereHas('roles', fn($r) => $r->where('name', 'organization_admin'))
+                    ->pluck('id')
+                    ->map(fn($id) => (string) $id)
+                    ->toArray();
             } else {
                 $orgId = $currentUser->organization_id ?? 1;
                 $this->selectedUsers = User::where('organization_id', $orgId)
@@ -343,6 +339,11 @@ class UserManager extends Component
         } else {
             $this->selectedUsers = [];
         }
+    }
+
+    public function updatedSelectedUsers(): void
+    {
+        $this->selectedUsers = array_values(array_unique(array_filter($this->selectedUsers)));
     }
 
     public function deleteSelected(): void
