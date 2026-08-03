@@ -72,8 +72,8 @@
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <h4 class="text-sm font-bold text-slate-900 dark:text-white">{{ $org->name }}</h4>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400">ORG ID: {{ $org->id }}</span>
+                                        <h4 class="text-sm font-semibold text-slate-900 dark:text-white">{{ $org->name }}</h4>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400">ORG ID: {{ $org->id }}</span>
                                     </div>
                                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
                                         Admin: <strong class="text-slate-700 dark:text-slate-300">{{ $adminUser ? $adminUser->name : 'Unassigned Admin' }}</strong>

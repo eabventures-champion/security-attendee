@@ -65,8 +65,9 @@ class EventDashboard extends Component
     }
 
     public string $generatedTokenLink = '';
+    public string $generatedTokenType = '';
 
-    public function generateSingleUseToken($role = 'vvip')
+    public function generateSingleUseToken($role = 'vvip', $noDetails = false)
     {
         $token = 'inv_' . \Illuminate\Support\Str::random(16);
 
@@ -75,17 +76,24 @@ class EventDashboard extends Component
             'event_id' => $this->event->id,
             'token' => $token,
             'access_role' => $role,
+            'no_details' => (bool) $noDetails,
             'max_uses' => 1,
             'use_count' => 0,
             'created_by' => auth()->id(),
         ]);
 
-        $this->generatedTokenLink = route('events.public.invite', [
+        $params = [
             'event_slug' => $this->event->slug,
             'token' => $token
-        ]);
+        ];
+        if ($noDetails) {
+            $params['no_details'] = 1;
+        }
 
-        session()->flash('success', 'Secure single-use token link generated!');
+        $this->generatedTokenLink = route('events.public.invite', $params);
+        $this->generatedTokenType = $noDetails ? 'NO DETAILS (Direct Pass)' : 'GET DETAILS (Interactive Form)';
+
+        session()->flash('success', ($noDetails ? 'Direct Pass (NO DETAILS)' : 'Interactive Form (GET DETAILS)') . ' 1-time invitation link generated!');
     }
 
     public function render()

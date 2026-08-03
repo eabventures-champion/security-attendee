@@ -186,35 +186,67 @@
                     </div>
 
                     <!-- Single-Use Secure Token Invitation Card -->
-                    <div class="md:col-span-2 p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 space-y-3" x-data="{ copied: false }">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                            <span class="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <div class="md:col-span-2 p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 space-y-4" x-data="{ copied: false, activeCat: 'get_details' }">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-amber-500/20 pb-3">
+                            <div class="flex items-center gap-2">
                                 <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                <span>Single-Use Token Invitation Link</span>
-                            </span>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 w-max">
-                                1-TIME PASS TOKEN
-                            </span>
+                                <span class="text-xs font-black text-amber-400 uppercase tracking-wider">Single-Use Token Invitation Links</span>
+                            </div>
+                            
+                            <!-- Category Filter Tabs -->
+                            <div class="flex items-center bg-slate-900/80 p-1 rounded-xl border border-amber-500/30">
+                                <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-amber-500 text-slate-950 font-black' : 'text-amber-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
+                                    📋 Category 1: GET DETAILS
+                                </button>
+                                <button type="button" @click="activeCat = 'no_details'" :class="activeCat === 'no_details' ? 'bg-amber-500 text-slate-950 font-black' : 'text-amber-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
+                                    ⚡ Category 2: NO DETAILS
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                            Generates a unique 1-time token link (for WhatsApp or Personal sharing). First person to register gets auto-verified; forwarded copies downgrade to Pending Verification.
-                        </p>
-                        
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                            <button wire:click="generateSingleUseToken('vvip')" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center">
-                                Generate 1-Time VVIP Link
-                            </button>
-                            <button wire:click="generateSingleUseToken('general_admission')" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center">
-                                Generate 1-Time General Link
-                            </button>
+
+                        <!-- Category 1: GET DETAILS Description & Generators -->
+                        <div x-show="activeCat === 'get_details'" class="space-y-3">
+                            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                <strong class="text-amber-300">GET DETAILS Category:</strong> Generates an interactive RSVP link. Invitees fill in their Name, Email, and Phone number before receiving their auto-verified digital pass.
+                            </p>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                <button wire:click="generateSingleUseToken('vvip', false)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
+                                    <span>👑 Generate 1-Time VVIP Link</span>
+                                    <span class="text-[9px] bg-black/20 px-1.5 py-0.5 rounded uppercase">(Get Details)</span>
+                                </button>
+                                <button wire:click="generateSingleUseToken('general_admission', false)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
+                                    <span>🎫 Generate 1-Time General Link</span>
+                                    <span class="text-[9px] bg-black/20 px-1.5 py-0.5 rounded uppercase">(Get Details)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Category 2: NO DETAILS Description & Generators -->
+                        <div x-show="activeCat === 'no_details'" class="space-y-3" x-cloak>
+                            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                <strong class="text-amber-300">NO DETAILS Category (Direct QR Claim):</strong> Personal details form inputs are completely eliminated. Invitees click the poster image to instantly claim &amp; download their QR pass. Forwarded or repeated attempts are denied.
+                            </p>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                <button wire:click="generateSingleUseToken('vvip', true)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
+                                    <span>⚡ Generate 1-Time VVIP Pass</span>
+                                    <span class="text-[9px] bg-black/30 px-1.5 py-0.5 rounded uppercase font-black text-amber-200">(No Details)</span>
+                                </button>
+                                <button wire:click="generateSingleUseToken('general_admission', true)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
+                                    <span>⚡ Generate 1-Time General Pass</span>
+                                    <span class="text-[9px] bg-black/30 px-1.5 py-0.5 rounded uppercase font-black text-slate-400">(No Details)</span>
+                                </button>
+                            </div>
                         </div>
 
                         @if($generatedTokenLink)
-                            <div class="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fadeIn">
+                            <div class="pt-3 border-t border-amber-500/20 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fadeIn">
+                                <div class="shrink-0 text-[10px] font-black uppercase px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                    {{ $generatedTokenType ?: 'Generated Link' }}
+                                </div>
                                 <input type="text" readonly value="{{ $generatedTokenLink }}" class="w-full sm:flex-1 bg-slate-900 border border-amber-500/50 rounded-xl px-3.5 py-2 text-xs text-amber-300 font-mono select-all truncate">
-                                <button @click="navigator.clipboard.writeText('{{ $generatedTokenLink }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                    <span x-show="!copied">Copy Token Link</span>
-                                    <span x-show="copied" x-cloak class="text-emerald-200">Copied! ✓</span>
+                                <button @click="navigator.clipboard.writeText('{{ $generatedTokenLink }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs transition-all shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                    <span x-show="!copied">Copy Link</span>
+                                    <span x-show="copied" x-cloak class="text-slate-950">Copied! ✓</span>
                                 </button>
                             </div>
                         @endif

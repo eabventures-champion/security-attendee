@@ -26,7 +26,91 @@
 
         <div class="relative z-10 space-y-6">
             @if(!$isSuccess)
-                <!-- Premium Event Cover Hero Image Banner (Contained & Uncropped) -->
+                @if($isNoDetailsMode)
+                    <!-- CATEGORY 2: NO DETAILS (Direct Pass / One-Click QR Claim) -->
+                    <div class="space-y-6 animate-fadeIn">
+                        @if($tokenNotice)
+                            <div class="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-semibold space-y-1 text-center shadow-lg">
+                                <div class="text-base font-black text-rose-400 uppercase tracking-wider">⛔ Access Denied</div>
+                                <p>{{ $tokenNotice }}</p>
+                            </div>
+                        @endif
+
+                        <!-- Header Badge -->
+                        <div class="text-center space-y-2">
+                            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-extrabold uppercase tracking-wider shadow-md">
+                                ⚡ {{ $event->invitation_title ?? ($isVip ? '🔒 DIRECT PRIVATE VVIP PASS' : 'DIRECT SINGLE-USE PASS') }}
+                            </span>
+                        </div>
+
+                        <!-- Interactive Poster Image Card (Click to Download QR Pass) -->
+                        @if($event->cover_image_path)
+                            <div @if(!$isTokenConsumed && $hasValidToken) wire:click="claimDirectPass" @endif 
+                                 class="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-amber-500/40 bg-slate-950/90 flex items-center justify-center min-h-[250px] max-h-[480px] group transition-all {{ (!$isTokenConsumed && $hasValidToken) ? 'cursor-pointer hover:border-amber-400 hover:shadow-amber-500/30' : 'opacity-80 cursor-not-allowed' }}"
+                                 title="{{ (!$isTokenConsumed && $hasValidToken) ? 'Click to claim & download your digital QR pass' : 'Pass already claimed / link invalid' }}">
+                                
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($event->cover_image_path) }}" class="absolute inset-0 w-full h-full object-cover filter blur-2xl opacity-40 scale-110 pointer-events-none">
+                                <div class="absolute inset-0 bg-slate-950/30 group-hover:bg-slate-950/10 transition-colors pointer-events-none"></div>
+
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($event->cover_image_path) }}" alt="{{ $event->name }}" class="relative z-10 w-full max-h-[480px] object-contain rounded-2xl shadow-xl transform group-hover:scale-[1.01] transition-transform">
+
+                                <!-- Floating Badge on Top Left -->
+                                <div class="absolute top-3 left-3 z-20">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full backdrop-blur-md bg-amber-500/90 text-slate-950 border border-amber-300 text-xs font-black uppercase tracking-wider shadow-lg">
+                                        ⭐ SINGLE-USE VVIP INVITATION PASS
+                                    </span>
+                                </div>
+
+                                @if(!$isTokenConsumed && $hasValidToken)
+                                    <div class="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-2xl transform scale-95 group-hover:scale-100 transition-transform flex items-center gap-2">
+                                            ✨ Click Image to Claim &amp; Download Pass →
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        <!-- Event Description & Subtitle -->
+                        <div class="text-center space-y-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+                            <p class="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
+                                @if(!empty($event->invitation_description))
+                                    {{ $event->invitation_description }}
+                                @else
+                                    You have received an exclusive private single-use VVIP invitation directly from the event organizers. No personal details submission required. Click below to claim and download your QR entry pass.
+                                @endif
+                            </p>
+
+                            <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-amber-300 font-semibold pt-2 border-t border-slate-800">
+                                <span class="flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    {{ $event->starts_at ? $event->starts_at->format('M j, Y — g:i A') : 'TBA' }}
+                                </span>
+                                <span class="flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                                    {{ $event->venue_name ?? 'Special Venue' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Direct Claim Action Button -->
+                        @if(!$isTokenConsumed && $hasValidToken)
+                            <button type="button" wire:click="claimDirectPass" wire:loading.attr="disabled" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                                <span wire:loading.remove>🎟️ Claim &amp; Download Digital QR Pass →</span>
+                                <span wire:loading class="flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4 text-slate-950" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Generating Digital Pass...
+                                </span>
+                            </button>
+                        @else
+                            <button type="button" disabled class="w-full py-4 rounded-2xl bg-slate-800 text-slate-500 font-extrabold text-sm border border-slate-700 cursor-not-allowed opacity-60">
+                                ⛔ Single-Use Link Already Claimed / Access Denied
+                            </button>
+                        @endif
+                    </div>
+                @else
+                    <!-- CATEGORY 1: GET DETAILS (Form with Inputs) -->
+                    <!-- Premium Event Cover Hero Image Banner (Contained & Uncropped) -->
                 @if($event->cover_image_path)
                     <div class="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-slate-950/90 mb-4 flex items-center justify-center min-h-[220px] max-h-[450px]">
                         <!-- Ambient Blur Background to fill letterbox areas seamlessly -->
@@ -349,6 +433,7 @@
                         @endif
                     </div>
                 </form>
+                @endif
             @else
                 <!-- Success View -->
                 <div class="text-center space-y-6 animate-fadeInUp">

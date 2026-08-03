@@ -22,6 +22,8 @@ class PrivateInvitationForm extends Component
     public $event;
     public bool $isSuccess = false;
     public bool $isVip = false;
+    public bool $isNoDetailsMode = false;
+    public bool $isClaimed = false;
     public string $qrToken = '';
 
     // Token enforcement properties
@@ -55,6 +57,7 @@ class PrivateInvitationForm extends Component
         }
 
         $this->isVip = request()->boolean('vip');
+        $noDetailsParam = request()->boolean('no_details');
 
         // Check for secure single-use invitation token
         $tokenString = request()->query('token');
@@ -65,6 +68,10 @@ class PrivateInvitationForm extends Component
 
             if ($inv) {
                 $this->invitationTokenObj = $inv;
+                if ($inv->no_details || $noDetailsParam) {
+                    $this->isNoDetailsMode = true;
+                }
+
                 if ($inv->isValid()) {
                     $this->hasValidToken = true;
                     if ($inv->access_role === 'vvip' || $inv->access_role === 'vip') {
@@ -75,13 +82,19 @@ class PrivateInvitationForm extends Component
                     }
                 } else {
                     $this->isTokenConsumed = true;
-                    $emailLockInfo = $inv->email ? " by {$inv->email}" : "";
-                    $this->tokenNotice = "This single-use invitation link has already been redeemed{$emailLockInfo}. Any new email submitted via this link will undergo Administrator Verification (No instant QR pass).";
+                    if ($inv->no_details || $noDetailsParam) {
+                        $this->tokenNotice = "⛔ Access Denied: This single-use invitation pass has already been claimed and downloaded. Each invitation link is strictly 1-time valid.";
+                    } else {
+                        $emailLockInfo = $inv->email ? " by {$inv->email}" : "";
+                        $this->tokenNotice = "This single-use invitation link has already been redeemed{$emailLockInfo}. Any new email submitted via this link will undergo Administrator Verification (No instant QR pass).";
+                    }
                 }
             } else {
                 $this->isTokenConsumed = true;
-                $this->tokenNotice = 'Invalid invitation link token. Submitting this form will route your request for Administrator Approval.';
+                $this->tokenNotice = 'Invalid invitation link token. Access denied.';
             }
+        } elseif ($noDetailsParam) {
+            $this->isNoDetailsMode = true;
         }
     }
 
@@ -303,6 +316,67 @@ class PrivateInvitationForm extends Component
         }
 
         $this->isSuccess = true;
+    }
+
+    public function claimDirectPass(): void
+    {
+        if ($this->isTokenConsumed || ($this->invitationTokenObj && !$this->hasValidToken)) {
+            session()->flash('error', '⛔ Access Denied: This single-use invitation pass has already been claimed and downloaded.');
+            return;
+        }
+
+        $targetRole = ($this->invitationTokenObj && $this->invitationTokenObj->access_role)
+            ? AccessRole::from($this->invitationTokenObj->access_role)
+            : ($this->isVip ? AccessRole::Vvip : AccessRole::GeneralAdmission);
+
+        $guestNumber = rand(1000, 9999);
+        $roleLabel = ($targetRole === AccessRole::Vvip || $targetRole === AccessRole::Vip) ? 'VVIP' : 'General';
+        $guestName = "{$roleLabel} Guest Pass #{$guestNumber}";
+        $guestEmail = 'guest_' . Str::random(8) . '@attendflow.pass';
+
+        // Create Auto-Verified Attendee Record
+        $attendee = Attendee::create([
+            'uuid' => (string) Str::uuid(),
+            'event_id' => $this->event->id,
+            'organization_id' => $this->event->organization_id,
+            'full_name' => $guestName,
+            'email' => $guestEmail,
+            'phone' => '000' . rand(1000000, 9999999),
+            'access_role' => $targetRole,
+            'verification_status' => VerificationStatus::Verified,
+            'consent' => true
+        ]);
+
+        // Consume Single-Use Token immediately
+        if ($this->invitationTokenObj) {
+            $this->invitationTokenObj->increment('use_count');
+            $this->invitationTokenObj->update([
+                'used_at' => now(),
+                'email' => $guestEmail,
+            ]);
+            $this->hasValidToken = false;
+            $this->isTokenConsumed = true;
+        }
+
+        // Generate QrCode for verified attendee
+        $token = Str::random(32);
+        $qrCode = QrCode::create([
+            'uuid' => (string) Str::uuid(),
+            'attendee_id' => $attendee->id,
+            'event_id' => $this->event->id,
+            'secure_token' => $token,
+            'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+            'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
+            'issued_at' => now(),
+            'expires_at' => $this->event->ends_at ? $this->event->ends_at->addDays(1) : now()->addYear(),
+            'is_revoked' => false,
+        ]);
+
+        $this->qrToken = $qrCode->secure_token;
+        $this->isSuccess = true;
+        $this->isClaimed = true;
+
+        session()->flash('success', '🎉 Your Digital Pass has been generated! Click below to download your QR Code.');
     }
 
     public function render()

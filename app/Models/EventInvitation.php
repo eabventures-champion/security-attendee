@@ -17,6 +17,7 @@ class EventInvitation extends Model
         'email',
         'token',
         'access_role',
+        'no_details',
         'max_uses',
         'use_count',
         'is_revoked',
@@ -29,6 +30,7 @@ class EventInvitation extends Model
         'expires_at' => 'datetime',
         'used_at' => 'datetime',
         'is_revoked' => 'boolean',
+        'no_details' => 'boolean',
         'max_uses' => 'integer',
         'use_count' => 'integer',
     ];

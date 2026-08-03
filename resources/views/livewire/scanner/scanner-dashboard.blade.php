@@ -24,12 +24,24 @@
                 <h1 class="text-sm sm:text-lg font-bold text-white truncate">{{ $gate->name }}</h1>
                 <span class="text-slate-500 text-xs sm:text-sm truncate hidden sm:inline">| {{ $event->name }}</span>
             </div>
-            <div class="flex items-center space-x-3 shrink-0">
+            <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+                <button type="button" onclick="initLiveCameraScanner()" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-bold text-xs cursor-pointer flex items-center gap-1.5 transition-all shadow-sm" title="Request camera permission & start live phone/webcam stream">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span class="hidden sm:inline">Live Camera</span>
+                </button>
                 <input type="file" id="qr-file-input" accept="image/*" class="hidden" onchange="handleQrFileUpload(event)">
                 <label for="qr-file-input" class="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 font-bold text-xs cursor-pointer flex items-center gap-1.5 transition-all shadow-sm" title="Upload a QR code image file to test locally">
                     <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <span>Upload QR Image</span>
+                    <span class="hidden sm:inline">Upload QR Image</span>
                 </label>
+                @if($event->capacity)
+                    <div class="text-[11px] sm:text-xs text-slate-400 text-right px-2.5 py-1 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                        <div class="font-bold {{ $stats['granted'] >= $event->capacity ? 'text-rose-400 font-extrabold' : 'text-emerald-400' }}">
+                            {{ $stats['granted'] }} / {{ $event->capacity }}
+                        </div>
+                        <span class="text-[9px] uppercase tracking-wider text-slate-400 font-medium">Capacity</span>
+                    </div>
+                @endif
                 <div class="text-[11px] sm:text-xs text-slate-400 text-right">
                     <div class="font-semibold text-white">{{ $stats['granted'] }} / {{ $stats['total'] }}</div>
                     <span class="text-[9px] sm:text-[11px]">Scans Today</span>
@@ -43,19 +55,35 @@
         <!-- Main Scanner Area -->
         <div class="flex-1 relative flex items-center justify-center bg-black overflow-hidden">
             
-            <!-- Camera Viewfinder -->
-            <div id="qr-reader" class="w-full h-full absolute inset-0 object-cover opacity-60">
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <div class="w-64 h-64 border-2 border-white/30 rounded-3xl relative">
-                        <!-- Corner markers -->
-                        <div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-3xl"></div>
-                        <div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-3xl"></div>
-                        <div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-3xl"></div>
-                        <div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-blue-500 rounded-br-3xl"></div>
-                        
-                        <!-- Scanning line animation -->
-                        <div class="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-scan"></div>
+            <!-- Live Camera Video Container -->
+            <div class="w-full h-full absolute inset-0 overflow-hidden bg-slate-950 flex items-center justify-center">
+                <div id="qr-reader-video" class="w-full h-full object-cover"></div>
+            </div>
+
+            <!-- Viewfinder Overlay -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <div class="w-64 h-64 border-2 border-white/30 rounded-3xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+                    <!-- Corner markers -->
+                    <div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-3xl"></div>
+                    <div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-3xl"></div>
+                    <div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-3xl"></div>
+                    <div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-blue-500 rounded-br-3xl"></div>
+                    
+                    <!-- Scanning line animation -->
+                    <div class="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-scan"></div>
+                </div>
+            </div>
+
+            <!-- Camera Status Banner (Permission prompt / Retry button) -->
+            <div id="camera-status-overlay" class="absolute top-4 inset-x-4 z-20 hidden">
+                <div class="p-3 rounded-2xl bg-slate-900/90 border border-amber-500/40 backdrop-blur-md text-amber-200 text-xs font-semibold flex items-center justify-between shadow-2xl">
+                    <div class="flex items-center gap-2">
+                        <span class="animate-pulse">📷</span>
+                        <span id="camera-status-text">Requesting camera permission...</span>
                     </div>
+                    <button type="button" onclick="initLiveCameraScanner()" class="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] uppercase tracking-wider cursor-pointer shadow-md">
+                        Allow / Start Camera
+                    </button>
                 </div>
             </div>
 
@@ -181,24 +209,6 @@
                                 <span class="truncate">Gate: <strong>{{ $gateObj->name ?? ($gate->name ?? 'Main Gate') }}</strong></span>
                             </div>
 
-                            <!-- Attendee Contact -->
-                            @if($att)
-                                <div class="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] text-slate-400">
-                                    @if($att->email)
-                                        <span class="inline-flex items-center gap-1 truncate max-w-[200px]" title="{{ $att->email }}">
-                                            <svg class="w-3 h-3 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                            <span class="truncate">{{ $att->email }}</span>
-                                        </span>
-                                    @endif
-                                    @if($att->phone)
-                                        <span class="inline-flex items-center gap-1">
-                                            <svg class="w-3 h-3 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                            <span>{{ $att->phone }}</span>
-                                        </span>
-                                    @endif
-                                </div>
-                            @endif
-
                             <div class="pt-0.5">
                                 <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider {{ $actResultStr === 'granted' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20' }}">
                                     {{ ucfirst($actResultStr) }}
@@ -244,12 +254,124 @@
         background-color: rgba(255, 255, 255, 0.1);
         border-radius: 4px;
     }
+    #qr-reader-video video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+    #qr-reader-video {
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
+    }
 </style>
 
 @script
 <script>
     console.log('Scanner UI initialized');
-    
+
+    let liveHtml5QrCode = null;
+    let lastScannedCode = '';
+    let lastScannedTimestamp = 0;
+
+    window.initLiveCameraScanner = function() {
+        const overlay = document.getElementById('camera-status-overlay');
+        const statusText = document.getElementById('camera-status-text');
+
+        if (overlay && statusText) {
+            overlay.classList.remove('hidden');
+            statusText.innerText = "Requesting device camera permission...";
+        }
+
+        if (typeof Html5Qrcode === 'undefined') {
+            console.warn('Html5Qrcode library loading...');
+            setTimeout(initLiveCameraScanner, 500);
+            return;
+        }
+
+        const videoContainer = document.getElementById('qr-reader-video');
+        if (!videoContainer) return;
+
+        if (liveHtml5QrCode) {
+            try {
+                liveHtml5QrCode.stop().catch(() => {}).then(() => {
+                    liveHtml5QrCode = null;
+                    startCamera();
+                });
+                return;
+            } catch(e) {
+                liveHtml5QrCode = null;
+            }
+        }
+
+        startCamera();
+    };
+
+    function startCamera() {
+        const overlay = document.getElementById('camera-status-overlay');
+        const statusText = document.getElementById('camera-status-text');
+
+        try {
+            liveHtml5QrCode = new Html5Qrcode("qr-reader-video");
+            const config = {
+                fps: 15,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+
+            // Attempt 1: Start rear/environment camera (main phone camera)
+            liveHtml5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onLiveQrScanSuccess,
+                onLiveQrScanError
+            ).then(() => {
+                if (overlay) overlay.classList.add('hidden');
+                console.log("📷 Live Environment Camera stream active!");
+            }).catch(err => {
+                console.warn("Environment camera unavailable, falling back to default camera:", err);
+                // Attempt 2: Fallback to user/default camera
+                liveHtml5QrCode.start(
+                    { facingMode: "user" },
+                    config,
+                    onLiveQrScanSuccess,
+                    onLiveQrScanError
+                ).then(() => {
+                    if (overlay) overlay.classList.add('hidden');
+                    console.log("📷 Live User Camera stream active!");
+                }).catch(err2 => {
+                    console.error("Camera access error:", err2);
+                    if (overlay && statusText) {
+                        overlay.classList.remove('hidden');
+                        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                            statusText.innerText = "⚠️ Phone camera access requires HTTPS or localhost. Please use HTTPS or Upload QR Image.";
+                        } else {
+                            statusText.innerText = "⚠️ Camera permission denied or camera in use. Please grant camera permission.";
+                        }
+                    }
+                });
+            });
+        } catch(err) {
+            console.error("Error setting up Html5Qrcode:", err);
+        }
+    }
+
+    function onLiveQrScanSuccess(decodedText) {
+        const now = Date.now();
+        if (decodedText === lastScannedCode && (now - lastScannedTimestamp) < 3000) {
+            return;
+        }
+        lastScannedCode = decodedText;
+        lastScannedTimestamp = now;
+
+        console.log("📷 Live Camera QR Scan Success:", decodedText);
+        $wire.processQrScan(decodedText);
+    }
+
+    function onLiveQrScanError(err) {
+        // Silent frame scan callback
+    }
+
     $wire.on('resume-scanning', () => {
         console.log('Resumed scanning');
     });
@@ -260,8 +382,8 @@
 
         if (typeof Html5Qrcode !== 'undefined') {
             try {
-                const html5QrCode = new Html5Qrcode("qr-reader-file-temp");
-                html5QrCode.scanFile(file, true)
+                const html5QrCodeFile = new Html5Qrcode("qr-reader-file-temp");
+                html5QrCodeFile.scanFile(file, true)
                     .then(decodedText => {
                         console.log("Scanned QR file code via Html5Qrcode:", decodedText);
                         $wire.processQrScan(decodedText);
@@ -309,5 +431,8 @@
             $wire.processQrScan('test-uuid-or-qr-content');
         }
     });
+
+    // Auto-initialize camera stream
+    setTimeout(initLiveCameraScanner, 600);
 </script>
 @endscript

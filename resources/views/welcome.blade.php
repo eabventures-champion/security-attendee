@@ -658,75 +658,411 @@
             line-height: 1.7;
         }
 
-        /* Pricing Section */
+        /* Pricing Section - Premium Coming Soon Package */
         .pricing {
             padding: 6rem 2rem;
             max-width: 1200px;
             margin: 0 auto;
-        }
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.5rem;
-        }
-        .pricing-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            padding: 2.5rem 2rem;
-            transition: all 0.4s ease;
             position: relative;
         }
-        .pricing-card.popular {
-            border-color: var(--blue-500);
-            background: rgba(59, 130, 246, 0.05);
+        .pricing-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.45rem 1.25rem;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #fbbf24;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
         }
-        .pricing-card.popular::before {
-            content: 'Most Popular';
+        .pulse-dot-amber {
+            width: 8px;
+            height: 8px;
+            background: #fbbf24;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fbbf24;
+            animation: pulse 1.8s infinite;
+        }
+        .pricing-coming-soon-container {
+            position: relative;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+        .pricing-glow-aura {
             position: absolute;
-            top: -12px;
+            top: -40px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(135deg, var(--blue-500), var(--purple-500));
-            color: white;
-            padding: 0.25rem 1rem;
+            width: 85%;
+            height: 380px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(59, 130, 246, 0.12) 45%, transparent 70%);
+            filter: blur(50px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .premium-package-card {
+            position: relative;
+            z-index: 2;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 28px;
+            padding: 3.5rem 3rem;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 45px rgba(245, 158, 11, 0.15);
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .premium-package-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f59e0b, #3b82f6, #8b5cf6, #10b981, #f59e0b);
+            background-size: 300% 100%;
+            animation: borderGradient 6s ease infinite;
+        }
+        @keyframes borderGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .package-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .package-badge-vip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 1rem;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
+            border: 1px solid rgba(245, 158, 11, 0.5);
             border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #fef08a;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
         }
-        .pricing-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255,255,255,0.15);
-        }
-        .pricing-card h3 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 0.5rem;
-        }
-        .pricing-price {
-            font-size: 3rem;
+        .package-header h3 {
+            font-size: 2.3rem;
             font-weight: 900;
             color: white;
-            margin: 1rem 0;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
         }
-        .pricing-price span { font-size: 1rem; color: var(--navy-400); font-weight: 400; }
-        .pricing-features {
-            list-style: none;
-            margin: 1.5rem 0;
-        }
-        .pricing-features li {
-            padding: 0.5rem 0;
+        .package-tagline {
             color: var(--navy-300);
+            font-size: 1.05rem;
+            max-width: 680px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .package-status-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 1.25rem 2rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .status-price .price-val {
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffffff, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .status-price .price-period {
             font-size: 0.9rem;
+            color: var(--navy-400);
+            margin-left: 0.5rem;
+        }
+        .status-pill {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-        .pricing-features li::before {
-            content: '✓';
-            color: var(--emerald-500);
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            padding: 0.45rem 1.15rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
             font-weight: 700;
+            color: #34d399;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+        }
+        .dot-gold {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 1.5s infinite;
+        }
+        .package-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 3rem;
+        }
+        .feature-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 1.25rem 1.5rem;
+            border-radius: 18px;
+            transition: all 0.3s ease;
+        }
+        .feature-item:hover {
+            background: rgba(255, 255, 255, 0.045);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+        }
+        .feature-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .feature-icon-box.blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; box-shadow: 0 0 12px rgba(59, 130, 246, 0.2); }
+        .feature-icon-box.emerald { background: rgba(16, 185, 129, 0.2); color: #34d399; box-shadow: 0 0 12px rgba(16, 185, 129, 0.2); }
+        .feature-icon-box.purple { background: rgba(139, 92, 246, 0.2); color: #c084fc; box-shadow: 0 0 12px rgba(139, 92, 246, 0.2); }
+        .feature-icon-box.amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.2); }
+
+        .feature-item h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+        .feature-item p {
+            font-size: 0.88rem;
+            color: var(--navy-400);
+            line-height: 1.5;
+        }
+        .waitlist-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 22px;
+            padding: 2.25rem 2rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+        .waitlist-header h4 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.4rem;
+        }
+        .waitlist-header p {
+            font-size: 0.92rem;
+            color: var(--navy-300);
+            margin-bottom: 1.5rem;
+        }
+        .waitlist-form {
+            max-width: 550px;
+            margin: 0 auto 1.25rem;
+        }
+        .waitlist-form .input-group {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(2, 6, 23, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.4rem;
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+        .waitlist-form .input-group:focus-within {
+            border-color: #fbbf24;
+            box-shadow: 0 0 18px rgba(245, 158, 11, 0.3);
+        }
+        .waitlist-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0.75rem 1rem;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .waitlist-input::placeholder {
+            color: var(--navy-500);
+        }
+        .btn-waitlist {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #0f172a;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.92rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+        .btn-waitlist:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.5);
+            filter: brightness(1.1);
+        }
+        .waitlist-success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #34d399;
+            padding: 0.9rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 1rem auto 1.25rem;
+            max-width: 550px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+        }
+        .waitlist-counter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--navy-400);
+        }
+        .avatar-group {
+            display: flex;
+            align-items: center;
+        }
+        .avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid #0f172a;
+            margin-left: -8px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avatar:first-child { margin-left: 0; }
+
+        /* Preview Tiers (Blurred Teaser Cards) */
+        .preview-tiers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-top: 2rem;
+            opacity: 0.8;
+        }
+        .tier-teaser {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+        .tier-teaser:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+        .tier-teaser.featured {
+            border-color: rgba(245, 158, 11, 0.35);
+            background: rgba(245, 158, 11, 0.04);
+        }
+        .teaser-lock-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--navy-300);
+            background: rgba(255,255,255,0.08);
+            padding: 0.25rem 0.7rem;
+            border-radius: 100px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 0.75rem;
+        }
+        .teaser-lock-badge.gold {
+            color: #fbbf24;
+            background: rgba(245, 158, 11, 0.18);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+        .tier-teaser h4 {
+            font-size: 1.15rem;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .teaser-price {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: white;
+            margin: 0.4rem 0;
+        }
+        .teaser-price span {
+            font-size: 0.85rem;
+            color: var(--navy-400);
+            font-weight: 400;
+        }
+        .tier-teaser p {
+            font-size: 0.84rem;
+            color: var(--navy-400);
+        }
+
+        @media (max-width: 768px) {
+            .premium-package-card {
+                padding: 2.25rem 1.5rem;
+            }
+            .package-header h3 {
+                font-size: 1.7rem;
+            }
+            .package-grid {
+                grid-template-columns: 1fr;
+            }
+            .package-status-box {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .waitlist-form .input-group {
+                flex-direction: column;
+                background: transparent;
+                border: none;
+                padding: 0;
+            }
+            .waitlist-input {
+                background: rgba(2, 6, 23, 0.85);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 12px;
+            }
+            .btn-waitlist {
+                width: 100%;
+                justify-content: center;
+                border-radius: 12px;
+            }
         }
 
         /* Footer */
@@ -866,6 +1202,51 @@
                 const icon = document.getElementById('hamburgerIcon');
                 if (drawer) drawer.classList.remove('open');
                 if (icon) icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+            }
+
+            async function handleWaitlistSubmit(event) {
+                event.preventDefault();
+                const form = document.getElementById('pricingWaitlistForm');
+                const emailInput = document.getElementById('waitlistEmail');
+                const successMsg = document.getElementById('waitlistSuccess');
+                const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+
+                if (!emailInput || !emailInput.value) return;
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.7';
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('email', emailInput.value);
+
+                    const response = await fetch('/pricing-waitlist', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        if (form && successMsg) {
+                            form.style.display = 'none';
+                            successMsg.style.display = 'flex';
+                        }
+                    } else {
+                        alert(data.message || 'Unable to join waitlist. Please verify your email.');
+                        if (submitBtn) submitBtn.disabled = false;
+                    }
+                } catch (err) {
+                    console.error('Waitlist submission error:', err);
+                    alert('Submission failed. Please try again.');
+                    if (submitBtn) submitBtn.disabled = false;
+                }
             }
         </script>
 
@@ -1051,63 +1432,127 @@
         <!-- Pricing -->
         <section class="pricing" id="pricing">
             <div class="section-header">
+                <div class="pricing-badge">
+                    <span class="pulse-dot-amber"></span>
+                    <span>PREMIUM PACKAGE &bull; COMING SOON</span>
+                </div>
                 <h2>Simple, Transparent Pricing</h2>
-                <p>Start free, scale as you grow. No hidden fees, no surprises.</p>
+                <p>We're finalizing our flexible subscription packages &amp; enterprise tiers. Join the early access waitlist to lock in exclusive launch perks!</p>
             </div>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>Free</h3>
-                    <div class="pricing-price">$0<span>/month</span></div>
-                    <ul class="pricing-features">
-                        <li>1 Event</li>
-                        <li>100 Registrations</li>
-                        <li>Basic QR Codes</li>
-                        <li>Email Verification</li>
-                        <li>Standard Support</li>
-                    </ul>
-                    <a href="/register" class="btn-secondary" style="display:block;text-align:center;width:100%">Get Started</a>
+
+            <div class="pricing-coming-soon-container">
+                <div class="pricing-glow-aura"></div>
+
+                <div class="premium-package-card">
+                    <div class="package-header">
+                        <div class="package-badge-vip">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            VIP EARLY ACCESS SUITE
+                        </div>
+                        <h3>AttendFlow All-Access Premium Package</h3>
+                        <p class="package-tagline">Everything you need for seamless event check-ins, encrypted QR ticketing, multi-gate security, and real-time attendance intelligence.</p>
+                    </div>
+
+                    <div class="package-status-box">
+                        <div class="status-price">
+                            <span class="price-val">Free VIP Early Access</span>
+                            <span class="price-period">/ Beta &amp; Launch Period</span>
+                        </div>
+                        <div class="status-pill">
+                            <span class="dot-gold"></span> Packages Launching Soon
+                        </div>
+                    </div>
+
+                    <div class="package-grid">
+                        <div class="feature-item">
+                            <div class="feature-icon-box blue">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                            </div>
+                            <div>
+                                <h4>Unlimited Events &amp; Registrations</h4>
+                                <p>Host unlimited small or mega events with high-volume ticket scanning capability.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon-box emerald">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            </div>
+                            <div>
+                                <h4>Encrypted &amp; Dynamic QR Codes</h4>
+                                <p>Prevent ticket forgery with cryptographic QR signatures and instant validation.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon-box purple">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            </div>
+                            <div>
+                                <h4>Real-Time Multi-Gate Analytics</h4>
+                                <p>Monitor live gate throughput, peak entry times, and gate keeper activity in real-time.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon-box amber">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            </div>
+                            <div>
+                                <h4>White Label &amp; Custom Domain</h4>
+                                <p>Custom branding, personalized email receipts, PDF tickets, and organizational subdomains.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="waitlist-card">
+                        <div class="waitlist-header">
+                            <h4>Get Notified &amp; Claim 50% Off Lifetime Discount</h4>
+                            <p>Be the first to know when full subscription packages launch. Zero commitment required.</p>
+                        </div>
+                        <form class="waitlist-form" id="pricingWaitlistForm" onsubmit="handleWaitlistSubmit(event)">
+                            <div class="input-group">
+                                <input type="email" id="waitlistEmail" placeholder="Enter your work email..." required class="waitlist-input">
+                                <button type="submit" class="btn-waitlist">
+                                    <span>Join VIP Waitlist</span>
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                </button>
+                            </div>
+                        </form>
+                        <div id="waitlistSuccess" class="waitlist-success" style="display: none;">
+                            <span class="check-icon">✓</span> You're on the VIP list! We'll send your launch invitation and 50% discount code first.
+                        </div>
+                        <div class="waitlist-counter">
+                            <div class="avatar-group">
+                                <span class="avatar" style="background:#3b82f6;">JD</span>
+                                <span class="avatar" style="background:#10b981;">SK</span>
+                                <span class="avatar" style="background:#8b5cf6;">AM</span>
+                                <span class="avatar" style="background:#f59e0b;">+</span>
+                            </div>
+                            <span>Over <strong>1,420+</strong> event organizers on the early access waitlist</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="pricing-card">
-                    <h3>Starter</h3>
-                    <div class="pricing-price">$29<span>/month</span></div>
-                    <ul class="pricing-features">
-                        <li>10 Events</li>
-                        <li>2,000 Registrations</li>
-                        <li>Encrypted QR Codes</li>
-                        <li>Multi-Gate Support</li>
-                        <li>PDF Reports</li>
-                        <li>Priority Support</li>
-                    </ul>
-                    <a href="/register" class="btn-primary" style="display:block;text-align:center;width:100%">Start Trial</a>
-                </div>
-                <div class="pricing-card popular">
-                    <h3>Business</h3>
-                    <div class="pricing-price">$99<span>/month</span></div>
-                    <ul class="pricing-features">
-                        <li>Unlimited Events</li>
-                        <li>Unlimited Registrations</li>
-                        <li>Role-Based Access</li>
-                        <li>Real-Time Dashboard</li>
-                        <li>Advanced Reports</li>
-                        <li>API Access</li>
-                        <li>Dedicated Support</li>
-                    </ul>
-                    <a href="/register" class="btn-primary" style="display:block;text-align:center;width:100%">Start Trial</a>
-                </div>
-                <div class="pricing-card">
-                    <h3>Enterprise</h3>
-                    <div class="pricing-price">$299<span>/month</span></div>
-                    <ul class="pricing-features">
-                        <li>Everything in Business</li>
-                        <li>White Label</li>
-                        <li>Custom Domain</li>
-                        <li>Dynamic QR Codes</li>
-                        <li>Offline Sync</li>
-                        <li>Multiple Organizations</li>
-                        <li>SSO Integration</li>
-                        <li>24/7 Support</li>
-                    </ul>
-                    <a href="/register" class="btn-secondary" style="display:block;text-align:center;width:100%">Contact Sales</a>
+
+                <div class="preview-tiers">
+                    <div class="tier-teaser">
+                        <span class="teaser-lock-badge">🔒 Launching Soon</span>
+                        <h4>Starter Package</h4>
+                        <div class="teaser-price">$29<span>/month</span></div>
+                        <p>10 Events &bull; 2,000 Registrations</p>
+                    </div>
+                    <div class="tier-teaser featured">
+                        <span class="teaser-lock-badge gold">⭐ Most Popular</span>
+                        <h4>Business Package</h4>
+                        <div class="teaser-price">$99<span>/month</span></div>
+                        <p>Unlimited Events &bull; Multi-Gate Access</p>
+                    </div>
+                    <div class="tier-teaser">
+                        <span class="teaser-lock-badge">🔒 Launching Soon</span>
+                        <h4>Enterprise Package</h4>
+                        <div class="teaser-price">Custom</div>
+                        <p>White Label &bull; Dedicated Support</p>
+                    </div>
                 </div>
             </div>
         </section>

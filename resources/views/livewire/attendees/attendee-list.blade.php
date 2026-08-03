@@ -230,8 +230,8 @@
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <h4 class="font-extrabold text-slate-900 dark:text-white text-base">{{ $org->name ?? 'Organization Workspace' }}</h4>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase tracking-widest">
+                                        <h4 class="font-semibold text-slate-900 dark:text-white text-base">{{ $org->name ?? 'Organization Workspace' }}</h4>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase tracking-wider">
                                             ORG ID: {{ $org->id }}
                                         </span>
                                     </div>

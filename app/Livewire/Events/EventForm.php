@@ -276,7 +276,7 @@ class EventForm extends Component
         session()->forget('active_event_draft_uuid');
         session()->forget('active_event_draft_step');
 
-        return redirect()->route('events.index');
+        return $this->redirect(route('events.index'), navigate: true);
     }
 
     public function getIsSuperAdminProperty(): bool

@@ -138,9 +138,9 @@
                                             {{ strtoupper(substr($org->name ?? $user->name, 0, 2)) }}
                                         </div>
                                         <div>
-                                            <div class="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                                            <div class="font-semibold text-slate-900 dark:text-white text-base flex items-center gap-2">
                                                 {{ $org->name ?? 'Personal Workspace' }}
-                                                <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                                <span class="text-[10px] uppercase font-medium px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                                     Org ID: {{ $org->id ?? 1 }}
                                                 </span>
                                             </div>
@@ -156,20 +156,20 @@
                                             </span>
                                             @if($user->approved_at)
                                                 <span class="text-[10px] text-slate-400 font-medium ml-1">
-                                                    Approved {{ $user->approved_at->format('M j, Y') }}
+                                                    Approved {{ $user->approved_at->format('M j, Y g:i A') }}
                                                 </span>
                                             @endif
                                         </div>
-                                    @elseif($user->approval_status === 'suspended' || !$user->is_active)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-500/15 text-rose-500 border border-rose-500/30">
+                                    @elseif($user->approval_status === 'suspended')
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-500 border border-rose-500/30">
                                             <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                             Suspended
                                         </span>
                                     @else
                                         <div class="flex items-center gap-2">
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse">
                                                 <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                Pending Review
+                                                Awaiting Approval
                                             </span>
                                             <button type="button" wire:click="approveOrgAdmin({{ $user->id }})" class="p-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/30 rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center shrink-0" title="Approve & Activate Workspace">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>

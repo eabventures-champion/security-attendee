@@ -25,6 +25,10 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// VIP Pricing Waitlist Signup
+Route::post('/pricing-waitlist', [App\Http\Controllers\PricingWaitlistController::class, 'store'])
+    ->name('pricing.waitlist.store');
+
 // Public Events Catalogue (Public Invitations)
 Route::get('/public-events', PublicEventsList::class)->name('events.public.index');
 

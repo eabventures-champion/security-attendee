@@ -180,6 +180,14 @@ class Event extends Model
         return $this->checkIns()->successful()->count();
     }
 
+    public function getIsVenueCapacityReachedAttribute(): bool
+    {
+        if ($this->capacity === null || $this->capacity <= 0) {
+            return false;
+        }
+        return $this->checked_in_count >= $this->capacity;
+    }
+
     public function publish(): void
     {
         $this->update([

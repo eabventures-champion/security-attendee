@@ -204,64 +204,80 @@
     @endif
 
     <!-- Stat Cards Row (Dynamic Cols based on Role) -->
-    <div class="grid grid-cols-2 {{ $isSecurity ? 'lg:grid-cols-3' : 'lg:grid-cols-4' }} gap-3 sm:gap-6">
+    <div class="grid grid-cols-2 {{ $isSecurity ? 'lg:grid-cols-3' : ($isSuperAdmin ? 'xl:grid-cols-5 md:grid-cols-3' : 'lg:grid-cols-4') }} gap-3 sm:gap-4">
         @if(!$isSecurity)
             <!-- Total Events Card -->
-            <button type="button" wire:click="openBreakdown('events')" class="text-left w-full bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-blue-500/50 hover:ring-2 hover:ring-blue-500/20 rounded-2xl shadow-sm dark:shadow-2xl p-3.5 sm:p-6 flex items-center justify-between animate-fadeInUp cursor-pointer transition-all hover:-translate-y-0.5 group" style="animation-delay: 0.2s" title="Click to view Breakdown">
-                <div class="flex items-center">
-                    <div class="p-2.5 sm:p-4 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 mr-2.5 sm:mr-4 group-hover:scale-110 transition-transform shrink-0">
-                        <svg class="w-5 h-5 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <button type="button" wire:click="openBreakdown('events')" class="text-left w-full bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-blue-500/50 hover:ring-2 hover:ring-blue-500/20 rounded-2xl shadow-sm dark:shadow-2xl p-3 sm:p-4 flex items-center justify-between animate-fadeInUp cursor-pointer transition-all hover:-translate-y-0.5 group" style="animation-delay: 0.2s" title="Click to view Breakdown">
+                <div class="flex items-center min-w-0">
+                    <div class="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 mr-2.5 sm:mr-3 group-hover:scale-110 transition-transform shrink-0">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Total Events</p>
-                        <h3 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1" wire:key="stat-events">{{ $totalEvents }}</h3>
-                        <span class="text-[9px] sm:text-[10px] font-extrabold text-blue-500 dark:text-blue-400 group-hover:underline mt-0.5 sm:mt-1 block truncate">{{ $breakdownBtnLabel }}</span>
+                        <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Total Events</p>
+                        <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5" wire:key="stat-events">{{ $totalEvents }}</h3>
+                        <span class="text-[9px] sm:text-[10px] font-extrabold text-blue-500 dark:text-blue-400 group-hover:underline mt-0.5 block truncate">{{ $breakdownBtnLabel }}</span>
                     </div>
                 </div>
             </button>
         @endif
         
         <!-- Total Registrations Card -->
-        <button type="button" wire:click="openBreakdown('registrations')" class="text-left w-full bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-purple-500/50 hover:ring-2 hover:ring-purple-500/20 rounded-2xl shadow-sm dark:shadow-2xl p-3.5 sm:p-6 flex items-center justify-between animate-fadeInUp cursor-pointer transition-all hover:-translate-y-0.5 group" style="animation-delay: 0.3s" title="Click to view Breakdown">
-            <div class="flex items-center">
-                <div class="p-2.5 sm:p-4 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 mr-2.5 sm:mr-4 group-hover:scale-110 transition-transform shrink-0">
-                    <svg class="w-5 h-5 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+        <button type="button" wire:click="openBreakdown('registrations')" class="text-left w-full bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-purple-500/50 hover:ring-2 hover:ring-purple-500/20 rounded-2xl shadow-sm dark:shadow-2xl p-3 sm:p-4 flex items-center justify-between animate-fadeInUp cursor-pointer transition-all hover:-translate-y-0.5 group" style="animation-delay: 0.3s" title="Click to view Breakdown">
+            <div class="flex items-center min-w-0">
+                <div class="p-2 sm:p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 mr-2.5 sm:mr-3 group-hover:scale-110 transition-transform shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
                 <div class="min-w-0">
-                    <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Registrations</p>
-                    <h3 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">{{ $totalRegistrations }}</h3>
-                    <span class="text-[9px] sm:text-[10px] font-extrabold text-purple-500 dark:text-purple-400 group-hover:underline mt-0.5 sm:mt-1 block truncate">{{ $breakdownBtnLabel }}</span>
+                    <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Registrations</p>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ $totalRegistrations }}</h3>
+                    <span class="text-[9px] sm:text-[10px] font-extrabold text-purple-500 dark:text-purple-400 group-hover:underline mt-0.5 block truncate">{{ $breakdownBtnLabel }}</span>
                 </div>
             </div>
         </button>
 
         <!-- Verified Attendees Card -->
-        <button type="button" wire:click="openBreakdown('verified')" class="text-left w-full bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-emerald-500/50 hover:ring-2 hover:ring-emerald-500/20 rounded-2xl shadow-sm dark:shadow-2xl p-3.5 sm:p-6 flex items-center justify-between animate-fadeInUp cursor-pointer transition-all hover:-translate-y-0.5 group" style="animation-delay: 0.4s" title="Click to view Breakdown">
-            <div class="flex items-center">
-                <div class="p-2.5 sm:p-4 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mr-2.5 sm:mr-4 group-hover:scale-110 transition-transform shrink-0">
-                    <svg class="w-5 h-5 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <button type="button" wire:click="openBreakdown('verified')" class="text-left w-full bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-emerald-500/50 hover:ring-2 hover:ring-emerald-500/20 rounded-2xl shadow-sm dark:shadow-2xl p-3 sm:p-4 flex items-center justify-between animate-fadeInUp cursor-pointer transition-all hover:-translate-y-0.5 group" style="animation-delay: 0.4s" title="Click to view Breakdown">
+            <div class="flex items-center min-w-0">
+                <div class="p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mr-2.5 sm:mr-3 group-hover:scale-110 transition-transform shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div class="min-w-0">
-                    <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Verified</p>
-                    <h3 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">{{ $verifiedAttendees }}</h3>
-                    <span class="text-[9px] sm:text-[10px] font-extrabold text-emerald-500 dark:text-emerald-400 group-hover:underline mt-0.5 sm:mt-1 block truncate">{{ $breakdownBtnLabel }}</span>
+                    <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Verified</p>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ $verifiedAttendees }}</h3>
+                    <span class="text-[9px] sm:text-[10px] font-extrabold text-emerald-500 dark:text-emerald-400 group-hover:underline mt-0.5 block truncate">{{ $breakdownBtnLabel }}</span>
                 </div>
             </div>
         </button>
 
         <!-- Checked In Today Card -->
-        <button type="button" wire:click="openBreakdown('checked_in')" class="text-left w-full bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-amber-500/50 hover:ring-2 hover:ring-amber-500/20 rounded-2xl shadow-sm dark:shadow-2xl p-3.5 sm:p-6 flex items-center justify-between animate-fadeInUp cursor-pointer transition-all hover:-translate-y-0.5 group" style="animation-delay: 0.5s" title="Click to view Breakdown">
-            <div class="flex items-center">
-                <div class="p-2.5 sm:p-4 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 mr-2.5 sm:mr-4 group-hover:scale-110 transition-transform shrink-0">
-                    <svg class="w-5 h-5 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+        <button type="button" wire:click="openBreakdown('checked_in')" class="text-left w-full bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-amber-500/50 hover:ring-2 hover:ring-amber-500/20 rounded-2xl shadow-sm dark:shadow-2xl p-3 sm:p-4 flex items-center justify-between animate-fadeInUp cursor-pointer transition-all hover:-translate-y-0.5 group" style="animation-delay: 0.5s" title="Click to view Breakdown">
+            <div class="flex items-center min-w-0">
+                <div class="p-2 sm:p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 mr-2.5 sm:mr-3 group-hover:scale-110 transition-transform shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                 </div>
                 <div class="min-w-0">
-                    <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Checked In</p>
-                    <h3 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">{{ $checkedInToday }}</h3>
-                    <span class="text-[9px] sm:text-[10px] font-extrabold text-amber-500 dark:text-amber-400 group-hover:underline mt-0.5 sm:mt-1 block truncate">{{ $breakdownBtnLabel }}</span>
+                    <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Checked In</p>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ $checkedInToday }}</h3>
+                    <span class="text-[9px] sm:text-[10px] font-extrabold text-amber-500 dark:text-amber-400 group-hover:underline mt-0.5 block truncate">{{ $breakdownBtnLabel }}</span>
                 </div>
             </div>
         </button>
+
+        @if($isSuperAdmin)
+            <!-- VIP Pricing Waitlist Stat Card -->
+            <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/10 backdrop-blur-xl border border-amber-500/30 rounded-2xl shadow-sm dark:shadow-2xl p-3 sm:p-4 flex items-center justify-between animate-fadeInUp group" style="animation-delay: 0.55s">
+                <div class="flex items-center min-w-0">
+                    <div class="p-2 sm:p-2.5 rounded-xl bg-amber-500/20 text-amber-400 mr-2.5 sm:mr-3 group-hover:scale-110 transition-transform shrink-0 border border-amber-500/30">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] sm:text-[11px] font-bold text-amber-400 uppercase tracking-wider truncate">VIP Waitlist</p>
+                        <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ $pricingWaitlistCount }}</h3>
+                        <span class="text-[9px] sm:text-[10px] font-extrabold text-amber-400/90 mt-0.5 block truncate">Early Access Signups</span>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 
     <!-- Charts Section -->
@@ -421,6 +437,118 @@
         </div>
     @endif
 
+    @if($isSuperAdmin)
+        <!-- Super Admin VIP Pricing Waitlist Section -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl space-y-6 animate-fadeInUp">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-xl shrink-0">
+                        ⭐
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">VIP Pricing Waitlist</h2>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                {{ number_format($pricingWaitlistCount) }} Subscribers
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            Early access interest submissions from the landing page.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 flex-wrap">
+                    <div class="relative min-w-[200px]">
+                        <input type="text" 
+                               wire:model.live.debounce.300ms="waitlistSearch" 
+                               placeholder="Search subscriber email..." 
+                               class="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+
+                    <select wire:model.live="waitlistStatusFilter" class="px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold outline-none cursor-pointer">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="notified">Notified</option>
+                        <option value="converted">Converted</option>
+                    </select>
+
+                    <button type="button" wire:click="exportWaitlistCsv" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>Export CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Waitlist Subscribers Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px] tracking-wider bg-slate-50 dark:bg-slate-950/50">
+                            <th class="py-3 px-4">Subscriber Email</th>
+                            <th class="py-3 px-4">Date Joined</th>
+                            <th class="py-3 px-4">IP Address</th>
+                            <th class="py-3 px-4">Status</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        @forelse($pricingWaitlistSubscribers as $item)
+                            <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 font-black text-xs flex items-center justify-center border border-amber-500/30">
+                                        {{ strtoupper(substr($item->email, 0, 1)) }}
+                                    </div>
+                                    <span>{{ $item->email }}</span>
+                                </td>
+                                <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 font-medium">
+                                    {{ $item->created_at ? $item->created_at->format('M j, Y g:i A') : 'N/A' }}
+                                </td>
+                                <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                                    {{ $item->ip_address ?? '127.0.0.1' }}
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    @if($item->status === 'converted')
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">Converted</span>
+                                    @elseif($item->status === 'notified')
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase">Notified</span>
+                                    @else
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">Pending</span>
+                                    @endif
+                                </td>
+                                <td class="py-3.5 px-4 text-right space-x-1">
+                                    <button type="button" wire:click="openSendVipEmailModal({{ $item->id }})" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-extrabold border border-amber-500/30 transition-all cursor-pointer inline-flex items-center gap-1 shadow-sm">
+                                        ✉️ Send VIP Email
+                                    </button>
+                                    @if($item->status !== 'notified')
+                                        <button type="button" wire:click="updateWaitlistStatus({{ $item->id }}, 'notified')" class="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold border border-blue-500/20 transition-all cursor-pointer">
+                                            Mark Notified
+                                        </button>
+                                    @endif
+                                    @if($item->status !== 'converted')
+                                        <button type="button" wire:click="updateWaitlistStatus({{ $item->id }}, 'converted')" class="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/20 transition-all cursor-pointer">
+                                            Mark Converted
+                                        </button>
+                                    @endif
+                                    <button type="button" wire:click="deleteWaitlistEntry({{ $item->id }})" wire:confirm="Are you sure you want to remove this waitlist entry?" class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold border border-rose-500/20 transition-all cursor-pointer" title="Delete Entry">
+                                        ✕
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-slate-400 font-medium italic">
+                                    No VIP waitlist entries found. Submissions from the landing page will appear here!
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     <!-- Organization Admin Metric Breakdown Modal -->
     @if($showBreakdownModal)
         <div class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 pt-8 sm:pt-4 overflow-y-auto bg-slate-950/80 backdrop-blur-md animate-fadeInUp">
@@ -486,6 +614,65 @@
                         Close Breakdown
                     </button>
                 </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Send VIP Discount Email Modal -->
+    @if($showSendVipEmailModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeInUp">
+            <div class="bg-slate-900 border border-amber-500/30 rounded-3xl w-full max-w-xl shadow-2xl p-6 space-y-5 my-auto">
+                <div class="flex items-start justify-between border-b border-white/10 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                            ✉️
+                        </div>
+                        <div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-widest inline-block">
+                                DIRECT EMAIL DISPATCH
+                            </span>
+                            <h3 class="text-lg font-black text-white mt-1">Send VIP Early Access &amp; Promo Code</h3>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="closeSendVipEmailModal" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer">
+                        ✕
+                    </button>
+                </div>
+
+                <form wire:submit.prevent="sendVipEmail" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Recipient Email</label>
+                        <input type="email" wire:model="emailTargetAddress" readonly class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-xs font-mono font-bold outline-none cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Email Subject</label>
+                        <input type="text" wire:model="emailSubject" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">50% Off Promo Code</label>
+                        <input type="text" wire:model="emailPromoCode" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-400 text-sm font-mono font-black tracking-widest focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Custom Invitation Message</label>
+                        <textarea wire:model="emailCustomMessage" rows="4" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-normal focus:ring-2 focus:ring-amber-500 outline-none leading-relaxed" placeholder="Write custom note to subscriber..."></textarea>
+                    </div>
+
+                    <div class="pt-3 border-t border-white/10 flex items-center justify-end gap-3">
+                        <button type="button" wire:click="closeSendVipEmailModal" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer transition-all">
+                            Cancel
+                        </button>
+                        <button type="submit" wire:loading.attr="disabled" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                            <span wire:loading.remove>🚀 Dispatch Direct VIP Email</span>
+                            <span wire:loading class="flex items-center gap-1.5">
+                                <svg class="animate-spin w-4 h-4 text-slate-950" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                Sending Mail...
+                            </span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif

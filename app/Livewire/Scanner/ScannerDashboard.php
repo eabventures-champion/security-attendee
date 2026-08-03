@@ -141,6 +141,18 @@ class ScannerDashboard extends Component
             return;
         }
 
+        // 5.5 Check venue total capacity limit
+        if ($this->event->capacity && $this->event->capacity > 0) {
+            $currentCheckIns = CheckIn::where('event_id', $this->event->id)
+                ->where('scan_result', ScanResult::Granted)
+                ->count();
+
+            if ($currentCheckIns >= $this->event->capacity) {
+                $this->recordScanResult('denied', "Venue capacity limit reached ({$this->event->capacity} max). Entry denied.", $attendee);
+                return;
+            }
+        }
+
         // 6. Grant access
         $checkIn = CheckIn::create([
             'uuid' => (string) Str::uuid(),
@@ -170,6 +182,18 @@ class ScannerDashboard extends Component
         if ($alreadyCheckedIn) {
             $this->recordScanResult('warning', 'Attendee already checked in.', $attendee);
             return;
+        }
+
+        // Check venue total capacity limit
+        if ($this->event->capacity && $this->event->capacity > 0) {
+            $currentCheckIns = CheckIn::where('event_id', $this->event->id)
+                ->where('scan_result', ScanResult::Granted)
+                ->count();
+
+            if ($currentCheckIns >= $this->event->capacity) {
+                $this->recordScanResult('denied', "Venue capacity limit reached ({$this->event->capacity} max). Manual entry denied.", $attendee);
+                return;
+            }
         }
 
         CheckIn::create([

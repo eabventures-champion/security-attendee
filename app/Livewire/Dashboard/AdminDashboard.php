@@ -25,12 +25,22 @@ class AdminDashboard extends Component
     public int $rejectedCount = 0;
     public int $checkedInToday = 0;
     public float $attendancePercentage = 0;
+    public int $pricingWaitlistCount = 0;
+    public string $waitlistSearch = '';
+    public string $waitlistStatusFilter = 'all';
 
     public bool $showBreakdownModal = false;
     public string $breakdownMetric = '';
     public string $breakdownTitle = '';
     public array $breakdownData = [];
     public bool $showWelcomeGuide = true;
+
+    public bool $showSendVipEmailModal = false;
+    public ?int $targetWaitlistId = null;
+    public string $emailTargetAddress = '';
+    public string $emailSubject = '🎉 Your AttendFlow VIP Early Access & 50% Off Promo Code!';
+    public string $emailPromoCode = 'ATTENDFLOW50VIP';
+    public string $emailCustomMessage = '';
 
     public function toggleWelcomeGuide(): void
     {
@@ -164,6 +174,152 @@ class AdminDashboard extends Component
         $this->attendancePercentage = $this->totalRegistrations > 0
             ? round(($this->verifiedAttendees / $this->totalRegistrations) * 100, 1)
             : 0;
+
+        $this->pricingWaitlistCount = \App\Models\PricingWaitlist::count();
+    }
+
+    #[Computed]
+    public function pricingWaitlistSubscribers()
+    {
+        $user = auth()->user();
+        $isSuperAdmin = $user->hasRole('super_admin') || $user->email === 'superadmin@attendflow.com';
+
+        if (!$isSuperAdmin) {
+            return collect();
+        }
+
+        $query = \App\Models\PricingWaitlist::query();
+
+        if (!empty($this->waitlistSearch)) {
+            $query->where('email', 'like', '%' . trim($this->waitlistSearch) . '%');
+        }
+
+        if ($this->waitlistStatusFilter !== 'all') {
+            $query->where('status', $this->waitlistStatusFilter);
+        }
+
+        return $query->latest()->take(50)->get();
+    }
+
+    public function updateWaitlistStatus(int $id, string $status): void
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('super_admin') && $user->email !== 'superadmin@attendflow.com') {
+            return;
+        }
+
+        $entry = \App\Models\PricingWaitlist::find($id);
+        if ($entry) {
+            $entry->update(['status' => $status]);
+            session()->flash('stats_refreshed', 'Waitlist status updated successfully!');
+        }
+    }
+
+    public function deleteWaitlistEntry(int $id): void
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('super_admin') && $user->email !== 'superadmin@attendflow.com') {
+            return;
+        }
+
+        $entry = \App\Models\PricingWaitlist::find($id);
+        if ($entry) {
+            $entry->delete();
+            $this->loadStats();
+            session()->flash('stats_refreshed', 'Waitlist entry deleted.');
+        }
+    }
+
+    public function exportWaitlistCsv()
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('super_admin') && $user->email !== 'superadmin@attendflow.com') {
+            return null;
+        }
+
+        $filename = 'vip-pricing-waitlist-' . now()->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID', 'Email', 'IP Address', 'Status', 'Submitted At']);
+
+            \App\Models\PricingWaitlist::latest()->chunk(200, function ($rows) use ($handle) {
+                foreach ($rows as $row) {
+                    fputcsv($handle, [
+                        $row->id,
+                        $row->email,
+                        $row->ip_address ?? 'N/A',
+                        ucfirst($row->status),
+                        $row->created_at ? $row->created_at->format('Y-m-d H:i:s') : 'N/A',
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    public function openSendVipEmailModal(int $id): void
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('super_admin') && $user->email !== 'superadmin@attendflow.com') {
+            return;
+        }
+
+        $entry = \App\Models\PricingWaitlist::find($id);
+        if ($entry) {
+            $this->targetWaitlistId = $entry->id;
+            $this->emailTargetAddress = $entry->email;
+            $this->emailSubject = '🎉 Your AttendFlow VIP Early Access & 50% Off Promo Code!';
+            $this->emailPromoCode = 'ATTENDFLOW50VIP';
+            $this->emailCustomMessage = 'Thank you for joining the AttendFlow VIP Early Access waitlist! We are excited to announce that our premium event attendance management platform and subscription packages are now officially open.';
+            $this->showSendVipEmailModal = true;
+        }
+    }
+
+    public function closeSendVipEmailModal(): void
+    {
+        $this->showSendVipEmailModal = false;
+        $this->targetWaitlistId = null;
+        $this->emailTargetAddress = '';
+    }
+
+    public function sendVipEmail(): void
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('super_admin') && $user->email !== 'superadmin@attendflow.com') {
+            return;
+        }
+
+        if (!$this->emailTargetAddress) {
+            return;
+        }
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($this->emailTargetAddress)->send(
+                new \App\Mail\VipWaitlistDiscountNotification(
+                    subscriberEmail: $this->emailTargetAddress,
+                    promoCode: $this->emailPromoCode ?: 'ATTENDFLOW50VIP',
+                    customMessage: $this->emailCustomMessage,
+                    subjectText: $this->emailSubject
+                )
+            );
+
+            if ($this->targetWaitlistId) {
+                $entry = \App\Models\PricingWaitlist::find($this->targetWaitlistId);
+                if ($entry) {
+                    $entry->update(['status' => 'notified']);
+                }
+            }
+
+            $this->closeSendVipEmailModal();
+            $this->loadStats();
+            session()->flash('stats_refreshed', '🎉 VIP Early Access email & 50% promo code sent to ' . $this->emailTargetAddress . '!');
+        } catch (\Throwable $e) {
+            session()->flash('stats_refreshed', '❌ Error sending email: ' . $e->getMessage());
+        }
     }
 
     #[Computed]
@@ -225,6 +381,8 @@ class AdminDashboard extends Component
             'rejectedCount' => $this->rejectedCount,
             'checkedInToday' => $this->checkedInToday,
             'attendancePercentage' => $this->attendancePercentage,
+            'pricingWaitlistCount' => $this->pricingWaitlistCount,
+            'pricingWaitlistSubscribers' => $this->pricingWaitlistSubscribers,
             'showBreakdownModal' => $this->showBreakdownModal,
             'breakdownMetric' => $this->breakdownMetric,
             'breakdownTitle' => $this->breakdownTitle,
