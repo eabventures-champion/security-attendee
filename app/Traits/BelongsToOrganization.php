@@ -11,8 +11,14 @@ trait BelongsToOrganization
     public static function bootBelongsToOrganization(): void
     {
         static::addGlobalScope('organization', function (Builder $builder) {
-            if (auth()->check() && session()->has('current_organization_id')) {
-                $builder->where($builder->getModel()->getTable() . '.organization_id', session('current_organization_id'));
+            if (auth()->check()) {
+                $user = auth()->user();
+                if ($user && $user->isSuperAdmin()) {
+                    return;
+                }
+                if (session()->has('current_organization_id')) {
+                    $builder->where($builder->getModel()->getTable() . '.organization_id', session('current_organization_id'));
+                }
             }
         });
 
