@@ -81,10 +81,10 @@ class AdminDashboard extends Component
                     $val = Event::where('organization_id', $org->id)->count();
                 } elseif ($metric === 'registrations') {
                     $this->breakdownTitle = 'Total Registrations Breakdown by Organization Admin';
-                    $val = Attendee::where('organization_id', $org->id)->count();
+                    $val = Attendee::whereHas('event')->where('organization_id', $org->id)->count();
                 } elseif ($metric === 'verified') {
                     $this->breakdownTitle = 'Verified Attendees Breakdown by Organization Admin';
-                    $val = Attendee::where('organization_id', $org->id)
+                    $val = Attendee::whereHas('event')->where('organization_id', $org->id)
                         ->where('verification_status', VerificationStatus::Verified)
                         ->count();
                 } elseif ($metric === 'checked_in') {
@@ -112,13 +112,13 @@ class AdminDashboard extends Component
                 $val = 0;
                 if ($metric === 'events') {
                     $this->breakdownTitle = 'Workspace Events Overview';
-                    $val = Attendee::where('event_id', $event->id)->count();
+                    $val = Attendee::whereHas('event')->where('event_id', $event->id)->count();
                 } elseif ($metric === 'registrations') {
                     $this->breakdownTitle = 'Total Registrations Breakdown by Event';
-                    $val = Attendee::where('event_id', $event->id)->count();
+                    $val = Attendee::whereHas('event')->where('event_id', $event->id)->count();
                 } elseif ($metric === 'verified') {
                     $this->breakdownTitle = 'Verified Attendees Breakdown by Event';
-                    $val = Attendee::where('event_id', $event->id)
+                    $val = Attendee::whereHas('event')->where('event_id', $event->id)
                         ->where('verification_status', VerificationStatus::Verified)
                         ->count();
                 } elseif ($metric === 'checked_in') {
@@ -161,7 +161,7 @@ class AdminDashboard extends Component
         $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
 
         $eventQuery = Event::query();
-        $attendeeQuery = Attendee::query();
+        $attendeeQuery = Attendee::whereHas('event');
         $checkInQuery = CheckIn::where('scan_result', ScanResult::Granted)->whereDate('scanned_at', Carbon::today());
 
         if (!$isSuperAdmin && $user->organization_id) {
@@ -356,7 +356,7 @@ class AdminDashboard extends Component
         $labels = collect(range(0, 14))->map(fn ($day) => now()->subDays(14 - $day)->format('M d'));
         $data = collect(range(0, 14))->map(function ($day) use ($user, $isSuperAdmin) {
             $date = now()->subDays(14 - $day)->toDateString();
-            $q = Attendee::whereDate('created_at', $date);
+            $q = Attendee::whereHas('event')->whereDate('created_at', $date);
             if (!$isSuperAdmin && $user->organization_id) {
                 $q->where('organization_id', $user->organization_id);
             }
