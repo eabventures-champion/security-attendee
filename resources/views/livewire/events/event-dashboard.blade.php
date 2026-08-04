@@ -235,16 +235,21 @@
                         </div>
                     </div>
 
-                    <!-- Single-Use Secure Token Invitation Card -->
-                    <div class="md:col-span-2 p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 space-y-4" x-data="{ copied: false, activeCat: 'get_details' }">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-amber-500/20 pb-3">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                <span class="text-xs font-black text-amber-400 uppercase tracking-wider">Single-Use Token Invitation Links</span>
+                    <!-- Single-Use Secure Token Invitation Card (Unified Single & Batch Dispatcher) -->
+                    <div class="md:col-span-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-950/20 via-slate-900/90 to-amber-950/30 backdrop-blur-xl shadow-2xl space-y-5" x-data="{ copied: false, activeCat: 'get_details', batchCopied: false }">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-amber-500/20 pb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/10">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm sm:text-base font-black text-amber-400 uppercase tracking-wider">Single-Use Token Invitation Links</h3>
+                                    <p class="text-[11px] text-slate-400 font-medium">Generate 1-time single-use passes for 1 guest or batch dispatch to multiple contacts</p>
+                                </div>
                             </div>
                             
                             <!-- Category Filter Tabs -->
-                            <div class="flex items-center bg-slate-900/80 p-1 rounded-xl border border-amber-500/30">
+                            <div class="flex items-center bg-slate-950/80 p-1 rounded-xl border border-amber-500/30 self-start md:self-auto">
                                 <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-amber-500 text-slate-950 font-black' : 'text-amber-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
                                     📋 Category 1: GET DETAILS
                                 </button>
@@ -254,6 +259,22 @@
                             </div>
                         </div>
 
+                        <!-- Quantity Selector Bar -->
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-950/60 p-3.5 rounded-2xl border border-white/5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Pass Quantity:</span>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" wire:model.live="tokenQuantity" min="1" max="50" class="w-20 bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-1.5 text-xs text-amber-300 font-extrabold text-center focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all">
+                                    <span class="text-[11px] text-slate-400 font-medium">
+                                        ({{ $tokenQuantity > 1 ? $tokenQuantity . ' Passes (Batch Sharing)' : '1 Pass (Single Sharing)' }})
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border {{ $tokenQuantity > 1 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-blue-500/20 text-blue-300 border-blue-500/40' }}">
+                                {{ $tokenQuantity > 1 ? '👥 Batch Dispatch Mode' : '👤 Single Pass Mode' }}
+                            </span>
+                        </div>
+
                         <!-- Category 1: GET DETAILS Description & Generators -->
                         <div x-show="activeCat === 'get_details'" class="space-y-3">
                             <p class="text-xs text-slate-300 font-medium leading-relaxed">
@@ -261,11 +282,11 @@
                             </p>
                             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
                                 <button wire:click="generateSingleUseToken('vvip', false)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
-                                    <span>👑 Generate 1-Time VVIP Link</span>
+                                    <span>👑 Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' VVIP Links' : '1-Time VVIP Link' }}</span>
                                     <span class="text-[9px] bg-black/20 px-1.5 py-0.5 rounded uppercase">(Get Details)</span>
                                 </button>
                                 <button wire:click="generateSingleUseToken('general_admission', false)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
-                                    <span>🎫 Generate 1-Time General Link</span>
+                                    <span>🎫 Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' General Links' : '1-Time General Link' }}</span>
                                     <span class="text-[9px] bg-black/20 px-1.5 py-0.5 rounded uppercase">(Get Details)</span>
                                 </button>
                             </div>
@@ -278,16 +299,17 @@
                             </p>
                             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
                                 <button wire:click="generateSingleUseToken('vvip', true)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
-                                    <span>⚡ Generate 1-Time VVIP Pass</span>
+                                    <span>⚡ Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' VVIP Passes' : '1-Time VVIP Pass' }}</span>
                                     <span class="text-[9px] bg-black/30 px-1.5 py-0.5 rounded uppercase font-black text-amber-200">(No Details)</span>
                                 </button>
                                 <button wire:click="generateSingleUseToken('general_admission', true)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
-                                    <span>⚡ Generate 1-Time General Pass</span>
+                                    <span>⚡ Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' General Passes' : '1-Time General Pass' }}</span>
                                     <span class="text-[9px] bg-black/30 px-1.5 py-0.5 rounded uppercase font-black text-slate-400">(No Details)</span>
                                 </button>
                             </div>
                         </div>
 
+                        <!-- SINGLE LINK OUTPUT VIEW (When Quantity = 1) -->
                         @if($generatedTokenLink)
                             <div class="pt-3 border-t border-amber-500/20 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fadeIn">
                                 <div class="shrink-0 text-[10px] font-black uppercase px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
@@ -306,105 +328,45 @@
                                 </a>
                             </div>
                         @endif
-                    </div>
 
-                    <!-- BATCH BULK WHATSAPP LINK DISPATCHER (FOR MANY PEOPLE) -->
-                    <div class="md:col-span-2 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-teal-950/40 backdrop-blur-xl shadow-2xl space-y-5" x-data="{ batchCopied: false }">
-                        
-                        <!-- Header Section -->
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-emerald-500/20 pb-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/10">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm sm:text-base font-black text-white tracking-wide">Batch WhatsApp Link Dispatcher</h3>
-                                    <p class="text-[11px] text-slate-400 font-medium">Generate &amp; send individual 1-time single-use links to multiple guests via WhatsApp</p>
-                                </div>
-                            </div>
-                            <span class="self-start md:self-auto text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full uppercase tracking-wider shrink-0">
-                                🛡️ Single-Use Protection
-                            </span>
-                        </div>
-
-                        <!-- Config Controls Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 items-end bg-slate-950/60 p-4 rounded-2xl border border-white/5">
-                            <div>
-                                <label class="block text-[10px] font-extrabold text-slate-300 uppercase tracking-wider mb-1.5">Quantity (Links)</label>
-                                <input type="number" wire:model.live="batchQuantity" min="1" max="50" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-extrabold text-slate-300 uppercase tracking-wider mb-1.5">Pass Category</label>
-                                <select wire:model.live="batchCategory" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all">
-                                    <option value="no_details">⚡ Category 2: NO DETAILS (Direct Pass)</option>
-                                    <option value="get_details">📋 Category 1: GET DETAILS (RSVP Form)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-extrabold text-slate-300 uppercase tracking-wider mb-1.5">Access Role</label>
-                                <select wire:model.live="batchRole" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all">
-                                    <option value="vvip">👑 VVIP Pass</option>
-                                    <option value="general_admission">🎫 General Admission</option>
-                                </select>
-                            </div>
-                            <div>
-                                <button wire:click="generateBatchTokens" type="button" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95">
-                                    <svg class="w-4 h-4 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                    <span>Generate {{ $batchQuantity }} Links</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Multi-Contact WhatsApp Dispatch Card -->
-                        @if(count($batchLinks) > 0)
-                            <div class="pt-4 border-t border-emerald-500/20 space-y-4 animate-fadeIn">
-                                <div class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-950/90 via-slate-950 to-teal-950/90 border border-emerald-500/50 shadow-2xl space-y-3.5">
-                                    
-                                    <!-- Header Row (Single neat flex line on mobile) -->
+                        <!-- BATCH LINKS OUTPUT VIEW (When Quantity > 1) -->
+                        @if(!empty($batchLinks) && count($batchLinks) > 0)
+                            <div class="pt-4 border-t border-emerald-500/30 space-y-4 animate-fadeIn">
+                                <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-950/90 via-slate-950 to-teal-950/90 border border-emerald-500/50 shadow-2xl space-y-3.5">
                                     <div class="flex items-center justify-between gap-2 border-b border-emerald-500/20 pb-3">
                                         <div class="flex items-center gap-2.5 min-w-0">
-                                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-md">
-                                                <svg class="w-4 h-4 sm:w-5 sm:h-5 fill-current text-emerald-400" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                                                <svg class="w-4 h-4 fill-current text-emerald-400" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                                             </div>
                                             <div class="min-w-0">
-                                                <h4 class="text-xs sm:text-sm font-extrabold text-white tracking-wide truncate">WhatsApp Dispatch Ready</h4>
-                                                <p class="text-[10px] sm:text-xs text-emerald-300/80 font-medium truncate">{{ count($batchLinks) }} Unique Passes</p>
+                                                <h4 class="text-xs font-extrabold text-white tracking-wide truncate">Batch WhatsApp Dispatch Ready</h4>
+                                                <p class="text-[10px] text-emerald-300/80 font-medium truncate">{{ count($batchLinks) }} Unique Single-Use Passes</p>
                                             </div>
                                         </div>
                                         
-                                        <div class="flex items-center gap-1.5 shrink-0">
-                                            <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
-                                                ✓ {{ count($batchLinks) }} Generated
-                                            </span>
-                                            <button type="button" wire:click="clearBatchLinks" class="p-1 rounded-lg text-rose-400 hover:text-rose-300 transition-colors cursor-pointer" title="Clear Batch">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            </button>
-                                        </div>
+                                        <button type="button" wire:click="clearBatchLinks" class="p-1 rounded-lg text-rose-400 hover:text-rose-300 transition-colors cursor-pointer" title="Clear Batch">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
                                     </div>
 
-                                    <p class="text-[11px] sm:text-xs text-slate-300 font-medium leading-relaxed">
-                                        Opens WhatsApp with all <strong class="text-white font-bold">{{ count($batchLinks) }} unique 1-time pass links</strong> pre-loaded. Select your contacts or group to send in 1 click!
-                                    </p>
-
-                                    <!-- Action Buttons Grid (Full width & clean text on Mobile) -->
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                                        <button type="button" @click="navigator.clipboard.writeText(`{{ $batchBulkMessageText }}`); batchCopied = true; setTimeout(() => batchCopied = false, 2000)" class="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-extrabold uppercase tracking-wider border border-emerald-500/40 shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
-                                            <span x-show="!batchCopied">📋 Copy All {{ count($batchLinks) }} Passes (Bulk)</span>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                        <button type="button" @click="navigator.clipboard.writeText(`{{ $batchBulkMessageText }}`); batchCopied = true; setTimeout(() => batchCopied = false, 2000)" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-extrabold uppercase tracking-wider border border-emerald-500/40 shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <span x-show="!batchCopied">📋 Copy All {{ count($batchLinks) }} Passes</span>
                                             <span x-show="batchCopied" x-cloak class="text-emerald-400">Copied All! ✓</span>
                                         </button>
 
-                                        <a href="{{ $batchWhatsappBulkUrl }}" target="_blank" class="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95">
+                                        <a href="{{ $batchWhatsappBulkUrl }}" target="_blank" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-1.5 cursor-pointer transition-all">
                                             <svg class="w-4 h-4 fill-current text-white shrink-0" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                                             <span>💬 Share All in 1 Message</span>
                                         </a>
                                     </div>
 
                                     <!-- Individual Pass Links Section (Send 1-by-1 to Separate Contacts) -->
-                                    <div class="pt-4 border-t border-emerald-500/20 space-y-3" x-data="{ showIndividual: true }">
+                                    <div class="pt-3 border-t border-emerald-500/20 space-y-2.5" x-data="{ showIndividual: true }">
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
                                                 <span>📲</span>
-                                                <span>Send Links Individually (1-by-1 to 5 Contacts)</span>
+                                                <span>Send Links Individually (1-by-1 to {{ count($batchLinks) }} Contacts)</span>
                                             </span>
                                             <button type="button" @click="showIndividual = !showIndividual" class="text-[10px] text-emerald-400 hover:text-emerald-300 underline font-bold cursor-pointer">
                                                 <span x-show="!showIndividual">Show List ▼</span>
@@ -413,9 +375,9 @@
                                         </div>
                                         <p class="text-[11px] text-slate-400 font-medium">To send each contact <strong>only their own 1 link</strong> (without seeing other guests' links), click <strong>"Send to Contact"</strong> next to each pass line one at a time:</p>
 
-                                        <div x-show="showIndividual" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                                        <div x-show="showIndividual" class="space-y-2 max-h-64 overflow-y-auto pr-1">
                                             @foreach($batchLinks as $bLink)
-                                                <div class="p-3 rounded-xl bg-slate-900/90 border border-emerald-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2" x-data="{ copiedItem: false }">
+                                                <div class="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2" x-data="{ copiedItem: false }">
                                                     <div class="flex items-center gap-2 min-w-0">
                                                         <span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
                                                             Pass #{{ $bLink['id'] }}

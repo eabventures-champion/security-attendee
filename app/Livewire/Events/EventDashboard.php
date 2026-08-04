@@ -72,42 +72,54 @@ class EventDashboard extends Component
     public int $batchQuantity = 5;
     public string $batchCategory = 'no_details';
     public string $batchRole = 'vvip';
+    public int $tokenQuantity = 1;
 
     public function generateSingleUseToken($role = 'vvip', $noDetails = false)
     {
-        $token = 'inv_' . \Illuminate\Support\Str::random(16);
+        $qty = min(max((int)$this->tokenQuantity, 1), 50);
 
-        \App\Models\EventInvitation::create([
-            'uuid' => (string) \Illuminate\Support\Str::uuid(),
-            'event_id' => $this->event->id,
-            'token' => $token,
-            'access_role' => $role,
-            'no_details' => (bool) $noDetails,
-            'max_uses' => 1,
-            'use_count' => 0,
-            'created_by' => auth()->id(),
-        ]);
+        if ($qty === 1) {
+            $token = 'inv_' . \Illuminate\Support\Str::random(16);
 
-        $params = [
-            'event_slug' => $this->event->slug,
-            'token' => $token
-        ];
-        if ($noDetails) {
-            $params['no_details'] = 1;
+            \App\Models\EventInvitation::create([
+                'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'event_id' => $this->event->id,
+                'token' => $token,
+                'access_role' => $role,
+                'no_details' => (bool) $noDetails,
+                'max_uses' => 1,
+                'use_count' => 0,
+                'created_by' => auth()->id(),
+            ]);
+
+            $params = [
+                'event_slug' => $this->event->slug,
+                'token' => $token
+            ];
+            if ($noDetails) {
+                $params['no_details'] = 1;
+            }
+
+            $this->generatedTokenLink = route('events.public.invite', $params);
+            $this->generatedTokenType = ($role === 'vvip' ? 'VVIP' : 'GENERAL') . ' • ' . ($noDetails ? 'NO DETAILS (Direct Pass)' : 'GET DETAILS (Form)');
+
+            // Formulate WhatsApp share message
+            $waMessage = "🎉 You're invited to *" . $this->event->name . "*!\n\n" .
+                         "📅 Date: " . ($this->event->starts_at ? $this->event->starts_at->format('M j, Y g:i A') : 'TBD') . "\n" .
+                         "📍 Venue: " . ($this->event->venue_name ?: 'Main Entry Checkpoint') . "\n\n" .
+                         "🎟️ Claim & Download your digital pass here:\n" . $this->generatedTokenLink . "\n\n" .
+                         "⚠️ Note: This invitation pass link is strictly 1-time single-use valid.";
+            $this->generatedTokenWhatsappUrl = "https://api.whatsapp.com/send?text=" . urlencode($waMessage);
+            $this->batchLinks = [];
+
+            session()->flash('success', '1-time single-use invitation link generated!');
+        } else {
+            $this->batchQuantity = $qty;
+            $this->batchCategory = $noDetails ? 'no_details' : 'get_details';
+            $this->batchRole = $role;
+            $this->generateBatchTokens();
+            $this->generatedTokenLink = '';
         }
-
-        $this->generatedTokenLink = route('events.public.invite', $params);
-        $this->generatedTokenType = $noDetails ? 'NO DETAILS (Direct Pass)' : 'GET DETAILS (Interactive Form)';
-
-        // Formulate WhatsApp share message
-        $waMessage = "🎉 You're invited to *" . $this->event->name . "*!\n\n" .
-                     "📅 Date: " . ($this->event->starts_at ? $this->event->starts_at->format('M j, Y g:i A') : 'TBD') . "\n" .
-                     "📍 Venue: " . ($this->event->venue_name ?: 'Main Entry Checkpoint') . "\n\n" .
-                     "🎟️ Claim & Download your digital pass here:\n" . $this->generatedTokenLink . "\n\n" .
-                     "⚠️ Note: This invitation pass link is strictly 1-time single-use valid.";
-        $this->generatedTokenWhatsappUrl = "https://api.whatsapp.com/send?text=" . urlencode($waMessage);
-
-        session()->flash('success', ($noDetails ? 'Direct Pass (NO DETAILS)' : 'Interactive Form (GET DETAILS)') . ' 1-time invitation link generated!');
     }
 
     public string $batchWhatsappBulkUrl = '';
