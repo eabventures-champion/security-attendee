@@ -33,7 +33,7 @@ class AdminDashboard extends Component
     public string $breakdownMetric = '';
     public string $breakdownTitle = '';
     public array $breakdownData = [];
-    public bool $showWelcomeGuide = true;
+    public bool $showWelcomeGuide = false;
 
     public bool $showSendVipEmailModal = false;
     public ?int $targetWaitlistId = null;
@@ -45,13 +45,13 @@ class AdminDashboard extends Component
     public function toggleWelcomeGuide(): void
     {
         $this->showWelcomeGuide = !$this->showWelcomeGuide;
-        session(['hide_workspace_guide' => !$this->showWelcomeGuide]);
+        session(['show_workspace_guide' => $this->showWelcomeGuide]);
     }
 
     public function closeWelcomeGuide(): void
     {
         $this->showWelcomeGuide = false;
-        session(['hide_workspace_guide' => true]);
+        session(['show_workspace_guide' => false]);
     }
 
     public function openBreakdown(string $metric): void
@@ -151,7 +151,7 @@ class AdminDashboard extends Component
 
     public function mount(): void
     {
-        $this->showWelcomeGuide = !session('hide_workspace_guide', false);
+        $this->showWelcomeGuide = session('show_workspace_guide', false);
         $this->loadStats();
     }
 

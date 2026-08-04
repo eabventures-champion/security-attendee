@@ -25,6 +25,7 @@ class AttendeeList extends Component
     public $search = '';
     public $statusFilter = '';
     public $roleFilter = '';
+    public $categoryFilter = '';
     public array $expandedOrgs = [];
     public array $expandedEvents = [];
     public bool $groupedView = true;
@@ -115,20 +116,24 @@ class AttendeeList extends Component
     // Secure Single-Use Link Generator fields
     public bool $showLinkGeneratorModal = false;
     public string $gen_access_role = 'vvip';
+    public string $gen_category = 'details'; // 'details', 'no_details'
     public string $gen_email = '';
     public int $gen_max_uses = 1;
     public string $generated_invite_url = '';
+    public string $generated_whatsapp_url = '';
 
     public function openLinkGeneratorModal()
     {
         $this->showLinkGeneratorModal = true;
         $this->generated_invite_url = '';
+        $this->generated_whatsapp_url = '';
     }
 
     public function closeLinkGeneratorModal()
     {
         $this->showLinkGeneratorModal = false;
         $this->generated_invite_url = '';
+        $this->generated_whatsapp_url = '';
         $this->gen_email = '';
     }
 
@@ -145,6 +150,7 @@ class AttendeeList extends Component
         }
 
         $token = 'inv_' . \Illuminate\Support\Str::random(16);
+        $isNoDetails = ($this->gen_category === 'no_details');
 
         \App\Models\EventInvitation::create([
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
@@ -152,12 +158,23 @@ class AttendeeList extends Component
             'email' => $this->gen_email ? trim($this->gen_email) : null,
             'token' => $token,
             'access_role' => $this->gen_access_role,
+            'no_details' => $isNoDetails,
             'max_uses' => $this->gen_max_uses ?: 1,
             'use_count' => 0,
             'created_by' => auth()->id(),
         ]);
 
-        $this->generated_invite_url = route('events.public.invite', ['event_slug' => $event->slug, 'token' => $token]);
+        $params = ['event_slug' => $event->slug, 'token' => $token];
+        if ($isNoDetails) {
+            $params['no_details'] = 1;
+        }
+
+        $this->generated_invite_url = route('events.public.invite', $params);
+
+        $roleLabel = strtoupper(str_replace('_', ' ', $this->gen_access_role));
+        $shareMsg = "🎉 You are invited to *" . $event->name . "*!\n\n🎟️ Access Role: " . $roleLabel . "\n\n🔗 Claim your digital entry pass here:\n" . $this->generated_invite_url;
+        $this->generated_whatsapp_url = 'https://api.whatsapp.com/send?text=' . urlencode($shareMsg);
+
         session()->flash('message', 'Secure single-use invitation link generated!');
     }
 
@@ -686,6 +703,18 @@ class AttendeeList extends Component
 
         if ($this->roleFilter) {
             $query->where('access_role', $this->roleFilter);
+        }
+
+        if ($this->categoryFilter === 'no_details') {
+            $query->where(function($q) {
+                $q->where('email', 'like', '%@attendflow.pass')
+                  ->orWhere('phone', 'like', '000%')
+                  ->orWhere('full_name', 'like', '%Guest Pass%');
+            });
+        } elseif ($this->categoryFilter === 'details') {
+            $query->where('email', 'not like', '%@attendflow.pass')
+                  ->where('phone', 'not like', '000%')
+                  ->where('full_name', 'not like', '%Guest Pass%');
         }
 
         $attendees = $query->latest()->paginate($this->perPage);

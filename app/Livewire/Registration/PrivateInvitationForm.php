@@ -58,6 +58,11 @@ class PrivateInvitationForm extends Component
 
         $this->isVip = request()->boolean('vip');
         $noDetailsParam = request()->boolean('no_details');
+        $eventDefaultNoDetails = (isset($this->event->settings['default_entry_mode']) && $this->event->settings['default_entry_mode'] === 'no_details');
+
+        if ($eventDefaultNoDetails || $noDetailsParam) {
+            $this->isNoDetailsMode = true;
+        }
 
         // Check for secure single-use invitation token
         $tokenString = request()->query('token');
@@ -68,7 +73,7 @@ class PrivateInvitationForm extends Component
 
             if ($inv) {
                 $this->invitationTokenObj = $inv;
-                if ($inv->no_details || $noDetailsParam) {
+                if ($inv->no_details || $noDetailsParam || $eventDefaultNoDetails) {
                     $this->isNoDetailsMode = true;
                 }
 
@@ -82,7 +87,7 @@ class PrivateInvitationForm extends Component
                     }
                 } else {
                     $this->isTokenConsumed = true;
-                    if ($inv->no_details || $noDetailsParam) {
+                    if ($inv->no_details || $noDetailsParam || $eventDefaultNoDetails) {
                         $this->tokenNotice = "⛔ Access Denied: This single-use invitation pass has already been claimed and downloaded. Each invitation link is strictly 1-time valid.";
                     } else {
                         $emailLockInfo = $inv->email ? " by {$inv->email}" : "";
@@ -93,8 +98,9 @@ class PrivateInvitationForm extends Component
                 $this->isTokenConsumed = true;
                 $this->tokenNotice = 'Invalid invitation link token. Access denied.';
             }
-        } elseif ($noDetailsParam) {
-            $this->isNoDetailsMode = true;
+        } else {
+            // Public invitation (No token required)
+            $this->hasValidToken = true;
         }
     }
 
@@ -253,10 +259,18 @@ class PrivateInvitationForm extends Component
         // If valid single-use token, consume it and issue QR pass
         if ($this->invitationTokenObj && $this->hasValidToken) {
             $this->invitationTokenObj->increment('use_count');
-            $this->invitationTokenObj->update([
-                'used_at' => now(),
-                'email' => $this->email, // Automatically locks token to registrant's email
-            ]);
+            $this->invitationTokenObj->refresh();
+
+            $updateData = ['used_at' => now()];
+            if ($this->invitationTokenObj->max_uses == 1) {
+                $updateData['email'] = $this->email;
+            }
+            $this->invitationTokenObj->update($updateData);
+
+            if ($this->invitationTokenObj->use_count >= $this->invitationTokenObj->max_uses) {
+                $this->hasValidToken = false;
+                $this->isTokenConsumed = true;
+            }
 
             // Generate QrCode for verified attendee
             $qrCode = QrCode::where('attendee_id', $attendee->id)->first();
@@ -350,12 +364,18 @@ class PrivateInvitationForm extends Component
         // Consume Single-Use Token immediately
         if ($this->invitationTokenObj) {
             $this->invitationTokenObj->increment('use_count');
-            $this->invitationTokenObj->update([
-                'used_at' => now(),
-                'email' => $guestEmail,
-            ]);
-            $this->hasValidToken = false;
-            $this->isTokenConsumed = true;
+            $this->invitationTokenObj->refresh();
+
+            $updateData = ['used_at' => now()];
+            if ($this->invitationTokenObj->max_uses == 1) {
+                $updateData['email'] = $guestEmail;
+            }
+            $this->invitationTokenObj->update($updateData);
+
+            if ($this->invitationTokenObj->use_count >= $this->invitationTokenObj->max_uses) {
+                $this->hasValidToken = false;
+                $this->isTokenConsumed = true;
+            }
         }
 
         // Generate QrCode for verified attendee

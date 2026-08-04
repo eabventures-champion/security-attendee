@@ -45,6 +45,7 @@ class EventForm extends Component
     public string $registration_deadline = '';
     public int $is_free = 1;
     public bool $is_private = false;
+    public string $default_entry_mode = 'details'; // 'details', 'no_details'
     public string $status = 'draft';
     public $organization_id = null;
 
@@ -87,6 +88,7 @@ class EventForm extends Component
                 $this->registration_deadline = $event->registration_deadline ? $event->registration_deadline->format('Y-m-d\TH:i') : '';
                 $this->is_free = $event->is_free ? 1 : 0;
                 $this->is_private = (bool) ($event->is_private ?? false);
+                $this->default_entry_mode = $event->settings['default_entry_mode'] ?? 'details';
                 $this->organization_id = $event->organization_id;
                 $this->status = $event->status instanceof EventStatus ? $event->status->value : ($event->status ?? 'draft');
 
@@ -146,6 +148,7 @@ class EventForm extends Component
             $path = $this->cover_image->store('events/covers', 'public');
             $data['cover_image_path'] = $path;
             $this->existing_cover_image_path = $path;
+            $this->cover_image = null;
         }
 
         if ($this->eventUuid) {
@@ -220,7 +223,23 @@ class EventForm extends Component
             return null;
         }
 
-        $this->validate();
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors();
+            if ($errors->has('name') || $errors->has('cover_image')) {
+                $this->currentStep = 1;
+            } elseif ($errors->has('starts_at') || $errors->has('ends_at')) {
+                $this->currentStep = 2;
+            } elseif ($errors->has('venue_name') || $errors->has('venue_city')) {
+                $this->currentStep = 3;
+            } else {
+                $this->currentStep = 4;
+            }
+            throw $e;
+        }
+
+        $statusValue = $this->status ?: 'draft';
 
         $data = [
             'name' => $this->name,
@@ -229,7 +248,7 @@ class EventForm extends Component
             'invitation_title' => $this->invitation_title ?: null,
             'invitation_description' => $this->invitation_description ?: null,
             'title_font' => $this->title_font ?: 'Alex Brush',
-            'is_multi_day' => $this->is_multi_day,
+            'is_multi_day' => (bool) $this->is_multi_day,
             'starts_at' => $this->starts_at ?: null,
             'ends_at' => $this->ends_at ?: null,
             'venue_name' => $this->venue_name ?: null,
@@ -240,24 +259,36 @@ class EventForm extends Component
             'registration_deadline' => $this->registration_deadline ?: null,
             'is_free' => (bool) $this->is_free,
             'is_private' => (bool) $this->is_private,
-            'status' => $this->status,
+            'status' => $statusValue,
         ];
 
         if ($this->cover_image) {
             $path = $this->cover_image->store('events/covers', 'public');
             $data['cover_image_path'] = $path;
+            $this->existing_cover_image_path = $path;
+            $this->cover_image = null;
         }
 
-        if ($this->status === EventStatus::Published->value) {
+        if ($statusValue === EventStatus::Published->value || $statusValue === 'published') {
             $data['published_at'] = now();
         }
 
         if ($this->eventUuid) {
-            Event::where('uuid', $this->eventUuid)->update($data);
-            session()->flash('success', 'Event saved successfully.');
+            $event = Event::where('uuid', $this->eventUuid)->first();
+            if ($event) {
+                $currentSettings = is_array($event->settings) ? $event->settings : [];
+                $currentSettings['default_entry_mode'] = $this->default_entry_mode;
+                $data['settings'] = $currentSettings;
+
+                $event->fill($data);
+                $event->status = ($statusValue === 'published' || $statusValue === EventStatus::Published->value) ? EventStatus::Published : EventStatus::Draft;
+                $event->save();
+            }
+            session()->flash('success', 'Event updated successfully.');
         } else {
             $data['uuid'] = (string) Str::uuid();
             $data['organization_id'] = auth()->user()->organization_id ?? session('current_organization_id');
+            $data['settings'] = ['default_entry_mode' => $this->default_entry_mode];
             $newEvent = Event::create($data);
 
             // Auto-seed primary gate for this new event
@@ -276,7 +307,7 @@ class EventForm extends Component
         session()->forget('active_event_draft_uuid');
         session()->forget('active_event_draft_step');
 
-        return redirect()->to(route('events.index'));
+        return redirect()->route('events.index');
     }
 
     public function getIsSuperAdminProperty(): bool

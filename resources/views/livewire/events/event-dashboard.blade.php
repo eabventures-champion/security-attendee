@@ -36,6 +36,15 @@
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider">
                         {{ $event->is_free ? 'FREE' : 'PAID' }}
                     </span>
+                    @if(($event->settings['default_entry_mode'] ?? 'details') === 'no_details')
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider" title="Default Entry Mode: Direct Claim Pass (No details required)">
+                            ⚡ DIRECT CLAIM MODE
+                        </span>
+                    @else
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider" title="Default Entry Mode: Form Entry (Name, Email & Phone)">
+                            📋 FORM DETAILS MODE
+                        </span>
+                    @endif
                 </div>
 
                 <h1 class="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight" style="font-family: {{ $event->title_css_font_family }};">
@@ -139,98 +148,125 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 font-medium">Share public registration or special private invitation links with attendees.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Public Invitation Link -->
-                    <div class="p-4 sm:p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-3.5" x-data="{ copied: false, activeCat: 'get_details' }">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-blue-500/20 pb-3">
-                            <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <span>🌐</span>
-                                <span>Public Invitation Link</span>
-                            </span>
+                    <!-- Multi-Use Permanent Invitation Links Card (Fused Public & Secret Private) -->
+                    <div class="md:col-span-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-blue-500/30 bg-gradient-to-br from-indigo-950/20 via-slate-900/90 to-blue-950/30 backdrop-blur-xl shadow-2xl space-y-5" x-data="{ activeCat: 'get_details' }">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-blue-500/20 pb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/10">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm sm:text-base font-black text-blue-400 uppercase tracking-wider">Multi-Use Permanent Invitation Links</h3>
+                                    <p class="text-[11px] text-slate-400 font-medium">Re-usable public registration &amp; secret private VVIP invitation links</p>
+                                </div>
+                            </div>
                             
                             <!-- Category Filter Tabs -->
-                            <div class="flex items-center bg-slate-900/80 p-1 rounded-xl border border-blue-500/30">
-                                <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-blue-600 text-white font-black' : 'text-blue-300 hover:text-white font-bold'" class="px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer">
-                                    📋 GET DETAILS
+                            <div class="flex items-center bg-slate-950/80 p-1 rounded-xl border border-blue-500/30 self-start md:self-auto">
+                                <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-blue-600 text-white font-black' : 'text-blue-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
+                                    📋 Category 1: GET DETAILS
                                 </button>
-                                <button type="button" @click="activeCat = 'no_details'" :class="activeCat === 'no_details' ? 'bg-blue-600 text-white font-black' : 'text-blue-300 hover:text-white font-bold'" class="px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer">
-                                    ⚡ NO DETAILS
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Category 1: GET DETAILS View -->
-                        <div x-show="activeCat === 'get_details'" class="space-y-3">
-                            <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                                <strong class="text-blue-400">Category 1 (GET DETAILS):</strong> Public invitation link for general attendees. Invitees fill in their Name, Email, and Phone number before receiving their pass.
-                            </p>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                <input type="text" readonly value="{{ route('events.public.invite', $event->slug) }}" class="w-full sm:flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 font-mono select-all truncate">
-                                <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', $event->slug) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                    <span x-show="!copied">Copy Link</span>
-                                    <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                <button type="button" @click="activeCat = 'no_details'" :class="activeCat === 'no_details' ? 'bg-blue-600 text-white font-black' : 'text-blue-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
+                                    ⚡ Category 2: NO DETAILS
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Category 2: NO DETAILS View -->
-                        <div x-show="activeCat === 'no_details'" class="space-y-3" x-cloak>
-                            <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                                <strong class="text-blue-400">Category 2 (NO DETAILS):</strong> Public direct entry link. Form inputs are bypassed so invitees click to instantly claim &amp; download their pass.
-                            </p>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 font-mono select-all truncate">
-                                <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                    <span x-show="!copied">Copy Link</span>
-                                    <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
-                                </button>
+                        <!-- Category 1: GET DETAILS View (Public & Secret Private Links) -->
+                        <div x-show="activeCat === 'get_details'" class="space-y-4">
+                            <!-- Public Invitation Link Row -->
+                            <div class="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-2.5" x-data="{ copiedPub: false }">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>🌐</span>
+                                        <span>Public Invitation Link</span>
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                                        STANDARD ACCESS (GET DETAILS)
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                    Public registration link for general attendees. Invitees fill in their Name, Email, and Phone number before receiving their pass.
+                                </p>
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                    <input type="text" readonly value="{{ route('events.public.invite', $event->slug) }}" class="w-full sm:flex-1 bg-slate-900 border border-blue-500/40 rounded-xl px-3.5 py-2 text-xs text-blue-300 font-mono select-all truncate">
+                                    <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', $event->slug) }}'); copiedPub = true; setTimeout(() => copiedPub = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                        <span x-show="!copiedPub">Copy Link</span>
+                                        <span x-show="copiedPub" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Secret Private VIP Invitation Link Row -->
+                            <div class="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-2.5" x-data="{ copiedVip: false }">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>🔒</span>
+                                        <span>Secret Private Invitation</span>
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                                        VVIP RSVP (GET DETAILS)
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                    Secret private VVIP invitation link for special guests. Guests enter their Name, Email, and Phone before obtaining VVIP pass privileges.
+                                </p>
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                    <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
+                                    <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}'); copiedVip = true; setTimeout(() => copiedVip = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                        <span x-show="!copiedVip">Copy Link</span>
+                                        <span x-show="copiedVip" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Secret Private VIP Invitation Link -->
-                    <div class="p-4 sm:p-5 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-3.5" x-data="{ copied: false, activeCat: 'get_details' }">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-purple-500/20 pb-3">
-                            <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <span>🔒</span>
-                                <span>Secret Private Invitation</span>
-                            </span>
-                            
-                            <!-- Category Filter Tabs -->
-                            <div class="flex items-center bg-slate-900/80 p-1 rounded-xl border border-purple-500/30">
-                                <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-purple-600 text-white font-black' : 'text-purple-300 hover:text-white font-bold'" class="px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer">
-                                    📋 GET DETAILS
-                                </button>
-                                <button type="button" @click="activeCat = 'no_details'" :class="activeCat === 'no_details' ? 'bg-purple-600 text-white font-black' : 'text-purple-300 hover:text-white font-bold'" class="px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer">
-                                    ⚡ NO DETAILS
-                                </button>
+                        <!-- Category 2: NO DETAILS View (Public Direct & Secret Private Direct Links) -->
+                        <div x-show="activeCat === 'no_details'" class="space-y-4" x-cloak>
+                            <!-- Public General Direct Entry Link Row -->
+                            <div class="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-2.5" x-data="{ copiedPubNoDet: false }">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>⚡</span>
+                                        <span>Public Direct Entry Pass</span>
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                                        STANDARD ACCESS (NO DETAILS)
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                    Public direct entry link. Form inputs are completely bypassed so general invitees click to instantly claim &amp; download their pass.
+                                </p>
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                    <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-blue-500/40 rounded-xl px-3.5 py-2 text-xs text-blue-300 font-mono select-all truncate">
+                                    <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}'); copiedPubNoDet = true; setTimeout(() => copiedPubNoDet = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                        <span x-show="!copiedPubNoDet">Copy Link</span>
+                                        <span x-show="copiedPubNoDet" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Category 1: GET DETAILS View -->
-                        <div x-show="activeCat === 'get_details'" class="space-y-3">
-                            <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                                <strong class="text-purple-300">Category 1 (GET DETAILS):</strong> Secret private VVIP invitation link. Special guests enter their Name, Email, and Phone before obtaining VVIP pass privileges.
-                            </p>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
-                                <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                    <span x-show="!copied">Copy Link</span>
-                                    <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Category 2: NO DETAILS View -->
-                        <div x-show="activeCat === 'no_details'" class="space-y-3" x-cloak>
-                            <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                                <strong class="text-purple-300">Category 2 (NO DETAILS):</strong> Secret private VVIP direct link. Form inputs are bypassed for instant VVIP pass claiming &amp; download.
-                            </p>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
-                                <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                    <span x-show="!copied">Copy Link</span>
-                                    <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
-                                </button>
+                            <!-- Secret Private VVIP Direct Entry Link Row -->
+                            <div class="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-2.5" x-data="{ copiedVipNoDet: false }">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>⚡</span>
+                                        <span>Secret Private VVIP Direct Pass</span>
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                                        VVIP DIRECT (NO DETAILS)
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                    Secret private VVIP direct link. Form inputs are completely bypassed for instant VVIP pass claiming &amp; download.
+                                </p>
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                    <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
+                                    <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}'); copiedVipNoDet = true; setTimeout(() => copiedVipNoDet = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                        <span x-show="!copiedVipNoDet">Copy Link</span>
+                                        <span x-show="copiedVipNoDet" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

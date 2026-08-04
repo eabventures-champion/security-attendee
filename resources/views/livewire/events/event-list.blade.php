@@ -246,10 +246,21 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
                                         @forelse($org->events as $evt)
                                             <div class="bg-slate-900 border border-white/10 rounded-2xl p-5 space-y-3 shadow-xl hover:border-blue-500/40 transition-all">
-                                                <div class="flex items-center justify-between">
-                                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $evt->status->badgeClass() }}">
-                                                        {{ $evt->status->label() }}
-                                                    </span>
+                                                <div class="flex items-center justify-between flex-wrap gap-1.5">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $evt->status->badgeClass() }}">
+                                                            {{ $evt->status->label() }}
+                                                        </span>
+                                                        @if(($evt->settings['default_entry_mode'] ?? 'details') === 'no_details')
+                                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider" title="Default Entry Mode: Direct Claim Pass (No details required)">
+                                                                ⚡ No Details
+                                                            </span>
+                                                        @else
+                                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider" title="Default Entry Mode: Form Entry (Name, Email & Phone)">
+                                                                📋 Details
+                                                            </span>
+                                                        @endif
+                                                    </div>
                                                     <span class="text-xs text-slate-400 font-medium">
                                                         {{ $evt->starts_at ? $evt->starts_at->format('M d, Y') : 'Date TBD' }}
                                                     </span>
@@ -444,6 +455,16 @@
                                         @else
                                             <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-900/90 text-blue-200 border border-blue-500/30 backdrop-blur-md shadow-sm">
                                                 🌐 Public
+                                            </span>
+                                        @endif
+
+                                        @if(($event->settings['default_entry_mode'] ?? 'details') === 'no_details')
+                                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-600/90 text-white border border-purple-400/40 backdrop-blur-md shadow-sm" title="Default Entry Mode: Direct Claim Pass (No details required)">
+                                                ⚡ No Details (Direct Claim)
+                                            </span>
+                                        @else
+                                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-600/90 text-white border border-amber-400/40 backdrop-blur-md shadow-sm" title="Default Entry Mode: Form Entry (Name, Email & Phone)">
+                                                📋 Details (Form Entry)
                                             </span>
                                         @endif
                                     </div>

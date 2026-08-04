@@ -234,7 +234,7 @@
                                     <span>Reason for Requesting Attendance <span class="text-rose-400 font-bold">*</span></span>
                                     <span class="text-[10px] text-amber-400 font-semibold uppercase">Fill to Unlock Form</span>
                                 </label>
-                                <textarea wire:model.live.blur="registration_reason"
+                                <textarea wire:model.live.debounce.300ms="registration_reason"
                                           rows="2"
                                           placeholder="Compulsory: Please state why you are filling this form / how you received this link before filling lower fields..."
                                           class="w-full bg-black/40 border border-amber-500/50 rounded-xl px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-xs"></textarea>

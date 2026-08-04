@@ -71,8 +71,21 @@
                     <!-- Cover Image Upload Box -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Event Cover Image</label>
+                        @php
+                            $previewUrl = null;
+                            if ($cover_image) {
+                                try {
+                                    $previewUrl = $cover_image->temporaryUrl();
+                                } catch (\Throwable $e) {
+                                    $previewUrl = null;
+                                }
+                            }
+                            if (!$previewUrl && $existing_cover_image_path) {
+                                $previewUrl = \Illuminate\Support\Facades\Storage::url($existing_cover_image_path);
+                            }
+                        @endphp
                         <div x-data="{
-                            imageUrl: @js($cover_image ? null : ($existing_cover_image_path ? \Illuminate\Support\Facades\Storage::url($existing_cover_image_path) : null)),
+                            imageUrl: @js($previewUrl),
                             handleFileSelect(e) {
                                 const file = e.target.files[0];
                                 if (file) {
@@ -388,6 +401,34 @@
                         </div>
                     </div>
 
+                    <!-- Default Event Entry Mode / Category Selection -->
+                    <div class="space-y-3 pt-2">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Default Entry Mode / Attendance Category</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <label class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $default_entry_mode === 'details' ? 'border-amber-500 bg-amber-500/5 dark:bg-amber-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span>📋</span>
+                                        <span>Details (Form Entry)</span>
+                                    </span>
+                                    <input type="radio" wire:model.live="default_entry_mode" value="details" class="form-radio text-amber-500 focus:ring-amber-500">
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Invitees fill in Name, Email & Phone number to claim or register for pass.</p>
+                            </label>
+
+                            <label class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $default_entry_mode === 'no_details' ? 'border-purple-500 bg-purple-500/5 dark:bg-purple-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span>⚡</span>
+                                        <span>No Details (Direct Claim)</span>
+                                    </span>
+                                    <input type="radio" wire:model.live="default_entry_mode" value="no_details" class="form-radio text-purple-600 focus:ring-purple-500">
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Form entry bypassed. Invitees click poster image to instantly claim pass.</p>
+                            </label>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Initial Status</label>
                         <select wire:model.live="status" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium">
@@ -470,7 +511,7 @@
                         </button>
                     @else
                         <!-- Final Step (Step 4): Primary Save Button -->
-                        <button type="button" wire:click="save" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                        <button type="submit" wire:click="save" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer active:scale-95">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                             <span wire:loading.remove>{{ $eventUuid ? 'Save Changes' : 'Save Event' }}</span>
                             <span wire:loading class="flex items-center gap-2">

@@ -84,6 +84,16 @@
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-md {{ $evt->is_free ? 'bg-emerald-500/80 text-white' : 'bg-purple-500/80 text-white' }}">
                                     {{ $evt->is_free ? 'Free Event' : 'Paid Event' }}
                                 </span>
+
+                                @if(($evt->settings['default_entry_mode'] ?? 'details') === 'no_details')
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600/90 text-white border border-purple-400/40 backdrop-blur-md shadow-md" title="Direct Claim Pass Mode (No form details required)">
+                                        ⚡ Direct Claim
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-600/90 text-white border border-amber-400/40 backdrop-blur-md shadow-md" title="Form Entry Mode (Name, Email & Phone required)">
+                                        📋 Form Entry
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
