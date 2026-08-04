@@ -98,36 +98,36 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-sm dark:shadow-xl flex flex-col lg:flex-row gap-3 sm:gap-4">
-        <div class="flex-1">
+    <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-sm dark:shadow-xl flex flex-col xl:flex-row gap-3 sm:gap-4 items-stretch xl:items-center">
+        <div class="flex-1 min-w-[240px]">
             <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
                 <input wire:model.live.debounce.300ms="search" type="text" class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm font-medium transition-colors" placeholder="Search by name, email, or QR code...">
             </div>
         </div>
-        <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 sm:gap-4 w-full lg:w-auto">
-            <select wire:model.live="eventUuid" class="block w-full sm:w-48 px-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm font-medium">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 w-full xl:w-auto shrink-0">
+            <select wire:model.live="eventUuid" class="block w-full px-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm font-medium truncate cursor-pointer">
                 <option value="" class="bg-slate-900 text-slate-100">All Events</option>
                 @foreach($events as $evt)
                     <option value="{{ $evt->uuid }}" class="bg-slate-900 text-slate-100">{{ $evt->name }}</option>
                 @endforeach
             </select>
-            <select wire:model.live="statusFilter" class="block w-full sm:w-48 px-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm font-medium">
+            <select wire:model.live="statusFilter" class="block w-full px-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm font-medium truncate cursor-pointer">
                 <option value="" class="bg-slate-900 text-slate-100">All Statuses ({{ $totalCount }})</option>
                 <option value="verified" class="bg-slate-900 text-slate-100">Verified ({{ $verifiedCount }})</option>
                 <option value="pending" class="bg-slate-900 text-slate-100">Pending ({{ $pendingCount }})</option>
                 <option value="rejected" class="bg-slate-900 text-slate-100">Rejected ({{ $rejectedCount }})</option>
             </select>
-            <select wire:model.live="roleFilter" class="col-span-2 sm:col-span-1 block w-full sm:w-40 px-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm font-medium">
+            <select wire:model.live="roleFilter" class="block w-full px-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm font-medium truncate cursor-pointer">
                 <option value="" class="bg-slate-900 text-slate-100">All Roles</option>
                 @foreach(\App\Enums\AccessRole::attendeeCases() as $role)
                     <option value="{{ $role->value }}" class="bg-slate-900 text-slate-100">{{ $role->label() }}</option>
                 @endforeach
             </select>
 
-            <select wire:model.live="categoryFilter" class="col-span-2 sm:col-span-1 block w-full sm:w-44 px-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm font-medium">
+            <select wire:model.live="categoryFilter" class="block w-full px-3 py-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm font-medium truncate cursor-pointer">
                 <option value="" class="bg-slate-900 text-slate-100">All Categories</option>
                 <option value="details" class="bg-slate-900 text-slate-100">📋 Form Details</option>
                 <option value="no_details" class="bg-slate-900 text-slate-100">⚡ No Details (Direct Claim)</option>
