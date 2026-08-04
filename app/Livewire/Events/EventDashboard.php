@@ -185,6 +185,15 @@ class EventDashboard extends Component
 
     public function render()
     {
-        return view('livewire.events.event-dashboard');
+        $recentScans = CheckIn::with(['attendee', 'gate', 'scanner'])
+            ->where('event_id', $this->event->id)
+            ->latest('scanned_at')
+            ->latest('created_at')
+            ->take(10)
+            ->get();
+
+        return view('livewire.events.event-dashboard', [
+            'recentScans' => $recentScans,
+        ]);
     }
 }

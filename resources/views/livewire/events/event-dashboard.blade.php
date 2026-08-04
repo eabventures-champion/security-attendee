@@ -140,48 +140,98 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Public Invitation Link -->
-                    <div class="p-4 sm:p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-3" x-data="{ copied: false }">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                    <div class="p-4 sm:p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-3.5" x-data="{ copied: false, activeCat: 'get_details' }">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-blue-500/20 pb-3">
                             <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                                 <span>🌐</span>
                                 <span>Public Invitation Link</span>
                             </span>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30 w-max">
-                                STANDARD ACCESS
-                            </span>
+                            
+                            <!-- Category Filter Tabs -->
+                            <div class="flex items-center bg-slate-900/80 p-1 rounded-xl border border-blue-500/30">
+                                <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-blue-600 text-white font-black' : 'text-blue-300 hover:text-white font-bold'" class="px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer">
+                                    📋 GET DETAILS
+                                </button>
+                                <button type="button" @click="activeCat = 'no_details'" :class="activeCat === 'no_details' ? 'bg-blue-600 text-white font-black' : 'text-blue-300 hover:text-white font-bold'" class="px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer">
+                                    ⚡ NO DETAILS
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                            Public invitation link for general attendees. Displays invitation layout and confirms pass.
-                        </p>
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                            <input type="text" readonly value="{{ route('events.public.invite', $event->slug) }}" class="w-full sm:flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 font-mono select-all truncate">
-                            <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', $event->slug) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                <span x-show="!copied">Copy Link</span>
-                                <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
-                            </button>
+
+                        <!-- Category 1: GET DETAILS View -->
+                        <div x-show="activeCat === 'get_details'" class="space-y-3">
+                            <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                                <strong class="text-blue-400">Category 1 (GET DETAILS):</strong> Public invitation link for general attendees. Invitees fill in their Name, Email, and Phone number before receiving their pass.
+                            </p>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                <input type="text" readonly value="{{ route('events.public.invite', $event->slug) }}" class="w-full sm:flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 font-mono select-all truncate">
+                                <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', $event->slug) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                    <span x-show="!copied">Copy Link</span>
+                                    <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Category 2: NO DETAILS View -->
+                        <div x-show="activeCat === 'no_details'" class="space-y-3" x-cloak>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                                <strong class="text-blue-400">Category 2 (NO DETAILS):</strong> Public direct entry link. Form inputs are bypassed so invitees click to instantly claim &amp; download their pass.
+                            </p>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 font-mono select-all truncate">
+                                <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                    <span x-show="!copied">Copy Link</span>
+                                    <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Secret Private VIP Invitation Link -->
-                    <div class="p-4 sm:p-5 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-3" x-data="{ copied: false }">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                    <div class="p-4 sm:p-5 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-3.5" x-data="{ copied: false, activeCat: 'get_details' }">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-purple-500/20 pb-3">
                             <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
                                 <span>🔒</span>
                                 <span>Secret Private Invitation</span>
                             </span>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 w-max">
-                                VVIP RSVP
-                            </span>
+                            
+                            <!-- Category Filter Tabs -->
+                            <div class="flex items-center bg-slate-900/80 p-1 rounded-xl border border-purple-500/30">
+                                <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-purple-600 text-white font-black' : 'text-purple-300 hover:text-white font-bold'" class="px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer">
+                                    📋 GET DETAILS
+                                </button>
+                                <button type="button" @click="activeCat = 'no_details'" :class="activeCat === 'no_details' ? 'bg-purple-600 text-white font-black' : 'text-purple-300 hover:text-white font-bold'" class="px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer">
+                                    ⚡ NO DETAILS
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                            Secret private VVIP invitation link for special guests. Grants VVIP access privileges & pre-verified pass.
-                        </p>
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                            <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
-                            <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                <span x-show="!copied">Copy Link</span>
-                                <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
-                            </button>
+
+                        <!-- Category 1: GET DETAILS View -->
+                        <div x-show="activeCat === 'get_details'" class="space-y-3">
+                            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                <strong class="text-purple-300">Category 1 (GET DETAILS):</strong> Secret private VVIP invitation link. Special guests enter their Name, Email, and Phone before obtaining VVIP pass privileges.
+                            </p>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
+                                <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                    <span x-show="!copied">Copy Link</span>
+                                    <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Category 2: NO DETAILS View -->
+                        <div x-show="activeCat === 'no_details'" class="space-y-3" x-cloak>
+                            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                <strong class="text-purple-300">Category 2 (NO DETAILS):</strong> Secret private VVIP direct link. Form inputs are bypassed for instant VVIP pass claiming &amp; download.
+                            </p>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
+                                <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                    <span x-show="!copied">Copy Link</span>
+                                    <span x-show="copied" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -446,11 +496,83 @@
 
         <!-- Sidebar Activity -->
         <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-2xl">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Recent Gate Activity</h3>
-            <div class="space-y-4">
-                <div class="text-center py-10 text-slate-400 font-medium text-sm">
-                    <p>No scans recorded yet.</p>
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/10 pb-3">
+                <div>
+                    <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>📡</span>
+                        <span>Recent Gate Activity</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Real-time scan logs across all gates</p>
                 </div>
+                @if(count($recentScans) > 0)
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0 flex items-center gap-1 animate-pulse">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span>LIVE</span>
+                    </span>
+                @endif
+            </div>
+
+            <div class="space-y-3">
+                @forelse($recentScans as $scan)
+                    @php
+                        $scanResultStr = is_object($scan->scan_result) ? $scan->scan_result->value : (string)$scan->scan_result;
+                        $isGranted = strtolower($scanResultStr) === 'granted';
+                        $att = $scan->attendee;
+                        $roleStr = $att && is_object($att->access_role) ? $att->access_role->value : ($att->access_role ?? 'general_admission');
+                        $isVipRole = in_array(strtolower((string)$roleStr), ['vvip', 'vip']);
+                    @endphp
+                    <div class="p-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/80 space-y-2 hover:border-blue-500/30 transition-all shadow-sm">
+                        <!-- Top Row: Attendee Name & Result Badge -->
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <p class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                                        {{ $att->full_name ?? 'Anonymous Guest' }}
+                                    </p>
+                                    @if($isVipRole)
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                                            👑 VVIP
+                                        </span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                                            🎫 PASS
+                                        </span>
+                                    @endif
+                                </div>
+                                @if($att && ($att->email || $att->phone))
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                                        {{ $att->phone ?: $att->email }}
+                                    </p>
+                                @endif
+                            </div>
+
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1 {{ $isGranted ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40' }}">
+                                <span>{{ $isGranted ? '✓' : '⛔' }}</span>
+                                <span>{{ ucfirst($scanResultStr) }}</span>
+                            </span>
+                        </div>
+
+                        <!-- Bottom Row: Gate Name, Scanner Operator & Timestamp -->
+                        <div class="pt-2 border-t border-slate-200/50 dark:border-white/5 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                            <span class="truncate font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                                <span>{{ $scan->gate->name ?? 'Main Checkpoint' }}</span>
+                            </span>
+
+                            <span class="font-mono text-slate-400 shrink-0" title="{{ $scan->scanned_at ? $scan->scanned_at->format('M d, Y g:i:s A') : '' }}">
+                                {{ $scan->scanned_at ? $scan->scanned_at->format('g:i A') : ($scan->created_at ? $scan->created_at->format('g:i A') : '') }}
+                                @if($scan->scanned_at)
+                                    ({{ $scan->scanned_at->diffForHumans(null, true) }} ago)
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-10 text-slate-400 font-medium text-xs space-y-1">
+                        <p class="font-bold text-slate-300">No scans recorded yet</p>
+                        <p class="text-[11px] text-slate-500">Live gate activity will appear here as passes are scanned.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
