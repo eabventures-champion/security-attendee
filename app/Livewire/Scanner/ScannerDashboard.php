@@ -143,7 +143,7 @@ class ScannerDashboard extends Component
 
         // 5.5 Check venue total capacity limit
         if ($this->event->capacity && $this->event->capacity > 0) {
-            $currentCheckIns = CheckIn::where('event_id', $this->event->id)
+            $currentCheckIns = CheckIn::whereHas('attendee')->where('event_id', $this->event->id)
                 ->where('scan_result', ScanResult::Granted)
                 ->count();
 
@@ -186,7 +186,7 @@ class ScannerDashboard extends Component
 
         // Check venue total capacity limit
         if ($this->event->capacity && $this->event->capacity > 0) {
-            $currentCheckIns = CheckIn::where('event_id', $this->event->id)
+            $currentCheckIns = CheckIn::whereHas('attendee')->where('event_id', $this->event->id)
                 ->where('scan_result', ScanResult::Granted)
                 ->count();
 
@@ -229,7 +229,14 @@ class ScannerDashboard extends Component
 
     public function loadRecentScans()
     {
+        $attendeeCount = Attendee::where('event_id', $this->event->id)->count();
+        if ($attendeeCount === 0) {
+            $this->recentScans = collect();
+            return;
+        }
+
         $this->recentScans = CheckIn::with(['attendee', 'gate'])
+            ->whereHas('attendee')
             ->where('event_id', $this->event->id)
             ->latest('scanned_at')
             ->take(10)
@@ -238,9 +245,19 @@ class ScannerDashboard extends Component
 
     public function updateStats()
     {
-        $this->stats['total'] = CheckIn::where('event_id', $this->event->id)->count();
-        $this->stats['granted'] = CheckIn::where('event_id', $this->event->id)->where('scan_result', ScanResult::Granted)->count();
-        $this->stats['denied'] = CheckIn::where('event_id', $this->event->id)->where('scan_result', '!=', ScanResult::Granted)->count();
+        $attendeeCount = Attendee::where('event_id', $this->event->id)->count();
+        if ($attendeeCount === 0) {
+            $this->stats = [
+                'total' => 0,
+                'granted' => 0,
+                'denied' => 0,
+            ];
+            return;
+        }
+
+        $this->stats['total'] = CheckIn::whereHas('attendee')->where('event_id', $this->event->id)->count();
+        $this->stats['granted'] = CheckIn::whereHas('attendee')->where('event_id', $this->event->id)->where('scan_result', ScanResult::Granted)->count();
+        $this->stats['denied'] = CheckIn::whereHas('attendee')->where('event_id', $this->event->id)->where('scan_result', '!=', ScanResult::Granted)->count();
     }
 
     public function getSearchResultsProperty()
