@@ -259,42 +259,48 @@
                     </div>
 
                     <!-- BATCH BULK WHATSAPP LINK DISPATCHER (FOR MANY PEOPLE) -->
-                    <div class="md:col-span-2 p-4 sm:p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 space-y-4" x-data="{ batchCopied: false }">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-emerald-500/20 pb-3">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                <span class="text-xs font-black text-emerald-400 uppercase tracking-wider">📢 Batch Bulk WhatsApp Link Dispatcher (For Many People)</span>
+                    <div class="md:col-span-2 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-teal-950/40 backdrop-blur-xl shadow-2xl space-y-5" x-data="{ batchCopied: false }">
+                        
+                        <!-- Header Section -->
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-emerald-500/20 pb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/10">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm sm:text-base font-black text-white tracking-wide">Batch WhatsApp Link Dispatcher</h3>
+                                    <p class="text-[11px] text-slate-400 font-medium">Generate &amp; send individual 1-time single-use links to multiple guests via WhatsApp</p>
+                                </div>
                             </div>
-                            <span class="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full uppercase">1-TIME STRICT PROTECTION GUARANTEED</span>
+                            <span class="self-start md:self-auto text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full uppercase tracking-wider shrink-0">
+                                🛡️ Single-Use Protection
+                            </span>
                         </div>
 
-                        <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                            Generate multiple unique single-use invitation links at once. Send each link to a different guest via WhatsApp — ensuring <strong class="text-emerald-300">every guest gets their OWN 1-time valid link</strong> so once a guest downloads their pass, forwarded links are automatically denied.
-                        </p>
-
-                        <!-- Controls Form Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
+                        <!-- Config Controls Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 items-end bg-slate-950/60 p-4 rounded-2xl border border-white/5">
                             <div>
-                                <label class="block text-[10px] font-black text-slate-300 uppercase tracking-wider mb-1">Quantity (How Many Links?)</label>
-                                <input type="number" wire:model.live="batchQuantity" min="1" max="50" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <label class="block text-[10px] font-extrabold text-slate-300 uppercase tracking-wider mb-1.5">Quantity (Links)</label>
+                                <input type="number" wire:model.live="batchQuantity" min="1" max="50" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-black text-slate-300 uppercase tracking-wider mb-1">Pass Category</label>
-                                <select wire:model.live="batchCategory" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <label class="block text-[10px] font-extrabold text-slate-300 uppercase tracking-wider mb-1.5">Pass Category</label>
+                                <select wire:model.live="batchCategory" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all">
                                     <option value="no_details">⚡ Category 2: NO DETAILS (Direct Pass)</option>
                                     <option value="get_details">📋 Category 1: GET DETAILS (RSVP Form)</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-black text-slate-300 uppercase tracking-wider mb-1">Access Role</label>
-                                <select wire:model.live="batchRole" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <label class="block text-[10px] font-extrabold text-slate-300 uppercase tracking-wider mb-1.5">Access Role</label>
+                                <select wire:model.live="batchRole" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all">
                                     <option value="vvip">👑 VVIP Pass</option>
                                     <option value="general_admission">🎫 General Admission</option>
                                 </select>
                             </div>
-                            <div class="flex items-end">
-                                <button wire:click="generateBatchTokens" type="button" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95">
-                                    <span>🚀 Generate {{ $batchQuantity }} Links</span>
+                            <div>
+                                <button wire:click="generateBatchTokens" type="button" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95">
+                                    <svg class="w-4 h-4 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    <span>Generate {{ $batchQuantity }} Links</span>
                                 </button>
                             </div>
                         </div>
