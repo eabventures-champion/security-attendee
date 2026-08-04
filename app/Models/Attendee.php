@@ -18,6 +18,18 @@ class Attendee extends Model
 {
     use HasFactory, HasUuid, SoftDeletes, BelongsToOrganization;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($attendee) {
+            $attendee->checkIns()->delete();
+            if ($attendee->qrCode) {
+                $attendee->qrCode()->delete();
+            }
+        });
+    }
+
     protected $fillable = [
         'event_id', 'organization_id', 'user_id', 'assigned_gate_id', 'ticket_category_id', 'full_name', 'email',
         'phone', 'company', 'job_title', 'country', 'gender', 'emergency_contact_name',

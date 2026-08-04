@@ -89,7 +89,7 @@ class AdminDashboard extends Component
                         ->count();
                 } elseif ($metric === 'checked_in') {
                     $this->breakdownTitle = 'Checked In Today Breakdown by Organization Admin';
-                    $val = CheckIn::whereHas('event', fn($q) => $q->where('organization_id', $org->id))
+                    $val = CheckIn::whereHas('attendee')->whereHas('event', fn($q) => $q->where('organization_id', $org->id))
                         ->where('scan_result', ScanResult::Granted)
                         ->whereDate('scanned_at', Carbon::today())
                         ->count();
@@ -123,7 +123,7 @@ class AdminDashboard extends Component
                         ->count();
                 } elseif ($metric === 'checked_in') {
                     $this->breakdownTitle = 'Checked-In Today Breakdown by Event';
-                    $val = CheckIn::where('event_id', $event->id)
+                    $val = CheckIn::whereHas('attendee')->where('event_id', $event->id)
                         ->where('scan_result', ScanResult::Granted)
                         ->whereDate('scanned_at', Carbon::today())
                         ->count();
@@ -162,7 +162,7 @@ class AdminDashboard extends Component
 
         $eventQuery = Event::query();
         $attendeeQuery = Attendee::whereHas('event');
-        $checkInQuery = CheckIn::where('scan_result', ScanResult::Granted)->whereDate('scanned_at', Carbon::today());
+        $checkInQuery = CheckIn::whereHas('attendee')->whereHas('event')->where('scan_result', ScanResult::Granted)->whereDate('scanned_at', Carbon::today());
 
         if (!$isSuperAdmin && $user->organization_id) {
             $eventQuery->where('organization_id', $user->organization_id);
