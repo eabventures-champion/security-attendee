@@ -244,10 +244,106 @@
                                     {{ $generatedTokenType ?: 'Generated Link' }}
                                 </div>
                                 <input type="text" readonly value="{{ $generatedTokenLink }}" class="w-full sm:flex-1 bg-slate-900 border border-amber-500/50 rounded-xl px-3.5 py-2 text-xs text-amber-300 font-mono select-all truncate">
-                                <button @click="navigator.clipboard.writeText('{{ $generatedTokenLink }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs transition-all shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                
+                                <button type="button" @click="navigator.clipboard.writeText('{{ $generatedTokenLink }}'); copied = true; setTimeout(() => copied = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs transition-all shrink-0 flex items-center justify-center gap-1 cursor-pointer">
                                     <span x-show="!copied">Copy Link</span>
                                     <span x-show="copied" x-cloak class="text-slate-950">Copied! ✓</span>
                                 </button>
+
+                                <a href="{{ $generatedTokenWhatsappUrl }}" target="_blank" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-md">
+                                    <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                    <span>Share WhatsApp</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- BATCH BULK WHATSAPP LINK DISPATCHER (FOR MANY PEOPLE) -->
+                    <div class="md:col-span-2 p-4 sm:p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 space-y-4" x-data="{ batchCopied: false }">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-emerald-500/20 pb-3">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                <span class="text-xs font-black text-emerald-400 uppercase tracking-wider">📢 Batch Bulk WhatsApp Link Dispatcher (For Many People)</span>
+                            </div>
+                            <span class="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full uppercase">1-TIME STRICT PROTECTION GUARANTEED</span>
+                        </div>
+
+                        <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                            Generate multiple unique single-use invitation links at once. Send each link to a different guest via WhatsApp — ensuring <strong class="text-emerald-300">every guest gets their OWN 1-time valid link</strong> so once a guest downloads their pass, forwarded links are automatically denied.
+                        </p>
+
+                        <!-- Controls Form Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-300 uppercase tracking-wider mb-1">Quantity (How Many Links?)</label>
+                                <input type="number" wire:model.live="batchQuantity" min="1" max="50" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-300 uppercase tracking-wider mb-1">Pass Category</label>
+                                <select wire:model.live="batchCategory" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                    <option value="no_details">⚡ Category 2: NO DETAILS (Direct Pass)</option>
+                                    <option value="get_details">📋 Category 1: GET DETAILS (RSVP Form)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-300 uppercase tracking-wider mb-1">Access Role</label>
+                                <select wire:model.live="batchRole" class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs text-emerald-300 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                    <option value="vvip">👑 VVIP Pass</option>
+                                    <option value="general_admission">🎫 General Admission</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button wire:click="generateBatchTokens" type="button" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95">
+                                    <span>🚀 Generate {{ $batchQuantity }} Links</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Batch Dispatch Queue Table -->
+                        @if(count($batchLinks) > 0)
+                            <div class="pt-4 border-t border-emerald-500/20 space-y-3 animate-fadeIn">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>Generated {{ count($batchLinks) }} Unique WhatsApp Links</span>
+                                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">Ready to Dispatch</span>
+                                    </h4>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" wire:click="clearBatchLinks" class="text-[10px] font-bold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer">
+                                            Clear Batch
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Links Queue -->
+                                <div class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar pr-1">
+                                    @foreach($batchLinks as $item)
+                                        <div class="p-3 bg-slate-900/90 border border-emerald-500/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 hover:border-emerald-500/60 transition-all" x-data="{ linkCopied: false }">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black flex items-center justify-center shrink-0">
+                                                    #{{ $item['id'] }}
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-[10px] font-black text-white uppercase">{{ $item['role'] }}</span>
+                                                        <span class="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">{{ $item['type'] }}</span>
+                                                    </div>
+                                                    <p class="text-[11px] font-mono text-emerald-300/90 truncate max-w-xs sm:max-w-md mt-0.5">{{ $item['link'] }}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                                                <button type="button" @click="navigator.clipboard.writeText('{{ $item['link'] }}'); linkCopied = true; setTimeout(() => linkCopied = false, 2000)" class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all border border-slate-700 flex items-center justify-center gap-1 cursor-pointer">
+                                                    <span x-show="!linkCopied">Copy Link</span>
+                                                    <span x-show="linkCopied" x-cloak class="text-emerald-400">Copied! ✓</span>
+                                                </button>
+                                                <a href="{{ $item['whatsapp_url'] }}" target="_blank" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                                    <span>Send WhatsApp</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
                     </div>
