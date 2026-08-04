@@ -252,7 +252,7 @@
                         </tr>
                         <tr>
                             <td class="card-label">Venue</td>
-                            <td class="card-value">{{ $event->venue_name ?? 'Location TBA' }}</td>
+                            <td class="card-value">{{ $event->full_venue_location }}</td>
                         </tr>
                         <tr>
                             <td class="card-label">Access Role</td>

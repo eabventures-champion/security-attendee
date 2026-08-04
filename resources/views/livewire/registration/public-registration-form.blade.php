@@ -57,7 +57,7 @@
                 <div class="p-5 bg-black/30 rounded-2xl border border-white/5 max-w-sm mx-auto mb-8 text-left backdrop-blur-md">
                     <p class="text-xs text-slate-500 uppercase tracking-wider mb-2">Event Details</p>
                     <p class="font-medium text-white text-sm">{{ $event->starts_at ? $event->starts_at->format('l, F j, Y @ g:i A') : 'Date TBA' }}</p>
-                    <p class="text-xs text-slate-400 mt-1">{{ $event->venue_name ?? 'Location TBA' }}</p>
+                    <p class="text-xs text-slate-400 mt-1">{{ $event->full_venue_location }}</p>
                 </div>
 
                 <a href="/public-events" class="text-blue-400 hover:text-blue-300 transition-colors text-xs font-bold uppercase tracking-wider">← Explore More Events</a>
@@ -79,7 +79,7 @@
                         @endif
                         <div class="flex flex-col md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-6 text-slate-300">
                             <span class="flex items-center"><svg class="w-5 h-5 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> {{ $event->starts_at ? $event->starts_at->format('M d, Y @ H:i') : 'Date TBA' }}</span>
-                            <span class="flex items-center"><svg class="w-5 h-5 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg> {{ $event->venue_name ?? 'Location TBA' }}</span>
+                            <span class="flex items-center"><svg class="w-5 h-5 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg> {{ $event->full_venue_location }}</span>
                         </div>
                     </div>
                 </div>

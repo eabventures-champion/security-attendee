@@ -56,6 +56,18 @@ class Event extends Model
         };
     }
 
+    public function getFullVenueLocationAttribute(): string
+    {
+        $parts = array_filter([
+            $this->venue_name,
+            $this->venue_address,
+            $this->venue_city,
+            $this->venue_country,
+        ], fn($val) => !empty(trim((string)$val)));
+
+        return !empty($parts) ? implode(', ', $parts) : 'Location TBA';
+    }
+
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
