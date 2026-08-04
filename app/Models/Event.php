@@ -17,6 +17,25 @@ class Event extends Model
 {
     use HasFactory, HasUuid, SoftDeletes, BelongsToOrganization;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($event) {
+            if (method_exists($event, 'isForceDeleting') && $event->isForceDeleting()) {
+                $event->attendees()->forceDelete();
+                $event->gates()->forceDelete();
+                $event->qrCodes()->forceDelete();
+                $event->checkIns()->forceDelete();
+            } else {
+                $event->attendees()->delete();
+                $event->gates()->delete();
+                $event->qrCodes()->delete();
+                $event->checkIns()->delete();
+            }
+        });
+    }
+
     protected $fillable = [
         'name', 'slug', 'description', 'invitation_title', 'invitation_description', 'title_font', 'venue_name', 'venue_address',
         'venue_city', 'venue_country', 'venue_latitude', 'venue_longitude',

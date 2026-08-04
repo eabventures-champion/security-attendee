@@ -558,7 +558,8 @@ class AttendeeList extends Component
 
     public function getFilteredAttendeesQuery()
     {
-        $query = Attendee::with(['event', 'qrCode', 'assignedGate', 'latestCheckIn.gate', 'latestCheckIn.scanner']);
+        $query = Attendee::whereHas('event')
+            ->with(['event', 'qrCode', 'assignedGate', 'latestCheckIn.gate', 'latestCheckIn.scanner']);
 
         $isSuperAdmin = auth()->user()->hasRole('super_admin') || auth()->user()->email === 'superadmin@attendflow.com';
         if (!$isSuperAdmin && auth()->user()->organization_id) {
