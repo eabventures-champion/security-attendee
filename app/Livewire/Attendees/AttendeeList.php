@@ -32,6 +32,7 @@ class AttendeeList extends Component
     public int $perPage = 10;
     public array $selectedAttendees = [];
     public bool $selectAll = false;
+    public bool $selectAllOnPage = false;
 
     public function toggleExpandOrg(int $orgId): void
     {
@@ -555,31 +556,74 @@ class AttendeeList extends Component
         }
     }
 
+    public function getFilteredAttendeesQuery()
+    {
+        $query = Attendee::with(['event', 'qrCode', 'assignedGate', 'latestCheckIn.gate', 'latestCheckIn.scanner']);
+
+        $isSuperAdmin = auth()->user()->hasRole('super_admin') || auth()->user()->email === 'superadmin@attendflow.com';
+        if (!$isSuperAdmin && auth()->user()->organization_id) {
+            $query->whereHas('event', fn($q) => $q->where('organization_id', auth()->user()->organization_id));
+        }
+
+        if ($this->eventUuid) {
+            $event = Event::where('uuid', $this->eventUuid)->first();
+            if ($event) {
+                $query->where('event_id', $event->id);
+            }
+        }
+
+        if ($this->search) {
+            $query->where(function($q) {
+                $q->where('full_name', 'like', '%'.$this->search.'%')
+                  ->orWhere('email', 'like', '%'.$this->search.'%');
+            });
+        }
+
+        if ($this->statusFilter !== '') {
+            $query->where('verification_status', $this->statusFilter);
+        }
+
+        if ($this->roleFilter) {
+            $query->where('access_role', $this->roleFilter);
+        }
+
+        if ($this->categoryFilter === 'no_details') {
+            $query->where(function($q) {
+                $q->where('email', 'like', '%@attendflow.pass')
+                  ->orWhere('phone', 'like', '000%')
+                  ->orWhere('full_name', 'like', '%Guest Pass%');
+            });
+        } elseif ($this->categoryFilter === 'details') {
+            $query->where('email', 'not like', '%@attendflow.pass')
+                  ->where('phone', 'not like', '000%')
+                  ->where('full_name', 'not like', '%Guest Pass%');
+        }
+
+        return $query;
+    }
+
     public function updatedSelectAllOnPage($value)
     {
         if ($value) {
-            // Select all attendees on the current page
-            $query = Attendee::query();
-            if ($this->eventUuid) {
-                $event = Event::where('uuid', $this->eventUuid)->first();
-                if ($event) $query->where('event_id', $event->id);
-            }
-            if ($this->search) {
-                $query->where(function($q) {
-                    $q->where('full_name', 'like', '%'.$this->search.'%')
-                      ->orWhere('email', 'like', '%'.$this->search.'%');
-                });
-            }
-            if ($this->statusFilter !== '') {
-                $query->where('verification_status', $this->statusFilter);
-            }
-            if ($this->roleFilter) {
-                $query->where('access_role', $this->roleFilter);
-            }
-            $this->selectedAttendees = $query->latest()->paginate($this->perPage)->pluck('uuid')->toArray();
+            $pageUuids = $this->getFilteredAttendeesQuery()
+                ->latest()
+                ->paginate($this->perPage, ['*'], 'page', $this->getPage())
+                ->pluck('uuid')
+                ->map(fn($uuid) => (string) $uuid)
+                ->toArray();
+
+            $this->selectedAttendees = array_values(array_unique(array_merge($this->selectedAttendees, $pageUuids)));
         } else {
-            $this->selectedAttendees = [];
+            $pageUuids = $this->getFilteredAttendeesQuery()
+                ->latest()
+                ->paginate($this->perPage, ['*'], 'page', $this->getPage())
+                ->pluck('uuid')
+                ->map(fn($uuid) => (string) $uuid)
+                ->toArray();
+
+            $this->selectedAttendees = array_values(array_diff($this->selectedAttendees, $pageUuids));
         }
+        $this->selectAll = $value;
     }
 
     public function bulkDeleteAttendees()
@@ -591,6 +635,7 @@ class AttendeeList extends Component
 
         $this->selectedAttendees = [];
         $this->selectAllOnPage = false;
+        $this->selectAll = false;
         session()->flash('success', "{$count} attendee(s) deleted successfully.");
     }
 
@@ -602,6 +647,7 @@ class AttendeeList extends Component
 
         $this->selectedAttendees = [];
         $this->selectAllOnPage = false;
+        $this->selectAll = false;
         session()->flash('success', "{$count} attendee(s) updated to '" . AccessRole::from($newRole)->label() . "'.");
     }
 
@@ -668,56 +714,22 @@ class AttendeeList extends Component
 
     public function render()
     {
-        $countQuery = Attendee::query();
-        if ($this->eventUuid) {
-            $event = Event::where('uuid', $this->eventUuid)->first();
-            if ($event) {
-                $countQuery->where('event_id', $event->id);
-            }
-        }
+        $countQuery = $this->getFilteredAttendeesQuery();
 
         $totalCount = (clone $countQuery)->count();
         $verifiedCount = (clone $countQuery)->where('verification_status', VerificationStatus::Verified)->count();
         $pendingCount = (clone $countQuery)->where('verification_status', VerificationStatus::Pending)->count();
         $rejectedCount = (clone $countQuery)->where('verification_status', VerificationStatus::Rejected)->count();
 
-        $query = Attendee::with(['event', 'qrCode', 'assignedGate', 'latestCheckIn.gate', 'latestCheckIn.scanner']);
+        $attendees = $this->getFilteredAttendeesQuery()->latest()->paginate($this->perPage);
 
-        if ($this->eventUuid) {
-            $event = Event::where('uuid', $this->eventUuid)->first();
-            if ($event) {
-                $query->where('event_id', $event->id);
-            }
+        // Keep selectAllOnPage checkbox in sync with current page items
+        $currentPageUuids = $attendees->pluck('uuid')->map(fn($u) => (string) $u)->toArray();
+        if (count($currentPageUuids) > 0 && count(array_diff($currentPageUuids, $this->selectedAttendees)) === 0) {
+            $this->selectAllOnPage = true;
+        } else {
+            $this->selectAllOnPage = false;
         }
-
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('full_name', 'like', '%'.$this->search.'%')
-                  ->orWhere('email', 'like', '%'.$this->search.'%');
-            });
-        }
-
-        if ($this->statusFilter !== '') {
-            $query->where('verification_status', $this->statusFilter);
-        }
-
-        if ($this->roleFilter) {
-            $query->where('access_role', $this->roleFilter);
-        }
-
-        if ($this->categoryFilter === 'no_details') {
-            $query->where(function($q) {
-                $q->where('email', 'like', '%@attendflow.pass')
-                  ->orWhere('phone', 'like', '000%')
-                  ->orWhere('full_name', 'like', '%Guest Pass%');
-            });
-        } elseif ($this->categoryFilter === 'details') {
-            $query->where('email', 'not like', '%@attendflow.pass')
-                  ->where('phone', 'not like', '000%')
-                  ->where('full_name', 'not like', '%Guest Pass%');
-        }
-
-        $attendees = $query->latest()->paginate($this->perPage);
         $events = Event::select('id', 'uuid', 'name')->get();
 
         $availableGates = \App\Models\Gate::all();
@@ -799,36 +811,6 @@ class AttendeeList extends Component
 
     public function updatedSelectAll($value): void
     {
-        if ($value) {
-            $query = Attendee::query();
-
-            $isSuperAdmin = auth()->user()->hasRole('super_admin') || auth()->user()->email === 'superadmin@attendflow.com';
-            if (!$isSuperAdmin && auth()->user()->organization_id) {
-                $query->whereHas('event', fn($q) => $q->where('organization_id', auth()->user()->organization_id));
-            }
-
-            if ($this->eventUuid) {
-                $query->whereHas('event', fn($q) => $q->where('uuid', $this->eventUuid));
-            }
-
-            if ($this->search) {
-                $query->where(function($q) {
-                    $q->where('full_name', 'like', '%'.$this->search.'%')
-                      ->orWhere('email', 'like', '%'.$this->search.'%');
-                });
-            }
-
-            if ($this->statusFilter !== '') {
-                $query->where('verification_status', $this->statusFilter);
-            }
-
-            if ($this->roleFilter) {
-                $query->where('access_role', $this->roleFilter);
-            }
-
-            $this->selectedAttendees = $query->pluck('id')->map(fn($id) => (string) $id)->toArray();
-        } else {
-            $this->selectedAttendees = [];
-        }
+        $this->updatedSelectAllOnPage($value);
     }
 }
