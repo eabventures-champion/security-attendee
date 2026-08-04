@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AttendFlow - Enterprise Event Attendance Management & Secure QR Check-in Platform. Manage events, verify attendees, and streamline check-ins with military-grade QR security.">
-    <title>AttendFlow — Smart Event Attendance Platform</title>
+    <meta name="description" content="Built Studios - Enterprise Event Attendance Management & Secure QR Check-in Platform. Manage events, verify attendees, and streamline check-ins with military-grade QR security.">
+    <title>Built Studios — Smart Event Attendance Platform</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -1126,8 +1126,8 @@
         <!-- Navigation -->
         <nav class="homepage-nav">
             <a href="/" class="logo">
-                <div class="logo-icon">AF</div>
-                <span class="logo-text">AttendFlow</span>
+                <div class="logo-icon">BS</div>
+                <span class="logo-text">Built Studios</span>
             </a>
 
             <!-- Desktop Links -->
@@ -1559,7 +1559,7 @@
 
         <!-- Footer -->
         <footer>
-            <p>&copy; {{ date('Y') }} AttendFlow. Built with Laravel. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Built Studios. Built with Laravel. All rights reserved.</p>
         </footer>
     </div>
 </body>

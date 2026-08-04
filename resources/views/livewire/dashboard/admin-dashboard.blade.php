@@ -76,7 +76,7 @@
                 </div>
                 <div class="space-y-1.5 min-w-0 flex-1">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <h2 class="text-lg sm:text-2xl font-black text-white leading-snug">Welcome to AttendFlow, {{ auth()->user()->name }}! 🎉</h2>
+                        <h2 class="text-lg sm:text-2xl font-black text-white leading-snug">Welcome to Built Studios, {{ auth()->user()->name }}! 🎉</h2>
                         <span class="px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-widest inline-block">
                             ACTIVE WORKSPACE
                         </span>

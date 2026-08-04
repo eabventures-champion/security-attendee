@@ -96,13 +96,13 @@
             <!-- Logo area -->
             <div class="flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800">
                 <a href="{{ route('dashboard') ?? '#' }}" @click="if (window.innerWidth < 1024) sidebarOpen = false" class="flex items-center overflow-hidden">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shrink-0 shadow-md">
-                        A
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-md tracking-tight">
+                        BS
                     </div>
                     <span x-show="sidebarOpen" 
                           x-transition.opacity.duration.300ms
                           class="ml-3 text-xl font-bold text-slate-800 dark:text-white whitespace-nowrap">
-                        AttendFlow
+                        Built Studios
                     </span>
                 </a>
                 <button @click="sidebarOpen = false" class="lg:hidden text-slate-400 hover:text-white">

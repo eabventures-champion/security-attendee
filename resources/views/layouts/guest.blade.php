@@ -231,8 +231,8 @@
     <!-- Navigation Bar -->
     <nav class="homepage-nav">
         <a href="/" class="logo">
-            <div class="logo-icon">AF</div>
-            <span class="logo-text">AttendFlow</span>
+            <div class="logo-icon">BS</div>
+            <span class="logo-text">Built Studios</span>
         </a>
 
         <!-- Desktop Links -->
