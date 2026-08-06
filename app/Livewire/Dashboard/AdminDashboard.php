@@ -19,6 +19,7 @@ use Carbon\Carbon;
 class AdminDashboard extends Component
 {
     public int $totalEvents = 0;
+    public int $totalCapacity = 0;
     public int $totalRegistrations = 0;
     public int $verifiedAttendees = 0;
     public int $pendingVerifications = 0;
@@ -88,10 +89,9 @@ class AdminDashboard extends Component
                         ->where('verification_status', VerificationStatus::Verified)
                         ->count();
                 } elseif ($metric === 'checked_in') {
-                    $this->breakdownTitle = 'Checked In Today Breakdown by Organization Admin';
+                    $this->breakdownTitle = 'Checked In Breakdown by Organization Admin';
                     $val = CheckIn::whereHas('attendee')->whereHas('event', fn($q) => $q->where('organization_id', $org->id))
                         ->where('scan_result', ScanResult::Granted)
-                        ->whereDate('scanned_at', Carbon::today())
                         ->count();
                 }
 
@@ -122,10 +122,9 @@ class AdminDashboard extends Component
                         ->where('verification_status', VerificationStatus::Verified)
                         ->count();
                 } elseif ($metric === 'checked_in') {
-                    $this->breakdownTitle = 'Checked-In Today Breakdown by Event';
+                    $this->breakdownTitle = 'Checked-In Breakdown by Event';
                     $val = CheckIn::whereHas('attendee')->where('event_id', $event->id)
                         ->where('scan_result', ScanResult::Granted)
-                        ->whereDate('scanned_at', Carbon::today())
                         ->count();
                 }
 
@@ -162,7 +161,7 @@ class AdminDashboard extends Component
 
         $eventQuery = Event::query();
         $attendeeQuery = Attendee::whereHas('event');
-        $checkInQuery = CheckIn::whereHas('attendee')->whereHas('event')->where('scan_result', ScanResult::Granted)->whereDate('scanned_at', Carbon::today());
+        $checkInQuery = CheckIn::whereHas('attendee')->whereHas('event')->where('scan_result', ScanResult::Granted);
 
         if (!$isSuperAdmin && $user->organization_id) {
             $eventQuery->where('organization_id', $user->organization_id);
@@ -171,6 +170,7 @@ class AdminDashboard extends Component
         }
 
         $this->totalEvents = $eventQuery->count();
+        $this->totalCapacity = (int) (clone $eventQuery)->sum('capacity');
         $this->totalRegistrations = $attendeeQuery->count();
         $this->verifiedAttendees = (clone $attendeeQuery)->where('verification_status', VerificationStatus::Verified)->count();
         $this->pendingVerifications = (clone $attendeeQuery)->where('verification_status', VerificationStatus::Pending)->count();
@@ -383,6 +383,7 @@ class AdminDashboard extends Component
 
         return view('livewire.dashboard.admin-dashboard', [
             'totalEvents' => $this->totalEvents,
+            'totalCapacity' => $this->totalCapacity,
             'totalRegistrations' => $this->totalRegistrations,
             'verifiedAttendees' => $this->verifiedAttendees,
             'pendingVerifications' => $this->pendingVerifications,
@@ -396,6 +397,7 @@ class AdminDashboard extends Component
             'breakdownTitle' => $this->breakdownTitle,
             'breakdownData' => $this->breakdownData,
             'showWelcomeGuide' => $this->showWelcomeGuide,
+            'showSendVipEmailModal' => $this->showSendVipEmailModal,
             'chart' => $this->getRegistrationChartData(),
             'upcomingEvents' => $this->upcomingEvents,
         ]);

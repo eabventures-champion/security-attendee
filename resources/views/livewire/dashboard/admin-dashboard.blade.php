@@ -252,7 +252,10 @@
                 </div>
                 <div class="min-w-0">
                     <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Registrations</p>
-                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ $totalRegistrations }}</h3>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5 flex items-baseline gap-1">
+                        <span>{{ number_format($totalRegistrations) }}</span>
+                        <span class="text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-500">/ {{ $totalCapacity > 0 ? number_format($totalCapacity) : '∞' }}</span>
+                    </h3>
                     <span class="text-[9px] sm:text-[10px] font-extrabold text-purple-500 dark:text-purple-400 group-hover:underline mt-0.5 block truncate">{{ $breakdownBtnLabel }}</span>
                 </div>
             </div>
@@ -266,7 +269,10 @@
                 </div>
                 <div class="min-w-0">
                     <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Verified</p>
-                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ $verifiedAttendees }}</h3>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5 flex items-baseline gap-1">
+                        <span>{{ number_format($verifiedAttendees) }}</span>
+                        <span class="text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-500">/ {{ $totalCapacity > 0 ? number_format($totalCapacity) : '∞' }}</span>
+                    </h3>
                     <span class="text-[9px] sm:text-[10px] font-extrabold text-emerald-500 dark:text-emerald-400 group-hover:underline mt-0.5 block truncate">{{ $breakdownBtnLabel }}</span>
                 </div>
             </div>
@@ -280,7 +286,10 @@
                 </div>
                 <div class="min-w-0">
                     <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Checked In</p>
-                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ $checkedInToday }}</h3>
+                    <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5 flex items-baseline gap-1">
+                        <span>{{ number_format($checkedInToday) }}</span>
+                        <span class="text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-500">/ {{ $totalCapacity > 0 ? number_format($totalCapacity) : '∞' }}</span>
+                    </h3>
                     <span class="text-[9px] sm:text-[10px] font-extrabold text-amber-500 dark:text-amber-400 group-hover:underline mt-0.5 block truncate">{{ $breakdownBtnLabel }}</span>
                 </div>
             </div>
