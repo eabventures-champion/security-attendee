@@ -18,6 +18,7 @@ class TeamMemberInvitation extends Mailable
     public string $rawPassword;
     public string $inviteUrl;
     public string $roleLabel;
+    public string $organizationName;
 
     /**
      * Create a new message instance.
@@ -28,6 +29,7 @@ class TeamMemberInvitation extends Mailable
         $this->rawPassword = $rawPassword;
         $this->roleLabel = $user->role_label;
         $this->inviteUrl = route('team.accept_invite', ['token' => $user->invitation_token]);
+        $this->organizationName = $user->organization?->name ?? config('app.name', 'AttendFlow');
     }
 
     /**

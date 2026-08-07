@@ -135,7 +135,15 @@ class EventList extends Component
 
     public function render()
     {
+        $user = auth()->user();
+        $assignedEventIds = $user->getAssignedEventIds();
+
         $baseQuery = Event::query();
+
+        // Security personnel: only show events they are assigned to
+        if ($assignedEventIds !== null) {
+            $baseQuery->whereIn('id', $assignedEventIds);
+        }
 
         $totalCount = (clone $baseQuery)->count();
         $publishedCount = (clone $baseQuery)->where('status', EventStatus::Published)->count();
@@ -145,6 +153,9 @@ class EventList extends Component
         $archivedCount = (clone $baseQuery)->where('status', EventStatus::Archived)->count();
 
         $events = Event::query()
+            ->when($assignedEventIds !== null, function ($query) use ($assignedEventIds) {
+                $query->whereIn('id', $assignedEventIds);
+            })
             ->withCount([
                 'attendees as total_registrations_count',
                 'attendees as verified_attendees_count' => function ($q) {

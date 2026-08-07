@@ -142,13 +142,13 @@
         <div class="container">
             <div class="header">
                 <p>Team Member Access Invitation</p>
-                <h1>Welcome to AttendFlow</h1>
+                <h1>Welcome to {{ $organizationName }}</h1>
             </div>
             
             <div class="content">
                 <div class="greeting">Hello {{ $user->name }},</div>
                 <div class="message">
-                    You have been added as a team member on <strong>AttendFlow</strong>. Your administrator has assigned you the role of <strong class="role-badge">{{ $roleLabel }}</strong>.
+                    You have been added as a team member on <strong>{{ $organizationName }}</strong>. Your administrator has assigned you the role of <strong class="role-badge">{{ $roleLabel }}</strong>.
                 </div>
 
                 <div class="card">

@@ -169,6 +169,14 @@ class AdminDashboard extends Component
             $checkInQuery->whereHas('event', fn($q) => $q->where('organization_id', $user->organization_id));
         }
 
+        // Security personnel: scope to only their assigned events
+        $assignedEventIds = $user->getAssignedEventIds();
+        if ($assignedEventIds !== null) {
+            $eventQuery->whereIn('id', $assignedEventIds);
+            $attendeeQuery->whereIn('event_id', $assignedEventIds);
+            $checkInQuery->whereIn('event_id', $assignedEventIds);
+        }
+
         $this->totalEvents = $eventQuery->count();
         $this->totalCapacity = (int) (clone $eventQuery)->sum('capacity');
         $this->totalRegistrations = $attendeeQuery->count();
@@ -337,6 +345,12 @@ class AdminDashboard extends Component
         $query = Event::query();
         if (!$isSuperAdmin && $user->organization_id) {
             $query->where('organization_id', $user->organization_id);
+        }
+
+        // Security personnel: scope to only their assigned events
+        $assignedEventIds = $user->getAssignedEventIds();
+        if ($assignedEventIds !== null) {
+            $query->whereIn('id', $assignedEventIds);
         }
 
         $upcoming = (clone $query)->where('starts_at', '>=', now())->orderBy('starts_at', 'asc')->take(5)->get();

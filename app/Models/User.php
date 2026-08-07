@@ -194,6 +194,36 @@ class User extends Authenticatable
         return $attendee ? $attendee->assignedGate : null;
     }
 
+    /**
+     * Get the event IDs this security user is assigned to (via gates).
+     * Returns null for non-security users (no filtering needed).
+     */
+    public function getAssignedEventIds(): ?array
+    {
+        if (!$this->isSecurityPersonnel()) {
+            return null;
+        }
+
+        $eventIds = collect();
+
+        // From directly assigned gate on the user record
+        if ($this->assigned_gate_id) {
+            $gate = Gate::find($this->assigned_gate_id);
+            if ($gate) {
+                $eventIds->push($gate->event_id);
+            }
+        }
+
+        // From attendee records where this user's email is assigned to a gate
+        $attendeeEventIds = Attendee::where('email', $this->email)
+            ->whereNotNull('assigned_gate_id')
+            ->pluck('event_id');
+
+        $eventIds = $eventIds->merge($attendeeEventIds)->unique()->values()->all();
+
+        return $eventIds;
+    }
+
     public function belongsToOrganization(Organization $organization): bool
     {
         return $this->organization_id === $organization->id;

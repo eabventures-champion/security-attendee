@@ -88,6 +88,10 @@
                         <span>Archive</span>
                     </button>
                 @endif
+                <button @click="$dispatch('open-clear-data-modal')" class="px-3.5 py-2.5 rounded-xl border border-orange-500/30 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span>Clear Data</span>
+                </button>
                 <button wire:click="deleteEvent" wire:confirm="Are you sure you want to delete this event?" class="px-3.5 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     <span>Delete</span>
@@ -571,6 +575,110 @@
                         <p class="text-[11px] text-slate-500">Live gate activity will appear here as passes are scanned.</p>
                     </div>
                 @endforelse
+            </div>
+        </div>
+    </div>
+    <!-- Clear Event Data Confirmation Modal -->
+    <div
+        x-data="{ showClearModal: false }"
+        x-on:open-clear-data-modal.window="showClearModal = true"
+        x-cloak
+    >
+        <!-- Backdrop -->
+        <div
+            x-show="showClearModal"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            @click="showClearModal = false"
+        ></div>
+
+        <!-- Modal Panel -->
+        <div
+            x-show="showClearModal"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+            x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            @keydown.escape.window="showClearModal = false"
+        >
+            <div class="w-full max-w-md bg-slate-900 border border-orange-500/30 rounded-2xl shadow-2xl shadow-orange-500/10 overflow-hidden" @click.stop>
+                <!-- Modal Header -->
+                <div class="p-6 pb-4">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
+                            <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-white">Clear All Event Data</h3>
+                            <p class="text-xs text-slate-400 font-medium mt-1">This action is permanent and cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="px-6 pb-5 space-y-4">
+                    <div class="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 space-y-3">
+                        <p class="text-xs font-bold text-orange-300 uppercase tracking-wider">This will permanently delete:</p>
+                        <ul class="space-y-2">
+                            <li class="flex items-center gap-2 text-sm text-slate-300">
+                                <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <span>All attendee registrations</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-sm text-slate-300">
+                                <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>All verification records</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-sm text-slate-300">
+                                <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                <span>All check-in scan records</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-sm text-slate-300">
+                                <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                <span>All QR codes</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-sm text-slate-300">
+                                <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                <span>All single-use invitation tokens</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        <p class="text-xs text-emerald-300 font-medium leading-relaxed">
+                            <strong>Preserved:</strong> The event itself, its settings, and all configured gates will remain intact.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 bg-slate-950/50 border-t border-white/5 flex items-center justify-end gap-3">
+                    <button
+                        @click="showClearModal = false"
+                        type="button"
+                        class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 transition-all cursor-pointer"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        @click="showClearModal = false; $wire.clearEventData()"
+                        type="button"
+                        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white text-xs font-extrabold shadow-lg shadow-orange-500/30 transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Yes, Clear All Data</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

@@ -45,7 +45,12 @@ class GateManager extends Component
             }
         }
 
-        $this->allEvents = Event::orderBy('name')->get();
+        $assignedEventIds = auth()->user()->getAssignedEventIds();
+        $eventsQuery = Event::orderBy('name');
+        if ($assignedEventIds !== null) {
+            $eventsQuery->whereIn('id', $assignedEventIds);
+        }
+        $this->allEvents = $eventsQuery->get();
         
         $this->availableRoles = array_map(function($role) {
             return $role->value;

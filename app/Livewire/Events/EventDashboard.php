@@ -64,6 +64,28 @@ class EventDashboard extends Component
         return redirect()->route('events.index');
     }
 
+    public function clearEventData()
+    {
+        $eventId = $this->event->id;
+
+        // Delete check-ins first (depends on attendees and qr_codes)
+        CheckIn::where('event_id', $eventId)->delete();
+
+        // Delete QR codes for this event
+        \App\Models\QrCode::where('event_id', $eventId)->delete();
+
+        // Force-delete attendees (bypass soft-delete so records are fully removed)
+        Attendee::where('event_id', $eventId)->forceDelete();
+
+        // Delete single-use invitation tokens for this event
+        \App\Models\EventInvitation::where('event_id', $eventId)->delete();
+
+        // Reload event to refresh relationship counts
+        $this->loadEvent();
+
+        session()->flash('success', 'All event data (registrations, verifications, check-ins, QR codes & invitation tokens) has been cleared successfully.');
+    }
+
     public string $generatedTokenLink = '';
     public string $generatedTokenType = '';
     public string $generatedTokenWhatsappUrl = '';
