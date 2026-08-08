@@ -162,7 +162,7 @@ class EventList extends Component
                     $q->where('verification_status', \App\Enums\VerificationStatus::Verified);
                 },
                 'checkIns as checked_in_count' => function ($q) {
-                    $q->where('scan_result', \App\Enums\ScanResult::Granted);
+                    $q->whereHas('attendee')->where('scan_result', \App\Enums\ScanResult::Granted);
                 },
                 'gates as gates_count'
             ])
@@ -186,7 +186,7 @@ class EventList extends Component
                 $q->withCount([
                     'attendees as total_registrations_count',
                     'attendees as verified_attendees_count' => fn($k) => $k->where('verification_status', \App\Enums\VerificationStatus::Verified),
-                    'checkIns as checked_in_count' => fn($k) => $k->where('scan_result', \App\Enums\ScanResult::Granted),
+                    'checkIns as checked_in_count' => fn($k) => $k->whereHas('attendee')->where('scan_result', \App\Enums\ScanResult::Granted),
                     'gates as gates_count'
                 ]);
                 if ($this->search) {

@@ -23,8 +23,8 @@ class EventForm extends Component
     public string $name = '';
     public string $slug = '';
     public string $description = '';
-    public string $invitation_title = 'PRIVATE VVIP INVITATION';
-    public string $invitation_description = 'You have received an exclusive private VVIP invitation directly from the event organizers. Confirming your attendance grants you VVIP access privileges and a pre-verified digital pass.';
+    public string $invitation_title = 'PRIVATE EVENT INVITATION';
+    public string $invitation_description = 'You have received a private invitation directly from the event organizers. Confirming your attendance secures your digital pass.';
     public string $title_font = 'Alex Brush';
     public $cover_image = null;
     public string $existing_cover_image_path = '';
@@ -49,6 +49,10 @@ class EventForm extends Component
     public string $status = 'draft';
     public $organization_id = null;
 
+    // Step 5: Form Customization
+    public array $form_standard_fields = [];
+    public array $form_custom_fields = [];
+
     public int $currentStep = 1;
     public int $totalSteps = 4;
 
@@ -65,6 +69,7 @@ class EventForm extends Component
         }
 
         $targetUuid = $uuid ?? session('active_event_draft_uuid');
+        $formFieldsConfig = Event::defaultFormFieldsConfig();
 
         if ($targetUuid) {
             $event = Event::where('uuid', $targetUuid)->first();
@@ -91,6 +96,7 @@ class EventForm extends Component
                 $this->default_entry_mode = $event->settings['default_entry_mode'] ?? 'details';
                 $this->organization_id = $event->organization_id;
                 $this->status = $event->status instanceof EventStatus ? $event->status->value : ($event->status ?? 'draft');
+                $formFieldsConfig = $event->form_fields_config;
 
                 if (!$uuid && session('active_event_draft_step')) {
                     $this->currentStep = min($this->totalSteps, max(1, (int) session('active_event_draft_step')));
@@ -98,6 +104,31 @@ class EventForm extends Component
                 }
             }
         }
+
+        $this->form_standard_fields = $formFieldsConfig['standard_fields'];
+        $this->form_custom_fields = $formFieldsConfig['custom_fields'];
+    }
+
+    public function updatedIsPrivate($value): void
+    {
+        $this->is_private = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public function addCustomField(): void
+    {
+        $this->form_custom_fields[] = [
+            'id' => 'field_' . Str::random(8),
+            'label' => '',
+            'type' => 'text',
+            'required' => false,
+            'options' => '',
+        ];
+    }
+
+    public function removeCustomField(int $index): void
+    {
+        unset($this->form_custom_fields[$index]);
+        $this->form_custom_fields = array_values($this->form_custom_fields);
     }
 
     public function rules(): array
@@ -151,11 +182,27 @@ class EventForm extends Component
             $this->cover_image = null;
         }
 
+        $formFieldsData = [
+            'standard_fields' => $this->form_standard_fields,
+            'custom_fields' => array_values(array_filter($this->form_custom_fields, fn($f) => !empty(trim($f['label'] ?? '')))),
+        ];
+
         if ($this->eventUuid) {
-            Event::where('uuid', $this->eventUuid)->update($data);
+            $event = Event::where('uuid', $this->eventUuid)->first();
+            if ($event) {
+                $currentSettings = is_array($event->settings) ? $event->settings : [];
+                $currentSettings['default_entry_mode'] = $this->default_entry_mode;
+                $currentSettings['form_fields'] = $formFieldsData;
+                $data['settings'] = $currentSettings;
+                $event->update($data);
+            }
         } else {
             $data['uuid'] = (string) Str::uuid();
             $data['organization_id'] = auth()->user()->organization_id ?? session('current_organization_id');
+            $data['settings'] = [
+                'default_entry_mode' => $this->default_entry_mode,
+                'form_fields' => $formFieldsData,
+            ];
             $event = Event::create($data);
             $this->eventUuid = $event->uuid;
         }
@@ -273,11 +320,17 @@ class EventForm extends Component
             $data['published_at'] = now();
         }
 
+        $formFieldsData = [
+            'standard_fields' => $this->form_standard_fields,
+            'custom_fields' => array_values(array_filter($this->form_custom_fields, fn($f) => !empty(trim($f['label'] ?? '')))),
+        ];
+
         if ($this->eventUuid) {
             $event = Event::where('uuid', $this->eventUuid)->first();
             if ($event) {
                 $currentSettings = is_array($event->settings) ? $event->settings : [];
                 $currentSettings['default_entry_mode'] = $this->default_entry_mode;
+                $currentSettings['form_fields'] = $formFieldsData;
                 $data['settings'] = $currentSettings;
 
                 $event->fill($data);
@@ -288,7 +341,10 @@ class EventForm extends Component
         } else {
             $data['uuid'] = (string) Str::uuid();
             $data['organization_id'] = auth()->user()->organization_id ?? session('current_organization_id');
-            $data['settings'] = ['default_entry_mode' => $this->default_entry_mode];
+            $data['settings'] = [
+                'default_entry_mode' => $this->default_entry_mode,
+                'form_fields' => $formFieldsData,
+            ];
             $newEvent = Event::create($data);
 
             // Auto-seed primary gate for this new event

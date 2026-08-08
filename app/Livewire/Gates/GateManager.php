@@ -38,20 +38,38 @@ class GateManager extends Component
             $this->event = Event::where('uuid', $eventUuid)->first();
         }
 
-        if (!$this->event) {
-            $this->event = Event::latest()->first();
-            if ($this->event) {
-                $this->eventUuid = $this->event->uuid;
-            }
-        }
-
+        // Build the user's allowed events list first (security users only see assigned events)
         $assignedEventIds = auth()->user()->getAssignedEventIds();
         $eventsQuery = Event::orderBy('name');
         if ($assignedEventIds !== null) {
             $eventsQuery->whereIn('id', $assignedEventIds);
         }
         $this->allEvents = $eventsQuery->get();
-        
+
+        // If no valid event was found from the URL, default to the user's first allowed event
+        if (!$this->event) {
+            if ($this->allEvents->isNotEmpty()) {
+                // Use the first event the user is allowed to access
+                $this->event = $this->allEvents->first();
+            } else {
+                // Fallback for admins with no event filter
+                $this->event = Event::latest()->first();
+            }
+
+            if ($this->event) {
+                $this->eventUuid = $this->event->uuid;
+            }
+        }
+
+        // Verify security user has access to the selected event
+        if ($this->event && $assignedEventIds !== null && !in_array($this->event->id, $assignedEventIds)) {
+            // User doesn't have access to this event, redirect to their first assigned event
+            $this->event = $this->allEvents->first();
+            if ($this->event) {
+                $this->eventUuid = $this->event->uuid;
+            }
+        }
+
         $this->availableRoles = array_map(function($role) {
             return $role->value;
         }, AccessRole::cases());

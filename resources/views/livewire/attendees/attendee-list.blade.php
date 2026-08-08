@@ -15,7 +15,7 @@
             <!-- Secure Link Generator -->
             <button wire:click="openLinkGeneratorModal" class="px-3.5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
                 <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                Secure Link
+                Secure Link (Closed eg. Ticketing)
             </button>
 
             <!-- Bulk Invitations -->
@@ -27,7 +27,7 @@
             <!-- Add Attendee -->
             <button wire:click="openAddModal" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> 
-                Add Attendee
+                Add
             </button>
         </div>
     </div>
@@ -148,6 +148,12 @@
                 </div>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
+                <!-- Bulk Approve -->
+                <button wire:click="bulkApproveAttendees" wire:confirm="Approve and issue digital QR passes to {{ count($selectedAttendees) }} selected attendee(s)?" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/20 flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    Approve &amp; Issue Passes
+                </button>
+
                 <!-- Bulk Role Change -->
                 <div x-data="{ open: false }" class="relative">
                     <button @click="open = !open" class="px-4 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
@@ -683,9 +689,16 @@
                                     <button type="button" wire:click="viewAttendeeDetails('{{ $attendee->uuid }}')" class="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-500/10 transition-colors cursor-pointer" title="View Full Details">
                                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     </button>
-                                    <button type="button" wire:click="verifyAttendee('{{ $attendee->uuid }}')" class="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-emerald-500/10 transition-colors cursor-pointer" title="Verify">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    </button>
+                                    @if(($attendee->verification_status->value ?? $attendee->verification_status) === 'pending')
+                                        <button type="button" wire:click="verifyAttendee('{{ $attendee->uuid }}')" class="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors cursor-pointer flex items-center gap-1 shadow-md shadow-emerald-500/20" title="Approve Attendee &amp; Issue QR Pass">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            <span>Approve &amp; Issue Pass</span>
+                                        </button>
+                                    @else
+                                        <button type="button" wire:click="verifyAttendee('{{ $attendee->uuid }}')" class="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-emerald-500/10 transition-colors cursor-pointer" title="Re-Verify Pass">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        </button>
+                                    @endif
                                     <button type="button" wire:click="deleteAttendee('{{ $attendee->uuid }}')" wire:confirm="Remove this attendee?" class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer" title="Delete">
                                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
@@ -932,6 +945,37 @@
                     </div>
                 @endif
 
+                <!-- Custom Extra Fields Answers (If Submitted) -->
+                @php
+                    $customAnswers = is_array($selectedAttendee->metadata) && isset($selectedAttendee->metadata['custom_fields'])
+                        ? $selectedAttendee->metadata['custom_fields']
+                        : [];
+                    $customFieldsConfig = $selectedAttendee->event ? ($selectedAttendee->event->form_fields_config['custom_fields'] ?? []) : [];
+                @endphp
+
+                @if(!empty($customAnswers))
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-extrabold text-purple-600 dark:text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Custom Extra Field Responses
+                        </h4>
+                        <div class="bg-purple-500/10 p-4 rounded-2xl border border-purple-500/20 text-xs font-medium space-y-2">
+                            @foreach($customFieldsConfig as $cConf)
+                                @php
+                                    $cId = $cConf['id'] ?? '';
+                                    $ans = $customAnswers[$cId] ?? null;
+                                @endphp
+                                @if($ans !== null && $ans !== '')
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-purple-500/10 pb-1.5 last:border-b-0 last:pb-0 gap-1">
+                                        <span class="text-purple-300 font-bold">{{ $cConf['label'] ?? 'Custom Field' }}:</span>
+                                        <span class="text-white font-extrabold">{{ is_array($ans) ? implode(', ', $ans) : (is_bool($ans) ? ($ans ? 'Yes' : 'No') : $ans) }}</span>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Security & Pass Details -->
                 <div class="space-y-2">
                     <h4 class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pass & QR Security Token</h4>
@@ -956,6 +1000,7 @@
                         <!-- Visual QR Code Graphic -->
                         @if($selectedAttendee->qrCode)
                             <div class="p-3 bg-white rounded-2xl border border-slate-200 dark:border-white/20 shadow-lg flex flex-col items-center gap-1.5 shrink-0 self-center sm:self-auto">
+                                <span class="text-[11px] font-black text-slate-900 uppercase tracking-wider text-center max-w-[140px] truncate">{{ $selectedAttendee->full_name }}</span>
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($selectedAttendee->qrCode->secure_token) }}" 
                                      alt="Attendee Entry Pass QR Code" 
                                      class="w-32 h-32 object-contain rounded-lg">
@@ -1123,6 +1168,20 @@ sarah@company.com, alex@tech.org"></textarea>
                 </div>
 
                 <div class="space-y-4">
+                    <!-- Event Selector -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Select Event <span class="text-red-500">*</span></label>
+                        <select wire:model.live="gen_event_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <option value="">— Choose an event —</option>
+                            @foreach($events as $evt)
+                                <option value="{{ $evt->id }}">{{ $evt->name }}</option>
+                            @endforeach
+                        </select>
+                        @if(empty($gen_event_id))
+                            <p class="text-[10px] text-amber-500 font-medium mt-1">Please select which event this secure link is for.</p>
+                        @endif
+                    </div>
+
                     <!-- Category Selector (Details vs No Details) -->
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Invitation Category / Entry Mode</label>
@@ -1143,6 +1202,82 @@ sarah@company.com, alex@tech.org"></textarea>
                                 <p class="text-[10px] text-slate-400 font-medium mt-1">Form bypassed. Click poster image to instantly claim pass.</p>
                             </button>
                         </div>
+
+                        <!-- Dropdown Field Selection / Form Controls (Shown when Details / Form Entry mode is selected) -->
+                        @if($gen_category === 'details')
+                            @php
+                                $selEvent = $gen_event_id ? $events->firstWhere('id', (int)$gen_event_id) : null;
+                                $ffConfig = $selEvent ? $selEvent->form_fields_config : null;
+                                $stdFields = $ffConfig['standard_fields'] ?? [
+                                    'full_name' => 'required',
+                                    'email' => 'required',
+                                    'phone' => 'required',
+                                    'company' => 'optional',
+                                    'job_title' => 'optional',
+                                ];
+                                $custFields = $ffConfig['custom_fields'] ?? [];
+                                
+                                $stdLabels = [
+                                    'full_name' => 'Full Name',
+                                    'email' => 'Email Address',
+                                    'phone' => 'Phone Number',
+                                    'company' => 'Company / Organization',
+                                    'job_title' => 'Job Title',
+                                    'country' => 'Country',
+                                    'gender' => 'Gender',
+                                    'emergency_contact_name' => 'Emergency Contact Name',
+                                    'emergency_contact_phone' => 'Emergency Contact Phone',
+                                    'dietary_preferences' => 'Dietary Preferences',
+                                    'accessibility_needs' => 'Accessibility Needs',
+                                    'registration_reason' => 'Registration Reason',
+                                ];
+                            @endphp
+
+                            <div class="mt-3 p-3.5 rounded-xl bg-amber-500/5 dark:bg-slate-800/90 border border-amber-500/30 space-y-3 animate-fadeIn">
+                                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/80 pb-2">
+                                    <span class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>⚙️</span>
+                                        <span>Configured Form Input Fields</span>
+                                    </span>
+                                    <span class="text-[10px] font-bold text-slate-400">Defaulted from Event Settings</span>
+                                </div>
+
+                                <!-- Standard Input Fields List -->
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    @foreach($stdLabels as $key => $label)
+                                        @php $st = $stdFields[$key] ?? 'disabled'; @endphp
+                                        @if($st !== 'disabled')
+                                            <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                                <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate mr-1">{{ $label }}</span>
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase shrink-0 {{ $st === 'required' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30' }}">
+                                                    {{ $st }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+
+                                <!-- Custom Extra Fields List -->
+                                @if(!empty($custFields))
+                                    <div class="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1.5">
+                                        <span class="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider block">Custom Extra Questions:</span>
+                                        <div class="space-y-1">
+                                            @foreach($custFields as $cf)
+                                                <div class="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-between">
+                                                    <span class="text-[11px] font-bold text-purple-700 dark:text-purple-300 truncate mr-1">{{ $cf['label'] ?? 'Question' }} ({{ strtoupper($cf['type'] ?? 'text') }})</span>
+                                                    <span class="text-[9px] font-black uppercase text-purple-600 dark:text-purple-400 shrink-0">{{ !empty($cf['required']) ? 'Required' : 'Optional' }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <div class="mt-2 p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-300 text-xs font-medium flex items-center gap-2">
+                                <span>⚡</span>
+                                <span>Direct Claim mode active. Form entry is bypassed so guests claim passes instantly without filling input fields.</span>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Target Role -->

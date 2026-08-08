@@ -68,6 +68,48 @@ class Event extends Model
         return !empty($parts) ? implode(', ', $parts) : 'Location TBA';
     }
 
+    public static function defaultFormFieldsConfig(): array
+    {
+        return [
+            'standard_fields' => [
+                'full_name' => 'required',
+                'email' => 'required',
+                'phone' => 'required',
+                'company' => 'optional',
+                'job_title' => 'optional',
+                'country' => 'disabled',
+                'gender' => 'disabled',
+                'emergency_contact_name' => 'disabled',
+                'emergency_contact_phone' => 'disabled',
+                'dietary_preferences' => 'disabled',
+                'accessibility_needs' => 'disabled',
+                'registration_reason' => 'optional',
+            ],
+            'custom_fields' => [],
+        ];
+    }
+
+    public function getFormFieldsConfigAttribute(): array
+    {
+        $default = static::defaultFormFieldsConfig();
+        $stored = is_array($this->settings) && isset($this->settings['form_fields']) ? $this->settings['form_fields'] : [];
+
+        return [
+            'standard_fields' => array_merge(
+                $default['standard_fields'],
+                is_array($stored['standard_fields'] ?? null) ? $stored['standard_fields'] : []
+            ),
+            'custom_fields' => is_array($stored['custom_fields'] ?? null) ? $stored['custom_fields'] : [],
+        ];
+    }
+
+    public function getDefaultEntryModeAttribute(): string
+    {
+        return is_array($this->settings) && isset($this->settings['default_entry_mode'])
+            ? $this->settings['default_entry_mode']
+            : 'details';
+    }
+
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',

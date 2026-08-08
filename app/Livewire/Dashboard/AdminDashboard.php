@@ -95,18 +95,29 @@ class AdminDashboard extends Component
                         ->count();
                 }
 
+                $orgCapacity = (int) Event::where('organization_id', $org->id)->sum('capacity');
+
                 $this->breakdownData[] = [
                     'org_id' => $org->id,
                     'org_name' => $org->name,
                     'admin_name' => $orgAdmin->name ?? 'Unassigned Admin',
                     'admin_email' => $orgAdmin->email ?? 'N/A',
                     'count' => $val,
+                    'capacity' => $orgCapacity,
                 ];
             }
         } else {
-            // Organization Admin: Breakdown by Event within Organization
+            // Organization Admin / Security: Breakdown by Event
             $orgId = $user->organization_id ?? 1;
-            $events = Event::where('organization_id', $orgId)->get();
+            $eventsQuery = Event::where('organization_id', $orgId);
+
+            // Security personnel: scope to only their assigned events
+            $assignedEventIds = $user->getAssignedEventIds();
+            if ($assignedEventIds !== null) {
+                $eventsQuery->whereIn('id', $assignedEventIds);
+            }
+
+            $events = $eventsQuery->get();
 
             foreach ($events as $event) {
                 $val = 0;
@@ -134,6 +145,7 @@ class AdminDashboard extends Component
                     'admin_name' => $event->venue_name ?: 'Venue Not Specified',
                     'admin_email' => $event->starts_at ? $event->starts_at->format('M j, Y g:i A') : 'Date TBD',
                     'count' => $val,
+                    'capacity' => $event->capacity,
                 ];
             }
         }
@@ -146,6 +158,41 @@ class AdminDashboard extends Component
     {
         $this->showBreakdownModal = false;
         $this->breakdownData = [];
+    }
+
+    /**
+     * Org admin: show per-security-guard scan breakdown for a specific event.
+     */
+    public function openSecurityScanBreakdown(int $eventId): void
+    {
+        $user = auth()->user();
+        $event = Event::findOrFail($eventId);
+
+        $this->breakdownMetric = 'security_scans';
+        $this->breakdownTitle = 'Security Guard Scan Breakdown — ' . $event->name;
+        $this->breakdownData = [];
+
+        // Get all granted check-ins for this event, grouped by scanned_by user
+        $scans = CheckIn::where('event_id', $eventId)
+            ->where('scan_result', ScanResult::Granted)
+            ->whereNotNull('scanned_by')
+            ->selectRaw('scanned_by, COUNT(*) as scan_count')
+            ->groupBy('scanned_by')
+            ->orderByDesc('scan_count')
+            ->get();
+
+        foreach ($scans as $scan) {
+            $scanner = \App\Models\User::find($scan->scanned_by);
+            $this->breakdownData[] = [
+                'org_id' => $scan->scanned_by,
+                'org_name' => $scanner->name ?? 'Unknown Guard',
+                'admin_name' => $scanner->email ?? 'N/A',
+                'admin_email' => $scan->scan_count . ' successful ' . ((int)$scan->scan_count === 1 ? 'scan' : 'scans'),
+                'count' => $scan->scan_count,
+            ];
+        }
+
+        $this->showBreakdownModal = true;
     }
 
     public function mount(): void

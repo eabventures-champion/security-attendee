@@ -38,7 +38,14 @@ class PrivateInvitationForm extends Component
     public string $phone = '';
     public string $company = '';
     public string $job_title = '';
+    public string $country = '';
+    public string $gender = '';
+    public string $emergency_contact_name = '';
+    public string $emergency_contact_phone = '';
+    public string $dietary_preferences = '';
+    public string $accessibility_needs = '';
     public string $registration_reason = '';
+    public array $custom_answers = [];
     public bool $consent = false;
 
     public function mount($event_slug = null, $eventSlug = null)
@@ -107,28 +114,77 @@ class PrivateInvitationForm extends Component
     public function rules()
     {
         $eventId = $this->event ? $this->event->id : null;
+        $config = $this->event ? $this->event->form_fields_config : Event::defaultFormFieldsConfig();
+        $stdConfig = $config['standard_fields'];
+        $customConfig = $config['custom_fields'];
 
-        $rules = [
-            'full_name' => 'required|string|min:2|max:255',
-            'email' => [
+        $rules = [];
+
+        // full_name rule
+        $fnState = $stdConfig['full_name'] ?? 'required';
+        if ($fnState === 'required') {
+            $rules['full_name'] = 'required|string|min:2|max:255';
+        } else {
+            $rules['full_name'] = 'nullable|string|max:255';
+        }
+
+        // email rule
+        $emailState = $stdConfig['email'] ?? 'required';
+        if ($emailState === 'required') {
+            $rules['email'] = [
                 'required',
                 'email',
                 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
                 'max:255'
-            ],
-            'phone' => [
+            ];
+        } else {
+            $rules['email'] = [
+                'nullable',
+                'email',
+                'max:255'
+            ];
+        }
+
+        // phone rule
+        $phoneState = $stdConfig['phone'] ?? 'required';
+        if ($phoneState === 'required') {
+            $rules['phone'] = [
                 'required',
                 'string',
-                'regex:/^[0-9]{10}$/',
                 Rule::unique('attendees', 'phone')->where(fn ($query) => $query->where('event_id', $eventId)->whereNotNull('phone')->where('phone', '!=', ''))
-            ],
-            'company' => 'nullable|string|max:255',
-            'job_title' => 'nullable|string|max:255',
-            'consent' => 'accepted'
-        ];
+            ];
+        } elseif ($phoneState === 'optional') {
+            $rules['phone'] = 'nullable|string|max:255';
+        }
 
-        if ($this->isTokenConsumed) {
+        // Other standard fields
+        $otherStandard = ['company', 'job_title', 'country', 'gender', 'emergency_contact_name', 'emergency_contact_phone', 'dietary_preferences', 'accessibility_needs', 'registration_reason'];
+        foreach ($otherStandard as $fieldKey) {
+            $state = $stdConfig[$fieldKey] ?? 'disabled';
+            if ($state === 'required') {
+                $rules[$fieldKey] = 'required|string|max:255';
+            } elseif ($state === 'optional') {
+                $rules[$fieldKey] = 'nullable|string|max:255';
+            }
+        }
+
+        if ($this->isTokenConsumed && empty($rules['registration_reason'])) {
             $rules['registration_reason'] = 'required|string|min:5|max:1000';
+        }
+
+        $rules['consent'] = 'accepted';
+
+        // Custom extra fields validation
+        foreach ($customConfig as $cField) {
+            $cId = $cField['id'] ?? null;
+            if ($cId) {
+                $ruleKey = "custom_answers.{$cId}";
+                if (!empty($cField['required'])) {
+                    $rules[$ruleKey] = 'required';
+                } else {
+                    $rules[$ruleKey] = 'nullable';
+                }
+            }
         }
 
         return $rules;
@@ -142,7 +198,6 @@ class PrivateInvitationForm extends Component
             'email.email' => 'Please enter a valid email address.',
             'email.regex' => 'Please enter a valid email address with a domain extension (e.g. .com, .org).',
             'phone.required' => 'Phone number is required.',
-            'phone.regex' => 'Phone number must be exactly 10 digits (e.g. 0246345698).',
             'phone.unique' => 'This phone number is already registered for this event.',
             'consent.accepted' => 'You must accept the terms and conditions to confirm attendance.',
             'registration_reason.required' => 'Please state your reason for filling this form before proceeding.',
@@ -167,7 +222,7 @@ class PrivateInvitationForm extends Component
 
     public function checkExistingAttendee()
     {
-        if (preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $this->email) && $this->event) {
+        if (!empty($this->email) && preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $this->email) && $this->event) {
             $pastAttendee = Attendee::with('event')
                 ->where('organization_id', $this->event->organization_id)
                 ->where('email', $this->email)
@@ -216,27 +271,42 @@ class PrivateInvitationForm extends Component
     {
         $this->validate();
 
-        // Instant verification only if token is valid and unconsumed
-        $shouldInstantVerify = ($this->invitationTokenObj && $this->hasValidToken);
-        $verificationStatus = $shouldInstantVerify ? VerificationStatus::Verified : VerificationStatus::Pending;
+        // Under Get Details (Form Entry / Attendance Category), all attendee submissions require Org Admin approval
+        $verificationStatus = VerificationStatus::Pending;
         $targetRole = ($this->invitationTokenObj && $this->invitationTokenObj->access_role)
             ? AccessRole::from($this->invitationTokenObj->access_role)
             : ($this->isVip ? AccessRole::Vvip : AccessRole::GeneralAdmission);
 
+        $fullNameValue = trim((string)$this->full_name) ?: 'Guest Attendee';
+        $emailValue = trim((string)$this->email) ?: ('guest_' . Str::random(8) . '@attendee.local');
+
         // Check if attendee already exists for this event
         $existing = Attendee::where('event_id', $this->event->id)
-            ->where('email', $this->email)
+            ->where('email', $emailValue)
             ->first();
 
         if ($existing) {
+            $existingMetadata = is_array($existing->metadata) ? $existing->metadata : [];
+            $existingMetadata['custom_fields'] = array_merge(
+                $existingMetadata['custom_fields'] ?? [],
+                $this->custom_answers
+            );
+
             $existing->update([
                 'verification_status' => $verificationStatus,
-                'full_name' => $this->full_name,
+                'full_name' => $fullNameValue,
                 'phone' => $this->phone ?: $existing->phone,
                 'company' => $this->company ?: $existing->company,
                 'job_title' => $this->job_title ?: $existing->job_title,
+                'country' => $this->country ?: $existing->country,
+                'gender' => $this->gender ?: $existing->gender,
+                'emergency_contact_name' => $this->emergency_contact_name ?: $existing->emergency_contact_name,
+                'emergency_contact_phone' => $this->emergency_contact_phone ?: $existing->emergency_contact_phone,
+                'dietary_preferences' => $this->dietary_preferences ?: $existing->dietary_preferences,
+                'accessibility_needs' => $this->accessibility_needs ?: $existing->accessibility_needs,
                 'registration_reason' => $this->registration_reason ?: $existing->registration_reason,
                 'access_role' => $targetRole,
+                'metadata' => $existingMetadata,
             ]);
             $attendee = $existing;
         } else {
@@ -244,19 +314,28 @@ class PrivateInvitationForm extends Component
                 'uuid' => (string) Str::uuid(),
                 'event_id' => $this->event->id,
                 'organization_id' => $this->event->organization_id,
-                'full_name' => $this->full_name,
-                'email' => $this->email,
-                'phone' => $this->phone,
+                'full_name' => $fullNameValue,
+                'email' => $emailValue,
+                'phone' => $this->phone ?: null,
                 'company' => $this->company ?: null,
                 'job_title' => $this->job_title ?: null,
+                'country' => $this->country ?: null,
+                'gender' => $this->gender ?: null,
+                'emergency_contact_name' => $this->emergency_contact_name ?: null,
+                'emergency_contact_phone' => $this->emergency_contact_phone ?: null,
+                'dietary_preferences' => $this->dietary_preferences ?: null,
+                'accessibility_needs' => $this->accessibility_needs ?: null,
                 'registration_reason' => $this->registration_reason ?: null,
                 'access_role' => $targetRole,
                 'verification_status' => $verificationStatus,
-                'consent' => $this->consent
+                'consent' => $this->consent,
+                'metadata' => [
+                    'custom_fields' => $this->custom_answers,
+                ],
             ]);
         }
 
-        // If valid single-use token, consume it and issue QR pass
+        // If single-use token was supplied, mark it used
         if ($this->invitationTokenObj && $this->hasValidToken) {
             $this->invitationTokenObj->increment('use_count');
             $this->invitationTokenObj->refresh();
@@ -271,50 +350,10 @@ class PrivateInvitationForm extends Component
                 $this->hasValidToken = false;
                 $this->isTokenConsumed = true;
             }
-
-            // Generate QrCode for verified attendee
-            $qrCode = QrCode::where('attendee_id', $attendee->id)->first();
-            if (!$qrCode) {
-                $token = Str::random(32);
-                $qrCode = QrCode::create([
-                    'uuid' => (string) Str::uuid(),
-                    'attendee_id' => $attendee->id,
-                    'event_id' => $this->event->id,
-                    'secure_token' => $token,
-                    'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
-                    'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
-                    'issued_at' => now(),
-                    'expires_at' => $this->event->ends_at ? $this->event->ends_at->addDays(1) : now()->addYear(),
-                    'is_revoked' => false,
-                ]);
-            }
-            $this->qrToken = $qrCode->secure_token ?? $attendee->uuid;
-
-            // Send Email Confirmation
-            try {
-                \Illuminate\Support\Facades\Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send private invitation confirmation email: ' . $e->getMessage());
-            }
-        } elseif ($shouldInstantVerify) {
-            // General instant verification for default link
-            $qrCode = QrCode::where('attendee_id', $attendee->id)->first();
-            if (!$qrCode) {
-                $token = Str::random(32);
-                $qrCode = QrCode::create([
-                    'uuid' => (string) Str::uuid(),
-                    'attendee_id' => $attendee->id,
-                    'event_id' => $this->event->id,
-                    'secure_token' => $token,
-                    'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
-                    'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
-                    'issued_at' => now(),
-                    'expires_at' => $this->event->ends_at ? $this->event->ends_at->addDays(1) : now()->addYear(),
-                    'is_revoked' => false,
-                ]);
-            }
-            $this->qrToken = $qrCode->secure_token ?? $attendee->uuid;
         }
+
+        // Leave $qrToken empty so attendee sees Pending Verification screen
+        $this->qrToken = '';
 
         // Send In-App Admin Notification
         try {

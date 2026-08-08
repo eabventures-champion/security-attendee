@@ -116,6 +116,7 @@ class AttendeeList extends Component
 
     // Secure Single-Use Link Generator fields
     public bool $showLinkGeneratorModal = false;
+    public string $gen_event_id = ''; // Explicit event selector for secure link
     public string $gen_access_role = 'vvip';
     public string $gen_category = 'details'; // 'details', 'no_details'
     public string $gen_email = '';
@@ -123,11 +124,33 @@ class AttendeeList extends Component
     public string $generated_invite_url = '';
     public string $generated_whatsapp_url = '';
 
+    public function updatedGenEventId($value)
+    {
+        if ($value) {
+            $event = Event::find($value);
+            if ($event) {
+                $this->gen_category = $event->settings['default_entry_mode'] ?? 'details';
+            }
+        }
+    }
+
     public function openLinkGeneratorModal()
     {
         $this->showLinkGeneratorModal = true;
         $this->generated_invite_url = '';
         $this->generated_whatsapp_url = '';
+
+        // Pre-select event from current filter, or default to first event
+        if ($this->eventUuid) {
+            $event = Event::where('uuid', $this->eventUuid)->first();
+            $this->gen_event_id = $event ? (string) $event->id : '';
+            if ($event) {
+                $this->gen_category = $event->settings['default_entry_mode'] ?? 'details';
+            }
+        } else {
+            $this->gen_event_id = '';
+            $this->gen_category = 'details';
+        }
     }
 
     public function closeLinkGeneratorModal()
@@ -136,14 +159,17 @@ class AttendeeList extends Component
         $this->generated_invite_url = '';
         $this->generated_whatsapp_url = '';
         $this->gen_email = '';
+        $this->gen_event_id = '';
     }
 
     public function generateSingleUseLink()
     {
-        $event = Event::where('uuid', $this->eventUuid)->first() ?? Event::find($this->new_event_id);
-        if (!$event) {
-            $event = Event::latest()->first();
+        if (empty($this->gen_event_id)) {
+            session()->flash('error', 'Please select an event to generate the link for.');
+            return;
         }
+
+        $event = Event::find($this->gen_event_id);
 
         if (!$event) {
             session()->flash('error', 'Event not found.');
@@ -478,7 +504,7 @@ class AttendeeList extends Component
 
     public function verifyAttendee($uuid)
     {
-        $attendee = Attendee::where('uuid', $uuid)->first();
+        $attendee = Attendee::with(['event', 'qrCode'])->where('uuid', $uuid)->first();
         if ($attendee) {
             $attendee->verification_status = VerificationStatus::Verified;
             $attendee->verified_at = now();
@@ -486,18 +512,73 @@ class AttendeeList extends Component
 
             // Create QR Code if missing
             if (!$attendee->qrCode) {
+                $token = \Illuminate\Support\Str::random(32);
                 QrCode::create([
                     'uuid' => (string) \Illuminate\Support\Str::uuid(),
                     'attendee_id' => $attendee->id,
                     'event_id' => $attendee->event_id,
-                    'secure_token' => \Illuminate\Support\Str::random(32),
+                    'secure_token' => $token,
+                    'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+                    'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
                     'issued_at' => now(),
+                    'expires_at' => ($attendee->event && $attendee->event->ends_at) ? $attendee->event->ends_at->addDays(1) : now()->addYear(),
                     'is_revoked' => false,
                 ]);
+                $attendee->load('qrCode');
             }
 
-            session()->flash('success', 'Attendee verified successfully.');
+            // Send Confirmation Email with QR Pass upon Org Admin Approval
+            try {
+                Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send approval confirmation email: ' . $e->getMessage());
+            }
+
+            session()->flash('success', "Attendee '{$attendee->full_name}' approved & verified! Official QR pass emailed to {$attendee->email}.");
         }
+    }
+
+    public function bulkApproveAttendees()
+    {
+        if (empty($this->selectedAttendees)) return;
+
+        $attendees = Attendee::with(['event', 'qrCode'])->whereIn('uuid', $this->selectedAttendees)->get();
+        $approvedCount = 0;
+
+        foreach ($attendees as $attendee) {
+            $attendee->verification_status = VerificationStatus::Verified;
+            $attendee->verified_at = now();
+            $attendee->save();
+
+            if (!$attendee->qrCode) {
+                $token = \Illuminate\Support\Str::random(32);
+                QrCode::create([
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'attendee_id' => $attendee->id,
+                    'event_id' => $attendee->event_id,
+                    'secure_token' => $token,
+                    'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+                    'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
+                    'issued_at' => now(),
+                    'expires_at' => ($attendee->event && $attendee->event->ends_at) ? $attendee->event->ends_at->addDays(1) : now()->addYear(),
+                    'is_revoked' => false,
+                ]);
+                $attendee->load('qrCode');
+            }
+
+            try {
+                Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send bulk approval confirmation email: ' . $e->getMessage());
+            }
+
+            $approvedCount++;
+        }
+
+        $this->selectedAttendees = [];
+        $this->selectAllOnPage = false;
+        $this->selectAll = false;
+        session()->flash('success', "{$approvedCount} attendee(s) approved & verified successfully! Official QR passes emailed to guests.");
     }
 
     public function resendPassEmail($uuid = null)
@@ -631,8 +712,15 @@ class AttendeeList extends Component
     {
         if (empty($this->selectedAttendees)) return;
 
-        $count = Attendee::whereIn('uuid', $this->selectedAttendees)->count();
-        Attendee::whereIn('uuid', $this->selectedAttendees)->delete();
+        $attendees = Attendee::whereIn('uuid', $this->selectedAttendees)->get();
+        $count = $attendees->count();
+        $attendeeIds = $attendees->pluck('id')->toArray();
+
+        if (!empty($attendeeIds)) {
+            \App\Models\CheckIn::whereIn('attendee_id', $attendeeIds)->delete();
+            \App\Models\QrCode::whereIn('attendee_id', $attendeeIds)->delete();
+            Attendee::whereIn('id', $attendeeIds)->delete();
+        }
 
         $this->selectedAttendees = [];
         $this->selectAllOnPage = false;

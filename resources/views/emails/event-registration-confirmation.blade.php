@@ -255,9 +255,50 @@
                     @if($attendee->verification_status === \App\Enums\VerificationStatus::Pending)
                         <strong style="color: #fbbf24;">Verification Notice:</strong> Your registration is currently undergoing verification by the organization admin. You will receive another notification once your pass is verified.
                     @else
-                        <strong style="color: #34d399;">Pass Ready:</strong> Your entry pass has been approved. Please present your digital pass or QR code at the event gate for check-in.
+                        <strong style="color: #34d399;">Pass Ready:</strong> Your entry pass has been approved. Below is your official digital entry pass. Please present it at the event gate for check-in.
                     @endif
                 </div>
+
+                @if($attendee->verification_status === \App\Enums\VerificationStatus::Verified)
+                    @php
+                        $qrCodeObj = $attendee->qrCode;
+                        $token = $qrCodeObj ? $qrCodeObj->secure_token : $attendee->uuid;
+                        $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($token);
+                        $downloadUrl = "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=" . urlencode($token);
+                    @endphp
+
+                    <!-- Digital Entry QR Pass Box -->
+                    <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 2px solid #10b981; border-radius: 20px; padding: 24px 20px; margin: 20px 0; text-align: center; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.25);">
+                        <div style="color: #34d399; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">
+                            🎟️ OFFICIAL DIGITAL QR ENTRY PASS
+                        </div>
+                        <div style="color: #ffffff; font-size: 18px; font-weight: 800; margin-bottom: 16px;">
+                            {{ $attendee->full_name }}
+                        </div>
+
+                        <!-- QR Code Image -->
+                        <div style="background-color: #ffffff; padding: 12px; border-radius: 16px; display: inline-block; box-shadow: 0 6px 16px rgba(0,0,0,0.4); margin-bottom: 16px;">
+                            <img src="{{ $qrImageUrl }}" alt="Digital QR Entry Pass" width="180" height="180" style="display: block; border: 0; width: 180px; height: 180px; margin: 0 auto;">
+                        </div>
+
+                        <!-- Pass Token Display -->
+                        <div style="background-color: rgba(15, 23, 42, 0.9); border: 1px solid #334155; border-radius: 10px; padding: 8px 12px; font-family: 'Courier New', monospace; font-size: 11px; color: #34d399; margin-bottom: 20px; word-break: break-all;">
+                            PASS TOKEN: {{ $token }}
+                        </div>
+
+                        <!-- Download Pass Button -->
+                        <div>
+                            <a href="{{ $downloadUrl }}" target="_blank" download="{{ \Illuminate\Support\Str::slug($attendee->full_name) }}-qr-pass.png" style="display: inline-block; background: linear-gradient(135deg, #059669 0%, #0d9488 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 800; padding: 12px 28px; border-radius: 12px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); border: 1px solid #34d399;">
+                                ⬇️ Download Official QR Pass (PNG)
+                            </a>
+                        </div>
+
+                        <!-- Entry Instruction -->
+                        <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #334155; font-size: 11px; color: #94a3b8; line-height: 1.5;">
+                            🔒 <strong>Check-In Instructions:</strong> Present this QR pass on your phone screen or printout at entry gates. Single-use only.
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Event Timeline Countdown Progress Bar Card -->
                 <div class="countdown-card">

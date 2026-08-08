@@ -38,15 +38,15 @@
 
                         <!-- Header Badge -->
                         <div class="text-center space-y-2">
-                            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-extrabold uppercase tracking-wider shadow-md">
-                                ⚡ {{ $event->invitation_title ?? ($isVip ? '🔒 DIRECT PRIVATE VVIP PASS' : 'DIRECT SINGLE-USE PASS') }}
+                            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full {{ $isVip ? 'bg-amber-500/15 border border-amber-500/40 text-amber-300' : 'bg-blue-500/15 border border-blue-500/40 text-blue-300' }} text-xs font-extrabold uppercase tracking-wider shadow-md">
+                                ⚡ {{ $isVip ? '🔒 DIRECT PRIVATE VVIP PASS' : '⚡ DIRECT PRIVATE GENERAL PASS' }}
                             </span>
                         </div>
 
                         <!-- Interactive Poster Image Card (Click to Download QR Pass) -->
                         @if($event->cover_image_path)
                             <div @if(!$isTokenConsumed && $hasValidToken) wire:click="claimDirectPass" @endif 
-                                 class="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-amber-500/40 bg-slate-950/90 flex items-center justify-center min-h-[250px] max-h-[480px] group transition-all {{ (!$isTokenConsumed && $hasValidToken) ? 'cursor-pointer hover:border-amber-400 hover:shadow-amber-500/30' : 'opacity-80 cursor-not-allowed' }}"
+                                 class="relative w-full rounded-2xl overflow-hidden shadow-2xl border {{ $isVip ? 'border-amber-500/40' : 'border-blue-500/40' }} bg-slate-950/90 flex items-center justify-center min-h-[250px] max-h-[480px] group transition-all {{ (!$isTokenConsumed && $hasValidToken) ? 'cursor-pointer hover:border-amber-400 hover:shadow-amber-500/30' : 'opacity-80 cursor-not-allowed' }}"
                                  title="{{ (!$isTokenConsumed && $hasValidToken) ? 'Click to claim & download your digital QR pass' : 'Pass already claimed / link invalid' }}">
                                 
                                 <img src="{{ \Illuminate\Support\Facades\Storage::url($event->cover_image_path) }}" class="absolute inset-0 w-full h-full object-cover filter blur-2xl opacity-40 scale-110 pointer-events-none">
@@ -56,14 +56,14 @@
 
                                 <!-- Floating Badge on Top Left -->
                                 <div class="absolute top-3 left-3 z-20">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full backdrop-blur-md bg-amber-500/90 text-slate-950 border border-amber-300 text-xs font-black uppercase tracking-wider shadow-lg">
-                                        ⭐ SINGLE-USE VVIP INVITATION PASS
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full backdrop-blur-md {{ $isVip ? 'bg-amber-500/90 text-slate-950 border border-amber-300' : 'bg-blue-600/90 text-white border border-blue-400' }} text-xs font-black uppercase tracking-wider shadow-lg">
+                                        ⭐ {{ $isVip ? 'SINGLE-USE VVIP INVITATION PASS' : 'SINGLE-USE GENERAL INVITATION PASS' }}
                                     </span>
                                 </div>
 
                                 @if(!$isTokenConsumed && $hasValidToken)
                                     <div class="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-2xl transform scale-95 group-hover:scale-100 transition-transform flex items-center gap-2">
+                                        <span class="px-6 py-3 rounded-xl bg-gradient-to-r {{ $isVip ? 'from-amber-500 to-orange-500 text-slate-950' : 'from-blue-600 to-indigo-600 text-white' }} font-black text-xs uppercase tracking-wider shadow-2xl transform scale-95 group-hover:scale-100 transition-transform flex items-center gap-2">
                                             ✨ Click Image to Claim &amp; Download Pass →
                                         </span>
                                     </div>
@@ -74,10 +74,14 @@
                         <!-- Event Description & Subtitle -->
                         <div class="text-center space-y-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
                             <p class="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-                                @if(!empty($event->invitation_description))
+                                @if(!empty($event->invitation_description) && str_contains($event->invitation_description, 'VVIP') && !$isVip)
+                                    You have received a private single-use General Admission invitation directly from the event organizers. No personal details submission required. Click below to claim and download your QR entry pass.
+                                @elseif(!empty($event->invitation_description))
                                     {{ $event->invitation_description }}
-                                @else
+                                @elseif($isVip)
                                     You have received an exclusive private single-use VVIP invitation directly from the event organizers. No personal details submission required. Click below to claim and download your QR entry pass.
+                                @else
+                                    You have received a private single-use General Admission invitation directly from the event organizers. No personal details submission required. Click below to claim and download your QR entry pass.
                                 @endif
                             </p>
 
@@ -95,17 +99,17 @@
 
                         <!-- Direct Claim Action Button -->
                         @if(!$isTokenConsumed && $hasValidToken)
-                            <button type="button" wire:click="claimDirectPass" wire:loading.attr="disabled" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                            <button type="button" wire:click="claimDirectPass" wire:loading.attr="disabled" class="w-full py-4 rounded-2xl bg-gradient-to-r {{ $isVip ? 'from-amber-500 via-orange-500 to-amber-600 text-slate-950 shadow-amber-500/25' : 'from-blue-600 via-indigo-600 to-blue-700 text-white shadow-blue-500/25' }} font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
                                 <span wire:loading.remove>🎟️ Claim &amp; Download Digital QR Pass →</span>
                                 <span wire:loading class="flex items-center gap-2">
-                                    <svg class="animate-spin h-4 w-4 text-slate-950" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <svg class="animate-spin h-4 w-4 text-current" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                     Generating Digital Pass...
                                 </span>
                             </button>
                         @else
-                            <button type="button" disabled class="w-full py-4 rounded-2xl bg-slate-800 text-slate-500 font-extrabold text-sm border border-slate-700 cursor-not-allowed opacity-60">
-                                ⛔ Single-Use Link Already Claimed / Access Denied
-                            </button>
+                            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-2">
+                                <p class="text-xs text-slate-400 font-medium">Link inactive or token already claimed.</p>
+                            </div>
                         @endif
                     </div>
                 @else
@@ -124,7 +128,7 @@
                         <div class="absolute top-3 left-3 z-20">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full backdrop-blur-md {{ $isVip ? 'bg-amber-500/90 text-white border border-amber-400/50' : 'bg-blue-600/90 text-white border border-blue-400/50' }} text-xs font-bold uppercase tracking-wider shadow-lg">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                {{ $event->invitation_title ?? ($isVip ? '🔒 PRIVATE VVIP INVITATION' : 'EVENT INVITATION') }}
+                                {{ $isVip ? '🔒 PRIVATE VVIP INVITATION' : '🔒 PRIVATE GENERAL INVITATION' }}
                             </span>
                         </div>
 
@@ -152,17 +156,19 @@
                     @if(!$event->cover_image_path)
                         <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full {{ $isVip ? 'bg-amber-500/15 border border-amber-500/40 text-amber-300' : 'bg-blue-500/10 border border-blue-500/30 text-blue-300' }} text-xs font-bold uppercase tracking-wider">
                             <svg class="w-4 h-4 {{ $isVip ? 'text-amber-400' : 'text-blue-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            {{ $event->invitation_title ?? ($isVip ? '🔒 PRIVATE VVIP INVITATION' : 'EVENT INVITATION') }}
+                            {{ $isVip ? '🔒 PRIVATE VVIP INVITATION' : '🔒 PRIVATE GENERAL INVITATION' }}
                         </span>
                     @endif
 
                     <p class="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-                        @if(!empty($event->invitation_description))
+                        @if(!empty($event->invitation_description) && str_contains($event->invitation_description, 'VVIP') && !$isVip)
+                            You have received a <strong class="text-blue-400">private General Admission invitation</strong> directly from the event organizers. Confirming your attendance secures your entry pass.
+                        @elseif(!empty($event->invitation_description))
                             {{ $event->invitation_description }}
                         @elseif($isVip)
                             You have received an <strong class="text-amber-400">exclusive private VVIP invitation</strong> directly from the event organizers. Confirming your attendance grants you <strong class="text-amber-400">VVIP access privileges</strong> and a pre-verified digital pass.
                         @else
-                            You are invited to join us for this special event. Confirming your attendance secures your entry pass.
+                            You have received a <strong class="text-blue-400">private General Admission invitation</strong> directly from the event organizers. Confirming your attendance secures your entry pass.
                         @endif
                     </p>
                 </div>
@@ -277,126 +283,248 @@
                         </div>
                     @endif
 
+                    @php
+                        $formConfig = $event->form_fields_config;
+                        $stdConfig = $formConfig['standard_fields'];
+                        $customConfig = $formConfig['custom_fields'];
+                    @endphp
+
                     <div class="{{ $isLocked ? 'opacity-40 pointer-events-none transition-all duration-300' : 'transition-all duration-300' }}">
                         <!-- Personal Details -->
                         <div class="space-y-4">
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Personal Details</span>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Full Name <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <input wire:model.live.blur="full_name"
-                                           @blur="saveDraft('name', $el.value)"
-                                           type="text"
-                                           {{ $isLocked ? 'disabled' : '' }}
-                                           placeholder="Your full name"
-                                           class="w-full bg-slate-900/80 border {{ $errors->has('full_name') ? 'border-rose-500 focus:ring-rose-500' : (!empty($full_name) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-slate-700 focus:ring-blue-500') }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 {{ $isVip ? 'focus:ring-amber-500' : 'focus:ring-blue-500' }} transition-all font-medium text-sm pr-10">
-                                    @if(!empty($full_name) && !$errors->has('full_name'))
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                            <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                        </div>
-                                    @endif
+                            <!-- Full Name -->
+                            @if(($stdConfig['full_name'] ?? 'required') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Full Name 
+                                        @if(($stdConfig['full_name'] ?? 'required') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="full_name" type="text" {{ $isLocked ? 'disabled' : '' }} placeholder="Your full name" class="w-full bg-slate-900/80 border {{ $errors->has('full_name') ? 'border-rose-500' : 'border-slate-700 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('full_name') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
                                 </div>
-                                @error('full_name') <span class="text-rose-400 text-xs mt-1.5 block font-semibold flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ $message }}</span> @enderror
-                            </div>
+                            @endif
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Email Address <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <input wire:model.live.blur="email"
-                                           @blur="saveDraft('email', $el.value)"
-                                           type="email"
-                                           {{ $isLocked ? 'disabled' : '' }}
-                                           placeholder="name@example.com"
-                                           class="w-full bg-slate-900/80 border {{ $errors->has('email') ? 'border-rose-500 focus:ring-rose-500' : (!empty($email) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-slate-700 focus:ring-blue-500') }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 {{ $isVip ? 'focus:ring-amber-500' : 'focus:ring-blue-500' }} transition-all font-medium text-sm pr-10">
-                                    @if(!empty($email) && !$errors->has('email'))
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                            <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                        </div>
-                                    @endif
+                            <!-- Email Address -->
+                            @if(($stdConfig['email'] ?? 'required') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Email Address 
+                                        @if(($stdConfig['email'] ?? 'required') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="email" type="email" {{ $isLocked ? 'disabled' : '' }} placeholder="name@example.com" class="w-full bg-slate-900/80 border {{ $errors->has('email') ? 'border-rose-500' : 'border-slate-700 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('email') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
                                 </div>
-                                @error('email') <span class="text-rose-400 text-xs mt-1.5 block font-semibold flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ $message }}</span> @enderror
-                            </div>
+                            @endif
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Phone Number <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <input wire:model.live.blur="phone"
-                                           @blur="saveDraft('phone', $el.value)"
-                                           type="tel"
-                                           maxlength="10"
-                                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
-                                           {{ $isLocked ? 'disabled' : '' }}
-                                           placeholder="0246345698 (10 digits)"
-                                           class="w-full bg-slate-900/80 border {{ $errors->has('phone') ? 'border-rose-500 focus:ring-rose-500' : (!empty($phone) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-slate-700 focus:ring-blue-500') }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 {{ $isVip ? 'focus:ring-amber-500' : 'focus:ring-blue-500' }} transition-all font-medium text-sm pr-10">
-                                    @if(!empty($phone) && !$errors->has('phone'))
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                            <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                        </div>
-                                    @endif
+                            <!-- Phone Number -->
+                            @if(($stdConfig['phone'] ?? 'required') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Phone Number 
+                                        @if(($stdConfig['phone'] ?? 'required') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="phone" type="tel" {{ $isLocked ? 'disabled' : '' }} placeholder="Phone Number" class="w-full bg-slate-900/80 border {{ $errors->has('phone') ? 'border-rose-500' : 'border-slate-700 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('phone') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
                                 </div>
-                                @error('phone') <span class="text-rose-400 text-xs mt-1.5 block font-semibold flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ $message }}</span> @enderror
-                            </div>
+                            @endif
+
+                            <!-- Company -->
+                            @if(($stdConfig['company'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Company / Org 
+                                        @if(($stdConfig['company'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="company" type="text" {{ $isLocked ? 'disabled' : '' }} placeholder="Company Name" class="w-full bg-slate-900/80 border border-slate-700 focus:ring-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('company') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Job Title -->
+                            @if(($stdConfig['job_title'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Job Title 
+                                        @if(($stdConfig['job_title'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="job_title" type="text" {{ $isLocked ? 'disabled' : '' }} placeholder="Position" class="w-full bg-slate-900/80 border border-slate-700 focus:ring-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('job_title') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Country -->
+                            @if(($stdConfig['country'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Country 
+                                        @if(($stdConfig['country'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="country" type="text" {{ $isLocked ? 'disabled' : '' }} placeholder="e.g. Ghana" class="w-full bg-slate-900/80 border border-slate-700 focus:ring-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('country') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Gender -->
+                            @if(($stdConfig['gender'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Gender 
+                                        @if(($stdConfig['gender'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <select wire:model.live="gender" {{ $isLocked ? 'disabled' : '' }} class="w-full bg-slate-900/80 border border-slate-700 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 font-medium text-sm cursor-pointer">
+                                        <option value="" class="bg-slate-900">Select Gender</option>
+                                        <option value="Male" class="bg-slate-900">Male</option>
+                                        <option value="Female" class="bg-slate-900">Female</option>
+                                        <option value="Other" class="bg-slate-900">Other / Prefer not to say</option>
+                                    </select>
+                                    @error('gender') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Emergency Contact Name -->
+                            @if(($stdConfig['emergency_contact_name'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Emergency Contact Name 
+                                        @if(($stdConfig['emergency_contact_name'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="emergency_contact_name" type="text" {{ $isLocked ? 'disabled' : '' }} placeholder="Contact Name" class="w-full bg-slate-900/80 border border-slate-700 focus:ring-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('emergency_contact_name') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Emergency Contact Phone -->
+                            @if(($stdConfig['emergency_contact_phone'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Emergency Contact Phone 
+                                        @if(($stdConfig['emergency_contact_phone'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="emergency_contact_phone" type="tel" {{ $isLocked ? 'disabled' : '' }} placeholder="Contact Phone" class="w-full bg-slate-900/80 border border-slate-700 focus:ring-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('emergency_contact_phone') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Dietary Preferences -->
+                            @if(($stdConfig['dietary_preferences'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Dietary Preferences 
+                                        @if(($stdConfig['dietary_preferences'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="dietary_preferences" type="text" {{ $isLocked ? 'disabled' : '' }} placeholder="e.g. Vegetarian, Halal" class="w-full bg-slate-900/80 border border-slate-700 focus:ring-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('dietary_preferences') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Accessibility Needs -->
+                            @if(($stdConfig['accessibility_needs'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Accessibility Needs 
+                                        @if(($stdConfig['accessibility_needs'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="accessibility_needs" type="text" {{ $isLocked ? 'disabled' : '' }} placeholder="e.g. Wheelchair access" class="w-full bg-slate-900/80 border border-slate-700 focus:ring-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    @error('accessibility_needs') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
                         </div>
 
-                        <!-- Optional Professional Details: Company & Job Title -->
-                        <div class="pt-4 border-t border-slate-700/60 space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Professional Details</span>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/40 shadow-sm shadow-orange-500/10">For Networking</span>
-                                </div>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-700/50 border border-slate-600/50">Optional</span>
-                            </div>
+                        <!-- Custom Extra Questions Section -->
+                        @if(!empty($customConfig))
+                            <div class="pt-4 border-t border-slate-700/60 space-y-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-purple-400 block">Additional Event Questions</span>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <!-- Company -->
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Company / Org <span class="text-slate-500 font-normal text-[10px]">(Optional)</span></label>
-                                    <div class="relative">
-                                        <input wire:model.live.blur="company"
-                                               @blur="saveDraft('company', $el.value)"
-                                               type="text"
-                                               {{ $isLocked ? 'disabled' : '' }}
-                                               placeholder="Company Name (Optional)"
-                                               class="w-full bg-slate-900/80 border {{ !empty($company) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-slate-700 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 {{ $isVip ? 'focus:ring-amber-500' : 'focus:ring-blue-500' }} transition-all font-medium text-sm pr-10">
-                                        @if(!empty($company) && !$errors->has('company'))
-                                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                                <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                    <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
+                                @foreach($customConfig as $cField)
+                                    @php
+                                        $cId = $cField['id'] ?? '';
+                                        $cLabel = $cField['label'] ?? 'Question';
+                                        $cType = $cField['type'] ?? 'text';
+                                        $cReq = !empty($cField['required']);
+                                        $cOpts = array_filter(array_map('trim', explode(',', $cField['options'] ?? '')));
+                                    @endphp
 
-                                <!-- Job Title -->
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Job Title <span class="text-slate-500 font-normal text-[10px]">(Optional)</span></label>
-                                    <div class="relative">
-                                        <input wire:model.live.blur="job_title"
-                                               @blur="saveDraft('job', $el.value)"
-                                               type="text"
-                                               {{ $isLocked ? 'disabled' : '' }}
-                                               placeholder="Position (Optional)"
-                                               class="w-full bg-slate-900/80 border {{ !empty($job_title) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-slate-700 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 {{ $isVip ? 'focus:ring-amber-500' : 'focus:ring-blue-500' }} transition-all font-medium text-sm pr-10">
-                                        @if(!empty($job_title) && !$errors->has('job_title'))
-                                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                                <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                    <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                                </div>
-                                            </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                            {{ $cLabel }}
+                                            @if($cReq)
+                                                <span class="text-rose-500">*</span>
+                                            @else
+                                                <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+                                            @endif
+                                        </label>
+
+                                        @if($cType === 'text')
+                                            <input type="text" wire:model.live="custom_answers.{{ $cId }}" {{ $isLocked ? 'disabled' : '' }} placeholder="Your answer..." class="w-full bg-slate-900/80 border border-slate-700 focus:ring-purple-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                        @elseif($cType === 'number')
+                                            <input type="number" wire:model.live="custom_answers.{{ $cId }}" {{ $isLocked ? 'disabled' : '' }} placeholder="0" class="w-full bg-slate-900/80 border border-slate-700 focus:ring-purple-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                        @elseif($cType === 'textarea')
+                                            <textarea wire:model.live="custom_answers.{{ $cId }}" {{ $isLocked ? 'disabled' : '' }} rows="3" placeholder="Your answer..." class="w-full bg-slate-900/80 border border-slate-700 focus:ring-purple-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm"></textarea>
+                                        @elseif($cType === 'select')
+                                            <select wire:model.live="custom_answers.{{ $cId }}" {{ $isLocked ? 'disabled' : '' }} class="w-full bg-slate-900/80 border border-slate-700 focus:ring-purple-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 font-medium text-sm cursor-pointer">
+                                                <option value="" class="bg-slate-900">Select an option</option>
+                                                @foreach($cOpts as $opt)
+                                                    <option value="{{ $opt }}" class="bg-slate-900">{{ $opt }}</option>
+                                                @endforeach
+                                            </select>
+                                        @elseif($cType === 'checkbox')
+                                            <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-slate-900/80 border border-slate-700">
+                                                <input type="checkbox" wire:model.live="custom_answers.{{ $cId }}" {{ $isLocked ? 'disabled' : '' }} class="form-checkbox h-4 w-4 text-purple-600 rounded border-slate-700 bg-slate-900 focus:ring-purple-500">
+                                                <span class="text-xs text-slate-300 font-semibold">{{ $cLabel }}</span>
+                                            </label>
                                         @endif
+
+                                        @error("custom_answers.{$cId}") <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
                                     </div>
-                                </div>
+                                @endforeach
                             </div>
-                        </div>
+                        @endif
 
                         <div class="pt-2">
                             <label class="flex items-start gap-3 cursor-pointer">
@@ -455,7 +583,12 @@
 
                         <!-- Digital QR Pass Card -->
                         <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-6 text-center space-y-4 shadow-inner">
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Digital Entry QR Code Token</p>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-emerald-400">🎟️ OFFICIAL DIGITAL QR ENTRY PASS</p>
+                                @if(!empty($full_name))
+                                    <h3 class="text-xl font-extrabold text-white drop-shadow">{{ $full_name }}</h3>
+                                @endif
+                            </div>
                             
                             <div class="w-36 h-36 bg-white rounded-xl p-2 mx-auto flex items-center justify-center shadow-lg">
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($qrToken) }}" alt="QR Pass" class="w-full h-full object-contain">

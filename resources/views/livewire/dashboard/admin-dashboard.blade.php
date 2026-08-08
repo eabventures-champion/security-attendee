@@ -452,7 +452,8 @@
                                         {{ ucfirst($event->status->value ?? 'Published') }}
                                     </span>
                                 </td>
-                                <td class="py-3.5 px-4 text-right">
+                                <td class="py-3.5 px-4 text-right space-x-2">
+                                    <button type="button" wire:click="openSecurityScanBreakdown({{ $event->id }})" class="text-xs text-amber-600 dark:text-amber-400 hover:underline font-semibold cursor-pointer">Guard Scans</button>
                                     <a href="{{ route('events.show', $event->uuid) }}" class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold">Manage →</a>
                                 </td>
                             </tr>
@@ -592,7 +593,7 @@
                         </div>
                         <div class="min-w-0">
                             <span class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-widest inline-block">
-                                {{ $isSuperAdmin ? 'SUPER ADMIN BREAKDOWN' : 'WORKSPACE EVENT BREAKDOWN' }}
+                                {{ $isSuperAdmin ? 'SUPER ADMIN BREAKDOWN' : ($isSecurity ? 'YOUR EVENT STATS' : 'WORKSPACE EVENT BREAKDOWN') }}
                             </span>
                             <h3 class="text-sm sm:text-lg font-black text-white mt-1 leading-snug truncate">{{ $breakdownTitle }}</h3>
                         </div>
@@ -606,9 +607,9 @@
                     <table class="w-full text-left text-xs table-fixed">
                         <thead>
                             <tr class="bg-slate-950 border-b border-white/10 text-slate-400 font-extrabold uppercase tracking-wider text-[9px] sm:text-xs sticky top-0 z-10">
-                                <th class="py-2.5 px-2 sm:px-4 w-[40%]">{{ $isSuperAdmin ? 'Organization Workspace' : 'Event Name' }}</th>
-                                <th class="py-2.5 px-2 sm:px-4 w-[40%]">{{ $isSuperAdmin ? 'Organization Admin' : 'Venue & Schedule' }}</th>
-                                <th class="py-2.5 px-2 sm:px-4 text-right w-[20%]">Metric</th>
+                                <th class="py-2.5 px-2 sm:px-4 w-[40%]">{{ $isSuperAdmin ? 'Organization Workspace' : ($breakdownMetric === 'security_scans' ? 'Security Guard' : 'Event Name') }}</th>
+                                <th class="py-2.5 px-2 sm:px-4 w-[40%]">{{ $isSuperAdmin ? 'Organization Admin' : ($breakdownMetric === 'security_scans' ? 'Email' : 'Venue & Schedule') }}</th>
+                                <th class="py-2.5 px-2 sm:px-4 text-right w-[20%]">{{ $breakdownMetric === 'security_scans' ? 'Scans' : 'Metric' }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5">
@@ -628,13 +629,16 @@
                                     </td>
                                     <td class="py-3 px-2 sm:px-4 text-right font-black text-xs sm:text-sm text-blue-400 whitespace-nowrap">
                                         <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-blue-500/10 border border-blue-500/30">
-                                            {{ number_format($row['count']) }}
+                                            <span>{{ number_format($row['count']) }}</span>
+                                            @if(isset($row['capacity']) && in_array($breakdownMetric, ['registrations', 'verified', 'checked_in']))
+                                                <span class="text-xs font-bold text-slate-400 dark:text-slate-500">/ {{ $row['capacity'] > 0 ? number_format($row['capacity']) : '∞' }}</span>
+                                            @endif
                                         </span>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="py-8 text-center text-slate-500 italic text-xs">No organization admin data available.</td>
+                                    <td colspan="3" class="py-8 text-center text-slate-500 italic text-xs">No data available for this breakdown.</td>
                                 </tr>
                             @endforelse
                         </tbody>

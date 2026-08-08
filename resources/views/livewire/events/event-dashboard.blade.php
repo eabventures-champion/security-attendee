@@ -165,118 +165,254 @@
                                 </div>
                             </div>
                             
-                            <!-- Category Filter Tabs -->
-                            <div class="flex items-center bg-slate-950/80 p-1 rounded-xl border border-blue-500/30 self-start md:self-auto">
-                                <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-blue-600 text-white font-black' : 'text-blue-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
-                                    📋 Category 1: GET DETAILS
-                                </button>
-                                <button type="button" @click="activeCat = 'no_details'" :class="activeCat === 'no_details' ? 'bg-blue-600 text-white font-black' : 'text-blue-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
-                                    ⚡ Category 2: NO DETAILS
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Category 1: GET DETAILS View (Public & Secret Private Links) -->
-                        <div x-show="activeCat === 'get_details'" class="space-y-4">
-                            <!-- Public Invitation Link Row -->
-                            <div class="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-2.5" x-data="{ copiedPub: false }">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                                        <span>🌐</span>
-                                        <span>Public Invitation Link</span>
+                            <!-- Active Category Badge Display -->
+                            <div class="self-start md:self-auto">
+                                @if(($event->default_entry_mode ?? 'details') === 'details')
+                                    <span class="px-3.5 py-1.5 rounded-xl text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/40 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                        <span>📋</span>
+                                        <span>CATEGORY 1: GET DETAILS</span>
                                     </span>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
-                                        STANDARD ACCESS (GET DETAILS)
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                                    Public registration link for general attendees. Invitees fill in their Name, Email, and Phone number before receiving their pass.
-                                </p>
-                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                    <input type="text" readonly value="{{ route('events.public.invite', $event->slug) }}" class="w-full sm:flex-1 bg-slate-900 border border-blue-500/40 rounded-xl px-3.5 py-2 text-xs text-blue-300 font-mono select-all truncate">
-                                    <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', $event->slug) }}'); copiedPub = true; setTimeout(() => copiedPub = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                        <span x-show="!copiedPub">Copy Link</span>
-                                        <span x-show="copiedPub" x-cloak class="text-emerald-300">Copied! ✓</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Secret Private VIP Invitation Link Row -->
-                            <div class="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-2.5" x-data="{ copiedVip: false }">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
-                                        <span>🔒</span>
-                                        <span>Secret Private Invitation</span>
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
-                                        VVIP RSVP (GET DETAILS)
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                                    Secret private VVIP invitation link for special guests. Guests enter their Name, Email, and Phone before obtaining VVIP pass privileges.
-                                </p>
-                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                    <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
-                                    <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}'); copiedVip = true; setTimeout(() => copiedVip = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                        <span x-show="!copiedVip">Copy Link</span>
-                                        <span x-show="copiedVip" x-cloak class="text-emerald-300">Copied! ✓</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Category 2: NO DETAILS View (Public Direct & Secret Private Direct Links) -->
-                        <div x-show="activeCat === 'no_details'" class="space-y-4" x-cloak>
-                            <!-- Public General Direct Entry Link Row -->
-                            <div class="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-2.5" x-data="{ copiedPubNoDet: false }">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                                @else
+                                    <span class="px-3.5 py-1.5 rounded-xl text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
                                         <span>⚡</span>
-                                        <span>Public Direct Entry Pass</span>
+                                        <span>CATEGORY 2: NO DETAILS</span>
                                     </span>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
-                                        STANDARD ACCESS (NO DETAILS)
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                                    Public direct entry link. Form inputs are completely bypassed so general invitees click to instantly claim &amp; download their pass.
-                                </p>
-                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                    <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-blue-500/40 rounded-xl px-3.5 py-2 text-xs text-blue-300 font-mono select-all truncate">
-                                    <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}'); copiedPubNoDet = true; setTimeout(() => copiedPubNoDet = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                        <span x-show="!copiedPubNoDet">Copy Link</span>
-                                        <span x-show="copiedPubNoDet" x-cloak class="text-emerald-300">Copied! ✓</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Secret Private VVIP Direct Entry Link Row -->
-                            <div class="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-2.5" x-data="{ copiedVipNoDet: false }">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
-                                        <span>⚡</span>
-                                        <span>Secret Private VVIP Direct Pass</span>
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
-                                        VVIP DIRECT (NO DETAILS)
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                                    Secret private VVIP direct link. Form inputs are completely bypassed for instant VVIP pass claiming &amp; download.
-                                </p>
-                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                    <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
-                                    <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}'); copiedVipNoDet = true; setTimeout(() => copiedVipNoDet = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
-                                        <span x-show="!copiedVipNoDet">Copy Link</span>
-                                        <span x-show="copiedVipNoDet" x-cloak class="text-emerald-300">Copied! ✓</span>
-                                    </button>
-                                </div>
+                                @endif
                             </div>
                         </div>
+
+                        @if(($event->default_entry_mode ?? 'details') === 'details')
+                            <!-- Category 1: GET DETAILS View (Public & Secret Private Links) -->
+                            <div class="space-y-4">
+                            @if(!$event->is_private)
+                                <!-- Public General Invitation Link Row -->
+                                <div class="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-2.5" x-data="{ copiedPub: false }">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>🌐</span>
+                                            <span>Public General Invitation Link</span>
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                                            PUBLIC GENERAL (GET DETAILS)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                        Public registration link for general attendees. Invitees fill in required details before obtaining their pass.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                        <input type="text" readonly value="{{ route('events.public.invite', $event->slug) }}" class="w-full sm:flex-1 bg-slate-900 border border-blue-500/40 rounded-xl px-3.5 py-2 text-xs text-blue-300 font-mono select-all truncate">
+                                        <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', $event->slug) }}'); copiedPub = true; setTimeout(() => copiedPub = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                            <span x-show="!copiedPub">Copy Link</span>
+                                            <span x-show="copiedPub" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                        </button>
+                                        <a href="https://api.whatsapp.com/send?text={{ urlencode("🎉 You are invited to *" . $event->name . "*!\n\n📋 Access: *General Invitation*\n\n🔗 Register here:\n" . route('events.public.invite', $event->slug)) }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <span>Share WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Public VVIP Invitation Link Row -->
+                                <div class="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-2.5" x-data="{ copiedVip: false }">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>👑</span>
+                                            <span>Public VVIP Invitation Link</span>
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                                            PUBLIC VVIP (GET DETAILS)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                        Public VVIP invitation link. Special guests fill in details to obtain VVIP pass privileges.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                        <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
+                                        <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}'); copiedVip = true; setTimeout(() => copiedVip = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                            <span x-show="!copiedVip">Copy Link</span>
+                                            <span x-show="copiedVip" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                        </button>
+                                        <a href="https://api.whatsapp.com/send?text={{ urlencode("🎉 You are invited to *" . $event->name . "*!\n\n👑 Access: *VVIP Invitation*\n\n🔗 Register here:\n" . route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1])) }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <span>Share WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            @else
+                                <!-- Secret Private General Invitation Link Row -->
+                                <div class="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-2.5" x-data="{ copiedGen: false }">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>🔒</span>
+                                            <span>Secret Private General Invitation</span>
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                                            GENERAL RSVP (GET DETAILS)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                        Secret private general invitation link. Invitees enter their Name, Email, and Phone before obtaining general pass privileges.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                        <input type="text" readonly value="{{ route('events.public.invite', $event->slug) }}" class="w-full sm:flex-1 bg-slate-900 border border-blue-500/40 rounded-xl px-3.5 py-2 text-xs text-blue-300 font-mono select-all truncate">
+                                        <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', $event->slug) }}'); copiedGen = true; setTimeout(() => copiedGen = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                            <span x-show="!copiedGen">Copy Link</span>
+                                            <span x-show="copiedGen" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                        </button>
+                                        <a href="https://api.whatsapp.com/send?text={{ urlencode("🎉 You are invited to *" . $event->name . "*!\n\n🔒 Access: *Secret Private General Invitation*\n\n🔗 Register here:\n" . route('events.public.invite', $event->slug)) }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <span>Share WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Secret Private VIP Invitation Link Row -->
+                                <div class="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-2.5" x-data="{ copiedVip: false }">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>👑</span>
+                                            <span>Secret Private VVIP Invitation</span>
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                                            VVIP RSVP (GET DETAILS)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                        Secret private VVIP invitation link for special guests. Guests enter their Name, Email, and Phone before obtaining VVIP pass privileges.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                        <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
+                                        <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1]) }}'); copiedVip = true; setTimeout(() => copiedVip = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                            <span x-show="!copiedVip">Copy Link</span>
+                                            <span x-show="copiedVip" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                        </button>
+                                        <a href="https://api.whatsapp.com/send?text={{ urlencode("🎉 You are invited to *" . $event->name . "*!\n\n👑 Access: *Secret Private VVIP Invitation*\n\n🔗 Register here:\n" . route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1])) }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <span>Share WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                        @else
+                            <!-- Category 2: NO DETAILS View (Public Direct & Secret Private Direct Links) -->
+                            <div class="space-y-4">
+                            @if(!$event->is_private)
+                                <!-- Public General Direct Entry Link Row -->
+                                <div class="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-2.5" x-data="{ copiedPubNoDet: false }">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>⚡</span>
+                                            <span>Public General Direct Pass</span>
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                                            PUBLIC GENERAL (NO DETAILS)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                        Public direct entry link. Form inputs are completely bypassed so general invitees click to instantly claim &amp; download their pass.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                        <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-blue-500/40 rounded-xl px-3.5 py-2 text-xs text-blue-300 font-mono select-all truncate">
+                                        <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}'); copiedPubNoDet = true; setTimeout(() => copiedPubNoDet = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                            <span x-show="!copiedPubNoDet">Copy Link</span>
+                                            <span x-show="copiedPubNoDet" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                        </button>
+                                        <a href="https://api.whatsapp.com/send?text={{ urlencode("🎉 You are invited to *" . $event->name . "*!\n\n⚡ Access: *Public Direct Pass*\n\n🔗 Claim your pass here:\n" . route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1])) }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <span>Share WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Public VVIP Direct Entry Link Row -->
+                                <div class="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-2.5" x-data="{ copiedVipPubNoDet: false }">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>⚡</span>
+                                            <span>Public VVIP Direct Pass</span>
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                                            PUBLIC VVIP (NO DETAILS)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                        Public VVIP direct entry link. Form inputs are completely bypassed for instant VVIP pass claiming &amp; download.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                        <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
+                                        <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}'); copiedVipPubNoDet = true; setTimeout(() => copiedVipPubNoDet = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                            <span x-show="!copiedVipPubNoDet">Copy Link</span>
+                                            <span x-show="copiedVipPubNoDet" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                        </button>
+                                        <a href="https://api.whatsapp.com/send?text={{ urlencode("🎉 You are invited to *" . $event->name . "*!\n\n👑 Access: *Public VVIP Direct Pass*\n\n🔗 Claim your pass here:\n" . route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1])) }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <span>Share WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            @else
+                                <!-- Secret Private General Direct Entry Link Row -->
+                                <div class="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 space-y-2.5" x-data="{ copiedGenNoDet: false }">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>⚡</span>
+                                            <span>Secret Private General Direct Pass</span>
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                                            GENERAL DIRECT (NO DETAILS)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                        Secret private general direct link. Form inputs are completely bypassed so general invitees click to instantly claim &amp; download their pass.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                        <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-blue-500/40 rounded-xl px-3.5 py-2 text-xs text-blue-300 font-mono select-all truncate">
+                                        <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1]) }}'); copiedGenNoDet = true; setTimeout(() => copiedGenNoDet = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                            <span x-show="!copiedGenNoDet">Copy Link</span>
+                                            <span x-show="copiedGenNoDet" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                        </button>
+                                        <a href="https://api.whatsapp.com/send?text={{ urlencode("🎉 You are invited to *" . $event->name . "*!\n\n⚡ Access: *Secret Private General Direct Pass*\n\n🔗 Claim your pass here:\n" . route('events.public.invite', ['event_slug' => $event->slug, 'no_details' => 1])) }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <span>Share WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Secret Private VVIP Direct Entry Link Row -->
+                                <div class="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 space-y-2.5" x-data="{ copiedVipNoDet: false }">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>⚡</span>
+                                            <span>Secret Private VVIP Direct Pass</span>
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                                            VVIP DIRECT (NO DETAILS)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                        Secret private VVIP direct link. Form inputs are completely bypassed for instant VVIP pass claiming &amp; download.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                        <input type="text" readonly value="{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}" class="w-full sm:flex-1 bg-slate-900 border border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-purple-300 font-mono select-all truncate">
+                                        <button @click="navigator.clipboard.writeText('{{ route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1]) }}'); copiedVipNoDet = true; setTimeout(() => copiedVipNoDet = false, 2000)" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1 cursor-pointer">
+                                            <span x-show="!copiedVipNoDet">Copy Link</span>
+                                            <span x-show="copiedVipNoDet" x-cloak class="text-emerald-300">Copied! ✓</span>
+                                        </button>
+                                        <a href="https://api.whatsapp.com/send?text={{ urlencode("🎉 You are invited to *" . $event->name . "*!\n\n👑 Access: *Secret Private VVIP Direct Pass*\n\n🔗 Claim your pass here:\n" . route('events.public.invite', ['event_slug' => $event->slug, 'vip' => 1, 'no_details' => 1])) }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shrink-0 flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            <span>Share WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                        @endif
                     </div>
 
-                    <!-- Single-Use Secure Token Invitation Card (Unified Single & Batch Dispatcher) -->
-                    <div class="md:col-span-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-950/20 via-slate-900/90 to-amber-950/30 backdrop-blur-xl shadow-2xl space-y-5" x-data="{ copied: false, activeCat: 'get_details', batchCopied: false }">
+                    @if($event->is_private)
+                        <!-- Single-Use Secure Token Invitation Card (Unified Single & Batch Dispatcher) -->
+                        <div class="md:col-span-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-950/20 via-slate-900/90 to-amber-950/30 backdrop-blur-xl shadow-2xl space-y-5" x-data="{ copied: false, activeCat: 'get_details', batchCopied: false }">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-amber-500/20 pb-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/10">
@@ -288,14 +424,19 @@
                                 </div>
                             </div>
                             
-                            <!-- Category Filter Tabs -->
-                            <div class="flex items-center bg-slate-950/80 p-1 rounded-xl border border-amber-500/30 self-start md:self-auto">
-                                <button type="button" @click="activeCat = 'get_details'" :class="activeCat === 'get_details' ? 'bg-amber-500 text-slate-950 font-black' : 'text-amber-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
-                                    📋 Category 1: GET DETAILS
-                                </button>
-                                <button type="button" @click="activeCat = 'no_details'" :class="activeCat === 'no_details' ? 'bg-amber-500 text-slate-950 font-black' : 'text-amber-300 hover:text-white font-bold'" class="px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
-                                    ⚡ Category 2: NO DETAILS
-                                </button>
+                            <!-- Active Category Badge Display -->
+                            <div class="self-start md:self-auto">
+                                @if(($event->default_entry_mode ?? 'details') === 'details')
+                                    <span class="px-3.5 py-1.5 rounded-xl text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                        <span>📋</span>
+                                        <span>CATEGORY 1: GET DETAILS</span>
+                                    </span>
+                                @else
+                                    <span class="px-3.5 py-1.5 rounded-xl text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                        <span>⚡</span>
+                                        <span>CATEGORY 2: NO DETAILS</span>
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -315,39 +456,41 @@
                             </span>
                         </div>
 
-                        <!-- Category 1: GET DETAILS Description & Generators -->
-                        <div x-show="activeCat === 'get_details'" class="space-y-3">
-                            <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                                <strong class="text-amber-300">GET DETAILS Category:</strong> Generates an interactive RSVP link. Invitees fill in their Name, Email, and Phone number before receiving their auto-verified digital pass.
-                            </p>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                <button wire:click="generateSingleUseToken('vvip', false)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
-                                    <span>👑 Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' VVIP Links' : '1-Time VVIP Link' }}</span>
-                                    <span class="text-[9px] bg-black/20 px-1.5 py-0.5 rounded uppercase">(Get Details)</span>
-                                </button>
-                                <button wire:click="generateSingleUseToken('general_admission', false)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
-                                    <span>🎫 Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' General Links' : '1-Time General Link' }}</span>
-                                    <span class="text-[9px] bg-black/20 px-1.5 py-0.5 rounded uppercase">(Get Details)</span>
-                                </button>
+                        @if(($event->default_entry_mode ?? 'details') === 'details')
+                            <!-- Category 1: GET DETAILS Description & Generators -->
+                            <div class="space-y-3">
+                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                    <strong class="text-amber-300">GET DETAILS Category:</strong> Generates an interactive RSVP link. Invitees fill in their Name, Email, and Phone number before receiving their auto-verified digital pass.
+                                </p>
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                    <button wire:click="generateSingleUseToken('vvip', false)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
+                                        <span>👑 Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' VVIP Links' : '1-Time VVIP Link' }}</span>
+                                        <span class="text-[9px] bg-black/20 px-1.5 py-0.5 rounded uppercase">(Get Details)</span>
+                                    </button>
+                                    <button wire:click="generateSingleUseToken('general_admission', false)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
+                                        <span>🎫 Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' General Links' : '1-Time General Link' }}</span>
+                                        <span class="text-[9px] bg-black/20 px-1.5 py-0.5 rounded uppercase">(Get Details)</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-
-                        <!-- Category 2: NO DETAILS Description & Generators -->
-                        <div x-show="activeCat === 'no_details'" class="space-y-3" x-cloak>
-                            <p class="text-xs text-slate-300 font-medium leading-relaxed">
-                                <strong class="text-amber-300">NO DETAILS Category (Direct QR Claim):</strong> Personal details form inputs are completely eliminated. Invitees click the poster image to instantly claim &amp; download their QR pass. Forwarded or repeated attempts are denied.
-                            </p>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                                <button wire:click="generateSingleUseToken('vvip', true)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
-                                    <span>⚡ Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' VVIP Passes' : '1-Time VVIP Pass' }}</span>
-                                    <span class="text-[9px] bg-black/30 px-1.5 py-0.5 rounded uppercase font-black text-amber-200">(No Details)</span>
-                                </button>
-                                <button wire:click="generateSingleUseToken('general_admission', true)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
-                                    <span>⚡ Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' General Passes' : '1-Time General Pass' }}</span>
-                                    <span class="text-[9px] bg-black/30 px-1.5 py-0.5 rounded uppercase font-black text-slate-400">(No Details)</span>
-                                </button>
+                        @else
+                            <!-- Category 2: NO DETAILS Description & Generators -->
+                            <div class="space-y-3">
+                                <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                                    <strong class="text-amber-300">NO DETAILS Category (Direct QR Claim):</strong> Personal details form inputs are completely eliminated. Invitees click the poster image to instantly claim &amp; download their QR pass. Forwarded or repeated attempts are denied.
+                                </p>
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                    <button wire:click="generateSingleUseToken('vvip', true)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
+                                        <span>⚡ Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' VVIP Passes' : '1-Time VVIP Pass' }}</span>
+                                        <span class="text-[9px] bg-black/30 px-1.5 py-0.5 rounded uppercase font-black text-amber-200">(No Details)</span>
+                                    </button>
+                                    <button wire:click="generateSingleUseToken('general_admission', true)" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5">
+                                        <span>⚡ Generate {{ $tokenQuantity > 1 ? $tokenQuantity . ' General Passes' : '1-Time General Pass' }}</span>
+                                        <span class="text-[9px] bg-black/30 px-1.5 py-0.5 rounded uppercase font-black text-slate-400">(No Details)</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        @endif
 
                         <!-- SINGLE LINK OUTPUT VIEW (When Quantity = 1) -->
                         @if($generatedTokenLink)
@@ -442,6 +585,7 @@
                             </div>
                         @endif
                     </div>
+                    @endif
                 </div>
             </div>
 

@@ -28,7 +28,12 @@
                 @if(!empty($qrToken))
                     <!-- Digital Entry QR Code Card -->
                     <div class="bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-6 max-w-sm mx-auto mb-8 text-center space-y-4 shadow-xl">
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Digital Entry QR Code Pass</p>
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-400">🎟️ OFFICIAL DIGITAL QR ENTRY PASS</p>
+                            @if(!empty($full_name))
+                                <h3 class="text-xl font-extrabold text-white drop-shadow">{{ $full_name }}</h3>
+                            @endif
+                        </div>
                         
                         <div class="w-36 h-36 bg-white rounded-xl p-2 mx-auto flex items-center justify-center shadow-lg">
                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($qrToken) }}" alt="QR Pass" class="w-full h-full object-contain">
@@ -144,122 +149,271 @@
                         </div>
                     @endif
 
-                    <!-- Section 1 -->
+                    @php
+                        $formConfig = $event->form_fields_config;
+                        $stdConfig = $formConfig['standard_fields'];
+                        $customConfig = $formConfig['custom_fields'];
+                    @endphp
+
+                    <!-- Section 1: Attendee Details -->
                     <div class="mb-10">
                         <h3 class="text-lg font-semibold text-white mb-6 flex items-center">
                             <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs mr-3">1</span>
-                            Personal Information
+                            Attendee Details
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Full Name -->
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Full Name <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <input wire:model.live.blur="full_name"
-                                           @blur="saveDraft('name', $el.value)"
-                                           type="text"
-                                           class="w-full bg-black/20 border {{ $errors->has('full_name') ? 'border-rose-500 focus:ring-rose-500' : (!empty($full_name) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-white/10 focus:ring-blue-500') }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium pr-10" placeholder="John Doe">
-                                    @if(!empty($full_name) && !$errors->has('full_name'))
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                            <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                        </div>
-                                    @endif
+                            @if(($stdConfig['full_name'] ?? 'required') !== 'disabled')
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Full Name 
+                                        @if(($stdConfig['full_name'] ?? 'required') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="full_name" type="text" class="w-full bg-black/20 border {{ $errors->has('full_name') ? 'border-rose-500 focus:ring-rose-500' : 'border-white/10 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="John Doe">
+                                    @error('full_name') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
                                 </div>
-                                @error('full_name') <span class="text-rose-400 text-xs mt-1.5 block font-semibold flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ $message }}</span> @enderror
-                            </div>
-                            <!-- Email Address -->
-                            <div>
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Email Address <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <input wire:model.live.blur="email"
-                                           @blur="saveDraft('email', $el.value)"
-                                           type="email"
-                                           class="w-full bg-black/20 border {{ $errors->has('email') ? 'border-rose-500 focus:ring-rose-500' : (!empty($email) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-white/10 focus:ring-blue-500') }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium pr-10" placeholder="john@example.com">
-                                    @if(!empty($email) && !$errors->has('email'))
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                            <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                                @error('email') <span class="text-rose-400 text-xs mt-1.5 block font-semibold flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ $message }}</span> @enderror
-                            </div>
-                            <!-- Phone Number -->
-                            <div>
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Phone Number <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <input wire:model.live.blur="phone"
-                                           @blur="saveDraft('phone', $el.value)"
-                                           type="tel"
-                                           maxlength="10"
-                                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
-                                           class="w-full bg-black/20 border {{ $errors->has('phone') ? 'border-rose-500 focus:ring-rose-500' : (!empty($phone) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-white/10 focus:ring-blue-500') }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium pr-10" placeholder="0246345698 (10 digits)">
-                                    @if(!empty($phone) && !$errors->has('phone'))
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                            <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                                @error('phone') <span class="text-rose-400 text-xs mt-1.5 block font-semibold flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ $message }}</span> @enderror
-                            </div>
-                        </div>
-                    </div>
+                            @endif
 
-                    <!-- Section 2: Professional Details (Optional) -->
-                    <div class="mb-10 pt-8 border-t border-white/10">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">2</span>
-                                Professional Details
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/40 shadow-sm shadow-orange-500/10 ml-1">For Networking</span>
-                            </h3>
-                            <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10">Optional</span>
-                        </div>
-                        <p class="text-xs text-slate-400 mb-6 font-medium pl-9">Optional — Leave blank if registering as an ordinary individual.</p>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Company -->
-                            <div>
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Company / Organization <span class="text-slate-500 text-xs font-normal">(Optional)</span></label>
-                                <div class="relative">
-                                    <input wire:model.live.blur="company"
-                                           @blur="saveDraft('company', $el.value)"
-                                           type="text"
-                                           class="w-full bg-black/20 border {{ !empty($company) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-white/10 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium pr-10" placeholder="Company Name (Optional)">
-                                    @if(!empty($company) && !$errors->has('company'))
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                            <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                        </div>
-                                    @endif
+                            <!-- Email Address -->
+                            @if(($stdConfig['email'] ?? 'required') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Email Address 
+                                        @if(($stdConfig['email'] ?? 'required') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="email" type="email" class="w-full bg-black/20 border {{ $errors->has('email') ? 'border-rose-500 focus:ring-rose-500' : 'border-white/10 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="john@example.com">
+                                    @error('email') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
                                 </div>
-                            </div>
+                            @endif
+
+                            <!-- Phone Number -->
+                            @if(($stdConfig['phone'] ?? 'required') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Phone Number 
+                                        @if(($stdConfig['phone'] ?? 'required') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="phone" type="tel" class="w-full bg-black/20 border {{ $errors->has('phone') ? 'border-rose-500 focus:ring-rose-500' : 'border-white/10 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="Phone Number">
+                                    @error('phone') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Company -->
+                            @if(($stdConfig['company'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Company / Organization 
+                                        @if(($stdConfig['company'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="company" type="text" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="Company Name">
+                                    @error('company') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
 
                             <!-- Job Title -->
-                            <div>
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Job Title / Occupation <span class="text-slate-500 text-xs font-normal">(Optional)</span></label>
-                                <div class="relative">">
-                                    <input wire:model.live.blur="job_title"
-                                           @blur="saveDraft('job', $el.value)"
-                                           type="text"
-                                           class="w-full bg-black/20 border {{ !empty($job_title) ? 'border-emerald-500/60 focus:ring-emerald-500' : 'border-white/10 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium pr-10" placeholder="e.g. Software Engineer (Optional)">
-                                    @if(!empty($job_title) && !$errors->has('job_title'))
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-emerald-400 animate-fadeIn">
-                                            <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                        </div>
-                                    @endif
+                            @if(($stdConfig['job_title'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Job Title 
+                                        @if(($stdConfig['job_title'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="job_title" type="text" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="e.g. Software Engineer">
+                                    @error('job_title') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
                                 </div>
-                            </div>
+                            @endif
+
+                            <!-- Country -->
+                            @if(($stdConfig['country'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Country 
+                                        @if(($stdConfig['country'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="country" type="text" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="e.g. Ghana">
+                                    @error('country') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Gender -->
+                            @if(($stdConfig['gender'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Gender 
+                                        @if(($stdConfig['gender'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <select wire:model.live="gender" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium cursor-pointer">
+                                        <option value="" class="bg-slate-900">Select Gender</option>
+                                        <option value="Male" class="bg-slate-900">Male</option>
+                                        <option value="Female" class="bg-slate-900">Female</option>
+                                        <option value="Other" class="bg-slate-900">Other / Prefer not to say</option>
+                                    </select>
+                                    @error('gender') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Emergency Contact Name -->
+                            @if(($stdConfig['emergency_contact_name'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Emergency Contact Name 
+                                        @if(($stdConfig['emergency_contact_name'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="emergency_contact_name" type="text" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="Contact Name">
+                                    @error('emergency_contact_name') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Emergency Contact Phone -->
+                            @if(($stdConfig['emergency_contact_phone'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Emergency Contact Phone 
+                                        @if(($stdConfig['emergency_contact_phone'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="emergency_contact_phone" type="tel" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="Contact Phone">
+                                    @error('emergency_contact_phone') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Dietary Preferences -->
+                            @if(($stdConfig['dietary_preferences'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Dietary Preferences 
+                                        @if(($stdConfig['dietary_preferences'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="dietary_preferences" type="text" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="e.g. Vegetarian, Halal, Kosher">
+                                    @error('dietary_preferences') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Accessibility Needs -->
+                            @if(($stdConfig['accessibility_needs'] ?? 'disabled') !== 'disabled')
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Accessibility Needs 
+                                        @if(($stdConfig['accessibility_needs'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <input wire:model.live.blur="accessibility_needs" type="text" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="e.g. Wheelchair access, Sign language">
+                                    @error('accessibility_needs') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
+                            <!-- Registration Reason -->
+                            @if(($stdConfig['registration_reason'] ?? 'disabled') !== 'disabled')
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Reason for Attendance 
+                                        @if(($stdConfig['registration_reason'] ?? '') === 'required')
+                                            <span class="text-rose-500">*</span>
+                                        @else
+                                            <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                        @endif
+                                    </label>
+                                    <textarea wire:model.live.blur="registration_reason" rows="2" class="w-full bg-black/20 border border-white/10 focus:ring-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="Brief note..."></textarea>
+                                    @error('registration_reason') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
                         </div>
                     </div>
+
+                    <!-- Custom Extra Questions Section -->
+                    @if(!empty($customConfig))
+                        <div class="mb-10 pt-8 border-t border-white/10">
+                            <h3 class="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">2</span>
+                                Additional Event Questions
+                            </h3>
+                            <div class="space-y-6">
+                                @foreach($customConfig as $cField)
+                                    @php
+                                        $cId = $cField['id'] ?? '';
+                                        $cLabel = $cField['label'] ?? 'Question';
+                                        $cType = $cField['type'] ?? 'text';
+                                        $cReq = !empty($cField['required']);
+                                        $cOpts = array_filter(array_map('trim', explode(',', $cField['options'] ?? '')));
+                                    @endphp
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">
+                                            {{ $cLabel }}
+                                            @if($cReq)
+                                                <span class="text-rose-500">*</span>
+                                            @else
+                                                <span class="text-slate-500 text-xs font-normal">(Optional)</span>
+                                            @endif
+                                        </label>
+
+                                        @if($cType === 'text')
+                                            <input type="text" wire:model.live="custom_answers.{{ $cId }}" class="w-full bg-black/20 border border-white/10 focus:ring-purple-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="Your answer...">
+                                        @elseif($cType === 'number')
+                                            <input type="number" wire:model.live="custom_answers.{{ $cId }}" class="w-full bg-black/20 border border-white/10 focus:ring-purple-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="0">
+                                        @elseif($cType === 'textarea')
+                                            <textarea wire:model.live="custom_answers.{{ $cId }}" rows="3" class="w-full bg-black/20 border border-white/10 focus:ring-purple-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="Your answer..."></textarea>
+                                        @elseif($cType === 'select')
+                                            <select wire:model.live="custom_answers.{{ $cId }}" class="w-full bg-black/20 border border-white/10 focus:ring-purple-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium cursor-pointer">
+                                                <option value="" class="bg-slate-900">Select an option</option>
+                                                @foreach($cOpts as $opt)
+                                                    <option value="{{ $opt }}" class="bg-slate-900">{{ $opt }}</option>
+                                                @endforeach
+                                            </select>
+                                        @elseif($cType === 'checkbox')
+                                            <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-xl bg-black/20 border border-white/10">
+                                                <input type="checkbox" wire:model.live="custom_answers.{{ $cId }}" class="form-checkbox h-5 w-5 text-purple-600 rounded border-slate-600 bg-slate-900 focus:ring-purple-500">
+                                                <span class="text-sm text-slate-300 font-semibold">{{ $cLabel }}</span>
+                                            </label>
+                                        @endif
+
+                                        @error("custom_answers.{$cId}") <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
                     <!-- Consent -->
                     <div class="mb-10 pt-8 border-t border-white/10">

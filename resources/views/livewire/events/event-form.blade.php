@@ -366,111 +366,215 @@
                         <label class="flex items-center space-x-3 cursor-pointer">
                             <input wire:model.live="is_free" type="radio" value="1" class="form-radio h-5 w-5 text-blue-600 border-slate-300 dark:border-white/20 focus:ring-blue-500">
                             <span class="text-slate-700 dark:text-slate-300 font-semibold">Free Event</span>
-                        </label>
-                        <label class="flex items-center space-x-3 cursor-pointer">
-                            <input wire:model.live="is_free" type="radio" value="0" class="form-radio h-5 w-5 text-blue-600 border-slate-300 dark:border-white/20 focus:ring-blue-500">
-                            <span class="text-slate-700 dark:text-slate-300 font-semibold">Paid Event</span>
-                        </label>
-                    </div>
+                                <input wire:model.live="is_free" type="radio" value="0" class="form-radio h-5 w-5 text-blue-600 border-slate-300 dark:border-white/20 focus:ring-blue-500">
+                                <span class="text-slate-700 dark:text-slate-300 font-semibold">Paid Event</span>
+                            </label>
+                        </div>
 
-                    <!-- Event Privacy Selection -->
-                    <div class="space-y-3">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Event Visibility & Privacy</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <label class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ !$is_private ? 'border-blue-500 bg-blue-500/5 dark:bg-blue-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
-                                        Public Event
-                                    </span>
-                                    <input type="radio" wire:model.live="is_private" :value="false" class="form-radio text-blue-600 focus:ring-blue-500">
+                        <!-- Event Privacy Selection -->
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Event Visibility & Privacy</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div wire:click="$set('is_private', false)" class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ !$is_private ? 'border-blue-500 bg-blue-500/5 dark:bg-blue-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                                            Public Event
+                                        </span>
+                                        <input type="radio" name="event_privacy_radio" value="0" @if(!$is_private) checked @endif wire:model.live="is_private" class="form-radio text-blue-600 focus:ring-blue-500">
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Visible on public website catalog (/public-events). Open to public registration.</p>
                                 </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Visible on public website catalog (/public-events). Open to public registration.</p>
-                            </label>
 
-                            <label class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $is_private ? 'border-purple-500 bg-purple-500/5 dark:bg-purple-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                        Private Event
-                                    </span>
-                                    <input type="radio" wire:model.live="is_private" :value="true" class="form-radio text-purple-600 focus:ring-purple-500">
+                                <div wire:click="$set('is_private', true)" class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $is_private ? 'border-purple-500 bg-purple-500/5 dark:bg-purple-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                            Private Event
+                                        </span>
+                                        <input type="radio" name="event_privacy_radio" value="1" @if($is_private) checked @endif wire:model.live="is_private" class="form-radio text-purple-600 focus:ring-purple-500">
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Hidden from public website catalog. Accessible only via private invite link.</p>
                                 </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Hidden from public website catalog. Accessible only via private invite link.</p>
-                            </label>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Default Event Entry Mode / Category Selection -->
-                    <div class="space-y-3 pt-2">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Default Entry Mode / Attendance Category</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <label class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $default_entry_mode === 'details' ? 'border-amber-500 bg-amber-500/5 dark:bg-amber-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                                        <span>📋</span>
-                                        <span>Details (Form Entry)</span>
-                                    </span>
-                                    <input type="radio" wire:model.live="default_entry_mode" value="details" class="form-radio text-amber-500 focus:ring-amber-500">
+                        <!-- Default Event Entry Mode / Category Selection -->
+                        <div class="space-y-3 pt-2">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Default Entry Mode / Attendance Category</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div wire:click="$set('default_entry_mode', 'details')" class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $default_entry_mode === 'details' ? 'border-amber-500 bg-amber-500/5 dark:bg-amber-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                            <span>📋</span>
+                                            <span>Details (Form Entry)</span>
+                                        </span>
+                                        <input type="radio" name="entry_mode_radio" value="details" @if($default_entry_mode === 'details') checked @endif wire:model.live="default_entry_mode" class="form-radio text-amber-500 focus:ring-amber-500">
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Invitees fill in Name, Email & Phone number to claim or register for pass.</p>
                                 </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Invitees fill in Name, Email & Phone number to claim or register for pass.</p>
-                            </label>
 
-                            <label class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $default_entry_mode === 'no_details' ? 'border-purple-500 bg-purple-500/5 dark:bg-purple-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                                        <span>⚡</span>
-                                        <span>No Details (Direct Claim)</span>
-                                    </span>
-                                    <input type="radio" wire:model.live="default_entry_mode" value="no_details" class="form-radio text-purple-600 focus:ring-purple-500">
+                                <div wire:click="$set('default_entry_mode', 'no_details')" class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $default_entry_mode === 'no_details' ? 'border-purple-500 bg-purple-500/5 dark:bg-purple-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                            <span>⚡</span>
+                                            <span>No Details (Direct Claim)</span>
+                                        </span>
+                                        <input type="radio" name="entry_mode_radio" value="no_details" @if($default_entry_mode === 'no_details') checked @endif wire:model.live="default_entry_mode" class="form-radio text-purple-600 focus:ring-purple-500">
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Form entry bypassed. Invitees click poster image to instantly claim pass.</p>
                                 </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Form entry bypassed. Invitees click poster image to instantly claim pass.</p>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Initial Status</label>
-                        <select wire:model.live="status" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium">
-                            <option value="draft">Draft (Internal Setup Only — Inactive Link)</option>
-                            <option value="published">Published (Active & Ready for RSVPs / Invites)</option>
-                        </select>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                            For private events, publishing activates the private invitation link so invited guests can confirm RSVPs.
-                        </p>
-                    </div>
-
-                    <!-- Invitation Customization (Badge Title & Subtitle Message) -->
-                    <div class="pt-6 border-t border-slate-200 dark:border-white/10 space-y-4">
-                        <div class="flex items-center gap-2">
-                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Invitation Page Customization</h4>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-500/10 text-blue-500 border border-blue-500/20">Custom Branding</span>
-                        </div>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Customize the highlighted badge title and message description shown on your event invitation page for guests.</p>
-
-                        <!-- Invitation Heading Title / Badge -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                                Invitation Badge / Heading Title
-                            </label>
-                            <input type="text"
-                                   wire:model.live="invitation_title"
-                                   placeholder="e.g. PRIVATE VVIP INVITATION (Default: 🔒 PRIVATE VVIP INVITATION)"
-                                   class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-sm">
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Replaces the highlighted badge title above the invitation poster card.</p>
+                            </div>
                         </div>
 
-                        <!-- Invitation Subtitle / Message -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                                Invitation Subtitle / Description Message
-                            </label>
-                            <textarea wire:model.live="invitation_description"
-                                      rows="3"
-                                      placeholder="e.g. You have received an exclusive private VVIP invitation directly from the event organizers..."
-                                      class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-sm"></textarea>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Leave empty to use default invitation welcome text.</p>
-                        </div>
+                        <!-- Nested Form Controls (Shown when Details / Form Entry mode is selected) -->
+                        @if($default_entry_mode === 'details')
+                            <div class="mt-4 p-5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-amber-500/30 space-y-6 animate-fadeIn">
+                                <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200 dark:border-white/10 pb-3">
+                                    <div>
+                                        <h4 class="text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                                            <span>⚙️</span>
+                                            <span>Form Controls & Input Customization</span>
+                                        </h4>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Configure which input fields appear on RSVP forms and add custom extra questions.</p>
+                                    </div>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">Category 1: Get Details</span>
+                                </div>
+
+                                <!-- Standard Form Fields Configuration Grid -->
+                                <div class="space-y-3">
+                                    <h5 class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                                        <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        Standard Input Fields
+                                    </h5>
+
+                                    @php
+                                        $labels = [
+                                            'full_name' => 'Full Name',
+                                            'email' => 'Email Address',
+                                            'phone' => 'Phone Number',
+                                            'company' => 'Company / Organization',
+                                            'job_title' => 'Job Title',
+                                            'country' => 'Country',
+                                            'gender' => 'Gender',
+                                            'emergency_contact_name' => 'Emergency Contact Name',
+                                            'emergency_contact_phone' => 'Emergency Contact Phone',
+                                            'dietary_preferences' => 'Dietary Preferences',
+                                            'accessibility_needs' => 'Accessibility Needs',
+                                            'registration_reason' => 'Reason for Attendance',
+                                        ];
+                                    @endphp
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        @foreach($labels as $fieldKey => $fieldLabel)
+                                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-3">
+                                                <div>
+                                                    <span class="text-xs font-bold text-slate-900 dark:text-white block">{{ $fieldLabel }}</span>
+                                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Standard RSVP Field</span>
+                                                </div>
+
+                                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+                                                    <button type="button" 
+                                                            wire:click="$set('form_standard_fields.{{ $fieldKey }}', 'disabled')" 
+                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? 'disabled') === 'disabled' ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                        Disabled
+                                                    </button>
+                                                    <button type="button" 
+                                                            wire:click="$set('form_standard_fields.{{ $fieldKey }}', 'optional')" 
+                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? '') === 'optional' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 font-extrabold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                        Optional
+                                                    </button>
+                                                    <button type="button" 
+                                                            wire:click="$set('form_standard_fields.{{ $fieldKey }}', 'required')" 
+                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? '') === 'required' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                        Required
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                <!-- Custom Extra Fields Builder Section -->
+                                <div class="pt-4 border-t border-slate-200 dark:border-white/10 space-y-4">
+                                    <div class="flex items-center justify-between flex-wrap gap-2">
+                                        <div>
+                                            <h5 class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                                                <svg class="w-3.5 h-3.5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                                Custom Extra Fields
+                                            </h5>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Add extra input questions tailored specifically to this event.</p>
+                                        </div>
+                                        <button type="button" wire:click="addCustomField" class="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            Add Custom Field
+                                        </button>
+                                    </div>
+
+                                    @if(empty($form_custom_fields))
+                                        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/60 border border-dashed border-slate-300 dark:border-white/10 text-center text-xs text-slate-500 dark:text-slate-400 italic">
+                                            No custom extra fields added yet. Click "Add Custom Field" to create custom questions for attendees.
+                                        </div>
+                                    @else
+                                        <div class="space-y-3">
+                                            @foreach($form_custom_fields as $index => $field)
+                                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 space-y-3 animate-fadeIn">
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <span class="text-xs font-extrabold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Custom Field #{{ $index + 1 }}</span>
+                                                        <button type="button" wire:click="removeCustomField({{ $index }})" class="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer" title="Remove Field">
+                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        </button>
+                                                    </div>
+
+                                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                        <div class="sm:col-span-2">
+                                                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Field Label / Question</label>
+                                                            <input type="text" 
+                                                                   wire:model="form_custom_fields.{{ $index }}.label" 
+                                                                   placeholder="e.g. T-Shirt Size, Table Number, Passport ID..." 
+                                                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none">
+                                                        </div>
+
+                                                        <div>
+                                                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Input Type</label>
+                                                            <select wire:model.live="form_custom_fields.{{ $index }}.type" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none cursor-pointer">
+                                                                <option value="text">Short Text</option>
+                                                                <option value="number">Number</option>
+                                                                <option value="textarea">Paragraph / Long Text</option>
+                                                                <option value="select">Dropdown Select</option>
+                                                                <option value="checkbox">Checkbox (Yes/No)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    @if(($field['type'] ?? '') === 'select')
+                                                        <div>
+                                                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dropdown Options (Comma-separated)</label>
+                                                            <input type="text" 
+                                                                   wire:model="form_custom_fields.{{ $index }}.options" 
+                                                                   placeholder="e.g. Small, Medium, Large, Extra Large" 
+                                                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none">
+                                                        </div>
+                                                    @endif
+
+                                                    <div class="flex items-center gap-2 pt-1">
+                                                        <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                                            <input type="checkbox" wire:model="form_custom_fields.{{ $index }}.required" class="rounded text-purple-600 focus:ring-purple-500">
+                                                            <span>Mandatory / Required Field</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @else
+                            <div class="mt-3 p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-300 text-xs font-medium flex items-center gap-2">
+                                <span>⚡</span>
+                                <span>Direct Claim mode is active. Form entry is bypassed so guests claim passes instantly without filling input fields.</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
