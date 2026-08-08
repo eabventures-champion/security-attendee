@@ -333,7 +333,7 @@
                                             <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
                                         @endif
                                     </label>
-                                    <input wire:model.live.blur="phone" type="tel" {{ $isLocked ? 'disabled' : '' }} placeholder="Phone Number" class="w-full bg-slate-900/80 border {{ $errors->has('phone') ? 'border-rose-500' : 'border-slate-700 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
+                                    <input wire:model.live.blur="phone" type="tel" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" {{ $isLocked ? 'disabled' : '' }} placeholder="e.g. 0240303609 (10 digits)" class="w-full bg-slate-900/80 border {{ $errors->has('phone') ? 'border-rose-500' : 'border-slate-700 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 font-medium text-sm">
                                     @error('phone') <span class="text-rose-400 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
                                 </div>
                             @endif

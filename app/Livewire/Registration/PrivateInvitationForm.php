@@ -152,10 +152,15 @@ class PrivateInvitationForm extends Component
             $rules['phone'] = [
                 'required',
                 'string',
+                'regex:/^[0-9]{10}$/',
                 Rule::unique('attendees', 'phone')->where(fn ($query) => $query->where('event_id', $eventId)->whereNotNull('phone')->where('phone', '!=', ''))
             ];
         } elseif ($phoneState === 'optional') {
-            $rules['phone'] = 'nullable|string|max:255';
+            $rules['phone'] = [
+                'nullable',
+                'string',
+                'regex:/^[0-9]{10}$/',
+            ];
         }
 
         // Other standard fields
@@ -199,6 +204,7 @@ class PrivateInvitationForm extends Component
             'email.email' => 'Please enter a valid email address.',
             'email.regex' => 'Please enter a valid email address with a domain extension (e.g. .com, .org).',
             'phone.required' => 'Phone number is required.',
+            'phone.regex' => 'Phone number must be exactly 10 digits (e.g. 0240303609).',
             'phone.unique' => 'This phone number is already registered for this event.',
             'consent.accepted' => 'You must accept the terms and conditions to confirm attendance.',
             'registration_reason.required' => 'Please state your reason for filling this form before proceeding.',

@@ -205,7 +205,7 @@
                                             <span class="text-slate-500 text-xs font-normal">(Optional)</span>
                                         @endif
                                     </label>
-                                    <input wire:model.live.blur="phone" type="tel" class="w-full bg-black/20 border {{ $errors->has('phone') ? 'border-rose-500 focus:ring-rose-500' : 'border-white/10 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="Phone Number">
+                                    <input wire:model.live.blur="phone" type="tel" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" class="w-full bg-black/20 border {{ $errors->has('phone') ? 'border-rose-500 focus:ring-rose-500' : 'border-white/10 focus:ring-blue-500' }} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:bg-white/5 transition-all font-medium" placeholder="e.g. 0240303609 (10 digits)">
                                     @error('phone') <span class="text-rose-400 text-xs mt-1.5 block font-semibold">{{ $message }}</span> @enderror
                                 </div>
                             @endif
