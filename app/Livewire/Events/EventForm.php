@@ -78,8 +78,8 @@ class EventForm extends Component
                 $this->name = $event->name ?? '';
                 $this->slug = $event->slug ?? '';
                 $this->description = $event->description ?? '';
-                $this->invitation_title = !empty($event->invitation_title) ? $event->invitation_title : 'PRIVATE VVIP INVITATION';
-                $this->invitation_description = !empty($event->invitation_description) ? $event->invitation_description : 'You have received an exclusive private VVIP invitation directly from the event organizers. Confirming your attendance grants you VVIP access privileges and a pre-verified digital pass.';
+                $this->invitation_title = !empty($event->invitation_title) ? $event->invitation_title : 'PRIVATE INVITATION';
+                $this->invitation_description = !empty($event->invitation_description) ? $event->invitation_description : 'You have received a private invitation directly from the event organizers. Confirming your attendance secures your digital pass.';
                 $this->title_font = $event->title_font ?? 'Alex Brush';
                 $this->existing_cover_image_path = $event->cover_image_path ?? '';
                 $this->is_multi_day = (bool) ($event->is_multi_day ?? false);
@@ -261,6 +261,18 @@ class EventForm extends Component
         session()->forget('active_event_draft_uuid');
         session()->forget('active_event_draft_step');
         return redirect()->to(route('events.create') . '?fresh=1');
+    }
+
+    public function saveAsDraft(): mixed
+    {
+        $this->status = 'draft';
+        return $this->save();
+    }
+
+    public function saveAndPublish(): mixed
+    {
+        $this->status = 'published';
+        return $this->save();
     }
 
     public function save(): mixed

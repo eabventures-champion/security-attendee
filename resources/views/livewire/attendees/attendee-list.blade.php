@@ -1206,17 +1206,6 @@ sarah@company.com, alex@tech.org"></textarea>
                         <!-- Dropdown Field Selection / Form Controls (Shown when Details / Form Entry mode is selected) -->
                         @if($gen_category === 'details')
                             @php
-                                $selEvent = $gen_event_id ? $events->firstWhere('id', (int)$gen_event_id) : null;
-                                $ffConfig = $selEvent ? $selEvent->form_fields_config : null;
-                                $stdFields = $ffConfig['standard_fields'] ?? [
-                                    'full_name' => 'required',
-                                    'email' => 'required',
-                                    'phone' => 'required',
-                                    'company' => 'optional',
-                                    'job_title' => 'optional',
-                                ];
-                                $custFields = $ffConfig['custom_fields'] ?? [];
-                                
                                 $stdLabels = [
                                     'full_name' => 'Full Name',
                                     'email' => 'Email Address',
@@ -1229,48 +1218,99 @@ sarah@company.com, alex@tech.org"></textarea>
                                     'emergency_contact_phone' => 'Emergency Contact Phone',
                                     'dietary_preferences' => 'Dietary Preferences',
                                     'accessibility_needs' => 'Accessibility Needs',
-                                    'registration_reason' => 'Registration Reason',
+                                    'registration_reason' => 'Reason for Attendance',
                                 ];
                             @endphp
 
-                            <div class="mt-3 p-3.5 rounded-xl bg-amber-500/5 dark:bg-slate-800/90 border border-amber-500/30 space-y-3 animate-fadeIn">
-                                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/80 pb-2">
-                                    <span class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                        <span>⚙️</span>
-                                        <span>Configured Form Input Fields</span>
-                                    </span>
-                                    <span class="text-[10px] font-bold text-slate-400">Defaulted from Event Settings</span>
+                            <div class="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-amber-500/30 space-y-4 animate-fadeIn max-h-[360px] overflow-y-auto pr-1">
+                                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/80 pb-2.5 flex-wrap gap-2">
+                                    <div>
+                                        <h4 class="text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span>⚙️</span>
+                                            <span>Form Controls & Input Customization</span>
+                                        </h4>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Configure which input fields appear on RSVP forms and add custom extra questions.</p>
+                                    </div>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">Category 1: Get Details</span>
                                 </div>
 
-                                <!-- Standard Input Fields List -->
-                                <div class="grid grid-cols-2 gap-1.5">
-                                    @foreach($stdLabels as $key => $label)
-                                        @php $st = $stdFields[$key] ?? 'disabled'; @endphp
-                                        @if($st !== 'disabled')
-                                            <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                                                <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate mr-1">{{ $label }}</span>
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase shrink-0 {{ $st === 'required' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30' }}">
-                                                    {{ $st }}
-                                                </span>
+                                <!-- Standard Input Fields Configuration Grid -->
+                                <div class="space-y-2">
+                                    <h5 class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        Standard Input Fields
+                                    </h5>
+
+                                    <div class="grid grid-cols-1 gap-2">
+                                        @foreach($stdLabels as $key => $label)
+                                            @php $currSt = $gen_standard_fields[$key] ?? 'disabled'; @endphp
+                                            <div class="p-2.5 px-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-xs">
+                                                <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate flex-1">{{ $label }}</span>
+                                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+                                                    <button type="button" 
+                                                            wire:click="setGenFieldStatus('{{ $key }}', 'disabled')" 
+                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'disabled' ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                        Disabled
+                                                    </button>
+                                                    <button type="button" 
+                                                            wire:click="setGenFieldStatus('{{ $key }}', 'optional')" 
+                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'optional' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 font-extrabold shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                        Optional
+                                                    </button>
+                                                    <button type="button" 
+                                                            wire:click="setGenFieldStatus('{{ $key }}', 'required')" 
+                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'required' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                        Required
+                                                    </button>
+                                                </div>
                                             </div>
-                                        @endif
-                                    @endforeach
+                                        @endforeach
+                                    </div>
                                 </div>
 
-                                <!-- Custom Extra Fields List -->
-                                @if(!empty($custFields))
-                                    <div class="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1.5">
-                                        <span class="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider block">Custom Extra Questions:</span>
-                                        <div class="space-y-1">
-                                            @foreach($custFields as $cf)
-                                                <div class="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-between">
-                                                    <span class="text-[11px] font-bold text-purple-700 dark:text-purple-300 truncate mr-1">{{ $cf['label'] ?? 'Question' }} ({{ strtoupper($cf['type'] ?? 'text') }})</span>
-                                                    <span class="text-[9px] font-black uppercase text-purple-600 dark:text-purple-400 shrink-0">{{ !empty($cf['required']) ? 'Required' : 'Optional' }}</span>
+                                <!-- Custom Extra Fields Builder Section -->
+                                <div class="pt-3 border-t border-slate-200 dark:border-slate-700 space-y-2.5">
+                                    <div class="flex items-center justify-between flex-wrap gap-2">
+                                        <h5 class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                            Custom Extra Fields
+                                        </h5>
+                                        <button type="button" wire:click="addGenCustomField" class="px-2.5 py-1 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer">
+                                            + Add Custom Field
+                                        </button>
+                                    </div>
+
+                                    @if(empty($gen_custom_fields))
+                                        <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs text-slate-400 italic">
+                                            No custom extra fields added yet.
+                                        </div>
+                                    @else
+                                        <div class="space-y-2">
+                                            @foreach($gen_custom_fields as $index => $field)
+                                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-xs font-black text-purple-600 dark:text-purple-400 uppercase">Question #{{ $index + 1 }}</span>
+                                                        <button type="button" wire:click="removeGenCustomField({{ $index }})" class="text-xs text-rose-500 hover:text-rose-600 font-bold cursor-pointer">Remove</button>
+                                                    </div>
+                                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                        <div class="sm:col-span-2">
+                                                            <input type="text" wire:model.blur="gen_custom_fields.{{ $index }}.label" wire:change="persistGenFormFields" placeholder="Question label / question text..." class="w-full px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium outline-none">
+                                                        </div>
+                                                        <div>
+                                                            <select wire:model.live="gen_custom_fields.{{ $index }}.type" wire:change="persistGenFormFields" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium outline-none cursor-pointer">
+                                                                <option value="text">Short Text</option>
+                                                                <option value="number">Number</option>
+                                                                <option value="textarea">Paragraph</option>
+                                                                <option value="select">Dropdown</option>
+                                                                <option value="checkbox">Checkbox</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             @endforeach
                                         </div>
-                                    </div>
-                                @endif
+                                    @endif
+                                </div>
                             </div>
                         @else
                             <div class="mt-2 p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-300 text-xs font-medium flex items-center gap-2">

@@ -294,6 +294,25 @@
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Description</label>
                         <textarea wire:model.live.debounce.300ms="description" rows="5" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium custom-scrollbar" placeholder="Describe your event..."></textarea>
                     </div>
+
+                    <!-- Invitation Header & Message Customization -->
+                    <div class="pt-4 border-t border-slate-200 dark:border-white/10 space-y-4">
+                        <h4 class="text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <span>💌</span>
+                            <span>Invitation Card Header & Subtitle Customization</span>
+                        </h4>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Invitation Header Title</label>
+                                <input type="text" wire:model.live.debounce.300ms="invitation_title" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" placeholder="e.g. PRIVATE EVENT INVITATION or SPECIAL VIP PASS">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Invitation Card Message / Subtitle</label>
+                                <textarea wire:model.live.debounce.300ms="invitation_description" rows="3" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium custom-scrollbar" placeholder="e.g. You have received a private invitation directly from the event organizers. Confirming your attendance secures your digital pass."></textarea>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
 
@@ -350,6 +369,34 @@
             @if($currentStep === 4)
                 <div class="space-y-6 animate-fadeInUp">
                     <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Event Settings</h3>
+
+                    <!-- Event Publication Status (Draft vs Published) -->
+                    <div class="space-y-3">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Event Publication Status</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div wire:click="$set('status', 'draft')" class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $status === 'draft' ? 'border-amber-500 bg-amber-500/5 dark:bg-amber-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span>📝</span>
+                                        <span>Draft Status</span>
+                                    </span>
+                                    <input type="radio" name="status_radio" value="draft" @if($status === 'draft') checked @endif wire:model.live="status" class="form-radio text-amber-500 focus:ring-amber-500">
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Keep event in draft mode. Bypasses public registration and guest links until you are ready to publish.</p>
+                            </div>
+
+                            <div wire:click="$set('status', 'published')" class="relative flex flex-col p-4 rounded-2xl border-2 transition-all cursor-pointer {{ $status === 'published' ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10' : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20' }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span>🚀</span>
+                                        <span>Published (Live Event)</span>
+                                    </span>
+                                    <input type="radio" name="status_radio" value="published" @if($status === 'published') checked @endif wire:model.live="status" class="form-radio text-emerald-600 focus:ring-emerald-500">
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Publish event immediately. Enables public registration, invitation passes, and check-in scanner validation.</p>
+                            </div>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Total Capacity</label>
@@ -468,10 +515,7 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         @foreach($labels as $fieldKey => $fieldLabel)
                                             <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-3">
-                                                <div>
-                                                    <span class="text-xs font-bold text-slate-900 dark:text-white block">{{ $fieldLabel }}</span>
-                                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Standard RSVP Field</span>
-                                                </div>
+                                                <span class="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">{{ $fieldLabel }}</span>
 
                                                 <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
                                                     <button type="button" 
@@ -614,15 +658,26 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
                     @else
-                        <!-- Final Step (Step 4): Primary Save Button -->
-                        <button type="submit" wire:click="save" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer active:scale-95">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                            <span wire:loading.remove>{{ $eventUuid ? 'Save Changes' : 'Save Event' }}</span>
-                            <span wire:loading class="flex items-center gap-2">
-                                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                Saving...
-                            </span>
-                        </button>
+                        <!-- Final Step (Step 4): Draft vs Publish Action Buttons -->
+                        <div class="flex items-center gap-3">
+                            <button type="button" wire:click="saveAsDraft" wire:loading.attr="disabled" class="px-5 py-2.5 rounded-xl bg-slate-500/10 hover:bg-slate-500/20 text-slate-700 dark:text-slate-300 font-extrabold text-sm border border-slate-300 dark:border-white/15 transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                                <span>📝</span>
+                                <span wire:loading.remove>Save as Draft</span>
+                                <span wire:loading class="flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Saving...
+                                </span>
+                            </button>
+
+                            <button type="button" wire:click="saveAndPublish" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                <span wire:loading.remove>{{ $status === 'published' ? 'Save & Publish Event' : '🚀 Publish Event' }}</span>
+                                <span wire:loading class="flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Saving...
+                                </span>
+                            </button>
+                        </div>
                     @endif
                 </div>
             </div>

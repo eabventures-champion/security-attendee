@@ -123,6 +123,8 @@ class AttendeeList extends Component
     public int $gen_max_uses = 1;
     public string $generated_invite_url = '';
     public string $generated_whatsapp_url = '';
+    public array $gen_standard_fields = [];
+    public array $gen_custom_fields = [];
 
     public function updatedGenEventId($value)
     {
@@ -130,6 +132,9 @@ class AttendeeList extends Component
             $event = Event::find($value);
             if ($event) {
                 $this->gen_category = $event->settings['default_entry_mode'] ?? 'details';
+                $config = $event->form_fields_config;
+                $this->gen_standard_fields = $config['standard_fields'];
+                $this->gen_custom_fields = $config['custom_fields'];
             }
         }
     }
@@ -146,10 +151,25 @@ class AttendeeList extends Component
             $this->gen_event_id = $event ? (string) $event->id : '';
             if ($event) {
                 $this->gen_category = $event->settings['default_entry_mode'] ?? 'details';
+                $config = $event->form_fields_config;
+                $this->gen_standard_fields = $config['standard_fields'];
+                $this->gen_custom_fields = $config['custom_fields'];
             }
         } else {
-            $this->gen_event_id = '';
-            $this->gen_category = 'details';
+            $firstEvent = Event::first();
+            if ($firstEvent) {
+                $this->gen_event_id = (string) $firstEvent->id;
+                $this->gen_category = $firstEvent->settings['default_entry_mode'] ?? 'details';
+                $config = $firstEvent->form_fields_config;
+                $this->gen_standard_fields = $config['standard_fields'];
+                $this->gen_custom_fields = $config['custom_fields'];
+            } else {
+                $this->gen_event_id = '';
+                $this->gen_category = 'details';
+                $defaultConfig = Event::defaultFormFieldsConfig();
+                $this->gen_standard_fields = $defaultConfig['standard_fields'];
+                $this->gen_custom_fields = [];
+            }
         }
     }
 
@@ -162,12 +182,55 @@ class AttendeeList extends Component
         $this->gen_event_id = '';
     }
 
+    public function setGenFieldStatus(string $fieldKey, string $status): void
+    {
+        $this->gen_standard_fields[$fieldKey] = $status;
+        $this->persistGenFormFields();
+    }
+
+    public function addGenCustomField(): void
+    {
+        $this->gen_custom_fields[] = [
+            'id' => 'field_' . \Illuminate\Support\Str::random(8),
+            'label' => '',
+            'type' => 'text',
+            'required' => false,
+            'options' => '',
+        ];
+        $this->persistGenFormFields();
+    }
+
+    public function removeGenCustomField(int $index): void
+    {
+        unset($this->gen_custom_fields[$index]);
+        $this->gen_custom_fields = array_values($this->gen_custom_fields);
+        $this->persistGenFormFields();
+    }
+
+    public function persistGenFormFields(): void
+    {
+        if (!empty($this->gen_event_id)) {
+            $event = Event::find($this->gen_event_id);
+            if ($event) {
+                $currentSettings = is_array($event->settings) ? $event->settings : [];
+                $currentSettings['form_fields'] = [
+                    'standard_fields' => $this->gen_standard_fields,
+                    'custom_fields' => array_values(array_filter($this->gen_custom_fields, fn($f) => !empty(trim($f['label'] ?? '')))),
+                ];
+                $event->settings = $currentSettings;
+                $event->save();
+            }
+        }
+    }
+
     public function generateSingleUseLink()
     {
         if (empty($this->gen_event_id)) {
             session()->flash('error', 'Please select an event to generate the link for.');
             return;
         }
+
+        $this->persistGenFormFields();
 
         $event = Event::find($this->gen_event_id);
 
@@ -819,7 +882,7 @@ class AttendeeList extends Component
         } else {
             $this->selectAllOnPage = false;
         }
-        $events = Event::select('id', 'uuid', 'name')->get();
+        $events = Event::select('id', 'uuid', 'name', 'settings')->get();
 
         $availableGates = \App\Models\Gate::all();
         if ($this->eventUuid) {
@@ -895,6 +958,8 @@ class AttendeeList extends Component
             'gen_max_uses' => $this->gen_max_uses,
             'generated_invite_url' => $this->generated_invite_url,
             'selectedAttendee' => $this->selectedAttendee,
+            'gen_standard_fields' => $this->gen_standard_fields,
+            'gen_custom_fields' => $this->gen_custom_fields,
         ]);
     }
 

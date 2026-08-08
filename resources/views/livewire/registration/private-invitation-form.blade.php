@@ -74,14 +74,12 @@
                         <!-- Event Description & Subtitle -->
                         <div class="text-center space-y-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
                             <p class="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-                                @if(!empty($event->invitation_description) && str_contains($event->invitation_description, 'VVIP') && !$isVip)
-                                    You have received a private single-use General Admission invitation directly from the event organizers. No personal details submission required. Click below to claim and download your QR entry pass.
-                                @elseif(!empty($event->invitation_description))
+                                @if(!empty($event->invitation_description))
                                     {{ $event->invitation_description }}
                                 @elseif($isVip)
-                                    You have received an exclusive private single-use VVIP invitation directly from the event organizers. No personal details submission required. Click below to claim and download your QR entry pass.
+                                    You have received an exclusive private single-use VVIP invitation directly from the event organizers. Confirming your attendance grants you VVIP access privileges and a digital pass.
                                 @else
-                                    You have received a private single-use General Admission invitation directly from the event organizers. No personal details submission required. Click below to claim and download your QR entry pass.
+                                    You have received a private single-use General Admission invitation directly from the event organizers. Confirming your attendance secures your digital pass.
                                 @endif
                             </p>
 
@@ -161,9 +159,7 @@
                     @endif
 
                     <p class="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-                        @if(!empty($event->invitation_description) && str_contains($event->invitation_description, 'VVIP') && !$isVip)
-                            You have received a <strong class="text-blue-400">private General Admission invitation</strong> directly from the event organizers. Confirming your attendance secures your entry pass.
-                        @elseif(!empty($event->invitation_description))
+                        @if(!empty($event->invitation_description))
                             {{ $event->invitation_description }}
                         @elseif($isVip)
                             You have received an <strong class="text-amber-400">exclusive private VVIP invitation</strong> directly from the event organizers. Confirming your attendance grants you <strong class="text-amber-400">VVIP access privileges</strong> and a pre-verified digital pass.
