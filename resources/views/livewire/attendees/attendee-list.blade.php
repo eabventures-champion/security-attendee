@@ -1013,9 +1013,15 @@
                     @if($selectedAttendee->qrCode)
                         @php
                             $cleanPhone = preg_replace('/[^0-9]/', '', $selectedAttendee->phone ?? '');
-                            $whatsappMessage = rawurlencode("Hello {$selectedAttendee->full_name},\n\nHere is your digital entry pass QR token for {$selectedAttendee->event->name}:\nPass Token ID: {$selectedAttendee->qrCode->secure_token}\n\nPlease present this QR code at check-in.");
-                            $whatsappUrl = "https://api.whatsapp.com/send?phone={$cleanPhone}&text={$whatsappMessage}";
-                            $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=" . urlencode($selectedAttendee->qrCode->secure_token);
+                            if (!empty($cleanPhone) && str_starts_with($cleanPhone, '0')) {
+                                $cleanPhone = '233' . substr($cleanPhone, 1);
+                            }
+                            $qrPassImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=" . urlencode($selectedAttendee->qrCode->secure_token);
+                            $whatsappMessage = rawurlencode("Hello {$selectedAttendee->full_name},\n\nHere is your official digital entry pass for *{$selectedAttendee->event->name}*:\n\n🎟️ *Pass Token ID:* {$selectedAttendee->qrCode->secure_token}\n\n📷 *View/Download Your Entry Pass QR Code:* \n{$qrPassImageUrl}\n\nPlease present this QR code at check-in.");
+                            $whatsappUrl = !empty($cleanPhone) 
+                                ? "https://api.whatsapp.com/send?phone={$cleanPhone}&text={$whatsappMessage}" 
+                                : "https://api.whatsapp.com/send?text={$whatsappMessage}";
+                            $qrImageUrl = $qrPassImageUrl;
                         @endphp
                         <div class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2 mt-3">
                             <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Reshare Pass Options</span>
