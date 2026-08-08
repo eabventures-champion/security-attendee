@@ -14,6 +14,7 @@ use App\Enums\VerificationStatus;
 use App\Enums\AccessRole;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 
 #[Layout('layouts.guest')]
 #[Title('Private Event Invitation — AttendFlow')]
@@ -271,8 +272,20 @@ class PrivateInvitationForm extends Component
     {
         $this->validate();
 
-        // Under Get Details (Form Entry / Attendance Category), all attendee submissions require Org Admin approval
-        $verificationStatus = VerificationStatus::Pending;
+        $isSingleUseSecureToken = ($this->invitationTokenObj && $this->invitationTokenObj->isValid());
+
+        // Single-Use Links (Generated via "Secure Link (Closed eg. Ticketing)" modal with max_uses):
+        // Automatically set to Verified and issue QR pass instantly because admin explicitly generated & issued this token link.
+        // Permanent Multi-Use Links (Image 3 - "Secret Private General Invitation" / "Secret Private VVIP Invitation"):
+        // Verification status remains Pending requiring Org Admin approval in dashboard.
+        if ($isSingleUseSecureToken) {
+            $verificationStatus = VerificationStatus::Verified;
+            $verifiedAt = now();
+        } else {
+            $verificationStatus = VerificationStatus::Pending;
+            $verifiedAt = null;
+        }
+
         $targetRole = ($this->invitationTokenObj && $this->invitationTokenObj->access_role)
             ? AccessRole::from($this->invitationTokenObj->access_role)
             : ($this->isVip ? AccessRole::Vvip : AccessRole::GeneralAdmission);
@@ -294,6 +307,7 @@ class PrivateInvitationForm extends Component
 
             $existing->update([
                 'verification_status' => $verificationStatus,
+                'verified_at' => $verifiedAt ?: $existing->verified_at,
                 'full_name' => $fullNameValue,
                 'phone' => $this->phone ?: $existing->phone,
                 'company' => $this->company ?: $existing->company,
@@ -328,6 +342,7 @@ class PrivateInvitationForm extends Component
                 'registration_reason' => $this->registration_reason ?: null,
                 'access_role' => $targetRole,
                 'verification_status' => $verificationStatus,
+                'verified_at' => $verifiedAt,
                 'consent' => $this->consent,
                 'metadata' => [
                     'custom_fields' => $this->custom_answers,
@@ -352,8 +367,34 @@ class PrivateInvitationForm extends Component
             }
         }
 
-        // Leave $qrToken empty so attendee sees Pending Verification screen
-        $this->qrToken = '';
+        // Generate instant QR Code pass if Auto-Verified (Single-Use Token Links)
+        if ($verificationStatus === VerificationStatus::Verified) {
+            $qrCode = $attendee->qrCode;
+            if (!$qrCode) {
+                $token = Str::random(32);
+                $qrCode = QrCode::create([
+                    'uuid' => (string) Str::uuid(),
+                    'attendee_id' => $attendee->id,
+                    'event_id' => $this->event->id,
+                    'secure_token' => $token,
+                    'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+                    'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
+                    'issued_at' => now(),
+                    'expires_at' => $this->event->ends_at ? $this->event->ends_at->addDays(1) : now()->addYear(),
+                    'is_revoked' => false,
+                ]);
+            }
+            $this->qrToken = $qrCode->secure_token;
+
+            try {
+                \Illuminate\Support\Facades\Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send confirmation email for single-use token link: ' . $e->getMessage());
+            }
+        } else {
+            // Leave $qrToken empty so attendee sees Pending Verification screen
+            $this->qrToken = '';
+        }
 
         // Send In-App Admin Notification
         try {
