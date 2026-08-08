@@ -597,7 +597,14 @@ class AttendeeList extends Component
                 \Illuminate\Support\Facades\Log::error('Failed to send approval confirmation email: ' . $e->getMessage());
             }
 
-            session()->flash('success', "Attendee '{$attendee->full_name}' approved & verified! Official QR pass emailed to {$attendee->email}.");
+            // Auto-Dispatch WhatsApp Pass & Log Delivery Status
+            try {
+                \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to auto-dispatch WhatsApp pass on approval: ' . $e->getMessage());
+            }
+
+            session()->flash('success', "Attendee '{$attendee->full_name}' approved & verified! Official QR pass dispatched.");
         }
     }
 
@@ -633,6 +640,12 @@ class AttendeeList extends Component
                 Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send bulk approval confirmation email: ' . $e->getMessage());
+            }
+
+            try {
+                \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to auto-dispatch bulk WhatsApp pass: ' . $e->getMessage());
             }
 
             $approvedCount++;
@@ -700,10 +713,49 @@ class AttendeeList extends Component
         }
     }
 
+    public function sendWhatsAppPass($uuid = null)
+    {
+        $targetUuid = $uuid ?: ($this->selectedAttendee->uuid ?? null);
+        if (!$targetUuid) return;
+
+        $attendee = Attendee::with(['event', 'qrCode', 'notificationLogs'])->where('uuid', $targetUuid)->first();
+        if (!$attendee) return;
+
+        // Ensure QR code exists
+        if (!$attendee->qrCode) {
+            $token = \Illuminate\Support\Str::random(32);
+            QrCode::create([
+                'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'attendee_id' => $attendee->id,
+                'event_id' => $attendee->event_id,
+                'secure_token' => $token,
+                'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+                'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
+                'issued_at' => now(),
+                'expires_at' => ($attendee->event && $attendee->event->ends_at) ? $attendee->event->ends_at->addDays(1) : now()->addYear(),
+                'is_revoked' => false,
+            ]);
+            $attendee->load('qrCode');
+        }
+
+        $result = \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
+
+        if ($this->selectedAttendee && $this->selectedAttendee->uuid === $targetUuid) {
+            $this->selectedAttendee = $attendee->fresh(['event', 'qrCode', 'notificationLogs']);
+        }
+
+        if ($result['success']) {
+            session()->flash('success', "📱 WhatsApp QR Pass message dispatched for {$attendee->full_name}!");
+            $this->js("window.open('{$result['url']}', '_blank')");
+        } else {
+            session()->flash('error', "⚠️ WhatsApp Dispatch Warning: {$result['message']}");
+        }
+    }
+
     public function getFilteredAttendeesQuery()
     {
         $query = Attendee::whereHas('event')
-            ->with(['event', 'qrCode', 'assignedGate', 'latestCheckIn.gate', 'latestCheckIn.scanner']);
+            ->with(['event', 'qrCode', 'assignedGate', 'latestCheckIn.gate', 'latestCheckIn.scanner', 'notificationLogs']);
 
         $isSuperAdmin = auth()->user()->hasRole('super_admin') || auth()->user()->email === 'superadmin@attendflow.com';
         if (!$isSuperAdmin && auth()->user()->organization_id) {

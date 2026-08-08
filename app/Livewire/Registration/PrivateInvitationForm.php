@@ -405,6 +405,13 @@ class PrivateInvitationForm extends Component
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send confirmation email for single-use token link: ' . $e->getMessage());
             }
+
+            // Trigger Automatic WhatsApp QR Pass Dispatch & Status Logging
+            try {
+                \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to auto-dispatch WhatsApp QR pass: ' . $e->getMessage());
+            }
         } else {
             // Leave $qrToken empty so attendee sees Pending Verification screen
             $this->qrToken = '';

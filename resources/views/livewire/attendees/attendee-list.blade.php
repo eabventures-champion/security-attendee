@@ -676,10 +676,38 @@
                             </td>
                             <td class="py-4 px-6">
                                 @if($attendee->qrCode)
-                                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        Generated
-                                    </span>
+                                    <div class="flex flex-col items-start gap-1">
+                                        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Generated
+                                        </span>
+
+                                        @php
+                                            $waLog = $attendee->notificationLogs ? $attendee->notificationLogs->where('channel', \App\Enums\NotificationChannel::WhatsApp)->sortByDesc('created_at')->first() : null;
+                                            $waStatus = $waLog ? $waLog->status : null;
+                                        @endphp
+
+                                        @if($waStatus === 'delivered' || $waStatus === 'sent')
+                                            <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="WhatsApp Pass Delivered! Click to resend via WhatsApp" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors cursor-pointer">
+                                                <svg class="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>WhatsApp Sent</span>
+                                            </button>
+                                        @elseif($waStatus === 'failed')
+                                            <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="Contact not WhatsApp compliant or phone missing. Click to retry" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors cursor-pointer">
+                                                <svg class="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>WhatsApp Failed</span>
+                                            </button>
+                                        @else
+                                            <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="Click to auto-send QR Pass to attendee via WhatsApp" class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer">
+                                                <svg class="w-3.5 h-3.5 fill-current text-slate-400" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                                                <span>Send WhatsApp</span>
+                                            </button>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-xs font-medium text-slate-400">Not Generated</span>
                                 @endif

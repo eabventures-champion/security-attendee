@@ -286,6 +286,13 @@ class PublicRegistrationForm extends Component
             \Illuminate\Support\Facades\Log::error('Failed to send registration confirmation email: ' . $e->getMessage());
         }
 
+        // Trigger Automatic WhatsApp QR Pass Dispatch & Status Logging
+        try {
+            \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to auto-dispatch WhatsApp QR pass: ' . $e->getMessage());
+        }
+
         // Send In-App Admin Notification
         try {
             \App\Services\AdminNotificationService::send(
