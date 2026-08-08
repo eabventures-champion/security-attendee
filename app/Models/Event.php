@@ -214,12 +214,19 @@ class Event extends Model
                      ->whereNull('cancelled_at');
     }
 
+    public function getIsRegistrationClosedAttribute(): bool
+    {
+        if ($this->registration_deadline && $this->registration_deadline->isPast()) {
+            return true;
+        }
+        return false;
+    }
+
     public function getIsRegistrationOpenAttribute(): bool
     {
-        $now = now();
         return $this->status === EventStatus::Published &&
                (!$this->registration_opens_at || $this->registration_opens_at->isPast()) &&
-               (!$this->registration_deadline || $this->registration_deadline->isFuture());
+               !$this->is_registration_closed;
     }
 
     public function getIsFullAttribute(): bool

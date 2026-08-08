@@ -20,10 +20,16 @@
         <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
             <div class="space-y-3 w-full md:w-auto">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border
-                        {{ $statusStr === 'published' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : ($statusStr === 'cancelled' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30') }}">
-                        ● {{ strtoupper($statusStr) }}
-                    </span>
+                    @if($event->is_registration_closed)
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border bg-rose-500/20 text-rose-300 border-rose-500/40">
+                            🔴 REGISTRATION CLOSED
+                        </span>
+                    @else
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border
+                            {{ $statusStr === 'published' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : ($statusStr === 'cancelled' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30') }}">
+                            ● {{ strtoupper($statusStr) }}
+                        </span>
+                    @endif
                     @if($event->is_private)
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider">
                             🔒 PRIVATE EVENT

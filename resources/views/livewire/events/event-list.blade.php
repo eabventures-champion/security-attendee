@@ -248,9 +248,15 @@
                                             <div class="bg-slate-900 border border-white/10 rounded-2xl p-5 space-y-3 shadow-xl hover:border-blue-500/40 transition-all">
                                                 <div class="flex items-center justify-between flex-wrap gap-1.5">
                                                     <div class="flex items-center gap-1.5">
-                                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $evt->status->badgeClass() }}">
-                                                            {{ $evt->status->label() }}
-                                                        </span>
+                                                        @if($evt->is_registration_closed)
+                                                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-500/20 text-rose-400 border border-rose-500/40" title="Registration Deadline Passed">
+                                                                 🔴 CLOSED
+                                                             </span>
+                                                         @else
+                                                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $evt->status->badgeClass() }}">
+                                                                 {{ $evt->status->label() }}
+                                                             </span>
+                                                         @endif
                                                         @if(($evt->settings['default_entry_mode'] ?? 'details') === 'no_details')
                                                             <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider" title="Default Entry Mode: Direct Claim Pass (No details required)">
                                                                 ⚡ No Details
@@ -354,10 +360,17 @@
                                                                             default => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 dot-emerald-500'
                                                                         };
                                                                     @endphp
-                                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border {{ $statusBadgeStyle }}">
-                                                                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                                                        <span>{{ ucfirst($statusName) }}</span>
-                                                                    </span>
+                                                                    @if($evt->is_registration_closed)
+                                                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border bg-rose-500/20 text-rose-400 border-rose-500/40">
+                                                                             <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+                                                                             <span>Closed (Deadline Passed)</span>
+                                                                         </span>
+                                                                     @else
+                                                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border {{ $statusBadgeStyle }}">
+                                                                             <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                                                             <span>{{ ucfirst($statusName) }}</span>
+                                                                         </span>
+                                                                     @endif
                                                                     @if($evt->is_private)
                                                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">
                                                                             🔒 Private

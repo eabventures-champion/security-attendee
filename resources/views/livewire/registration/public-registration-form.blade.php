@@ -90,6 +90,19 @@
                 </div>
 
                 <!-- Warnings -->
+                @if($event->is_registration_closed)
+                    <div class="bg-rose-500/20 border-b border-rose-500/30 p-6 text-center space-y-3 animate-fadeIn">
+                        <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-rose-500/30 text-rose-300 border border-rose-500/50 uppercase tracking-wider inline-flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                            REGISTRATION CLOSED
+                        </span>
+                        <h3 class="text-xl font-bold text-white">Registration Deadline Passed</h3>
+                        <p class="text-xs text-rose-200 font-medium max-w-md mx-auto leading-relaxed">
+                            Registration for this event officially closed on <strong>{{ $event->registration_deadline ? $event->registration_deadline->format('F j, Y @ g:i A') : '' }}</strong>. New submissions are disabled.
+                        </p>
+                    </div>
+                @endif
+
                 @if (session()->has('error'))
                     <div class="bg-rose-500/20 border-b border-rose-500/30 p-4 text-center text-rose-300 font-medium">
                         {{ session('error') }}
@@ -430,13 +443,20 @@
 
                     <!-- Submit -->
                     <div class="mt-8">
-                        <button type="submit" class="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 relative overflow-hidden group">
-                            <span wire:loading.remove>Complete Registration</span>
-                            <span wire:loading class="flex items-center justify-center">
-                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                Processing...
-                            </span>
-                            <div class="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <button type="submit" {{ $event->is_registration_closed ? 'disabled' : '' }} class="w-full py-4 rounded-xl {{ $event->is_registration_closed ? 'bg-rose-950/60 text-rose-300 border border-rose-500/30 cursor-not-allowed' : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5' }} font-bold text-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 relative overflow-hidden group">
+                            @if($event->is_registration_closed)
+                                <span class="flex items-center justify-center gap-2">
+                                    <span>⛔</span>
+                                    <span>Registration Closed (Deadline Passed)</span>
+                                </span>
+                            @else
+                                <span wire:loading.remove>Complete Registration</span>
+                                <span wire:loading class="flex items-center justify-center">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Processing...
+                                </span>
+                                <div class="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                            @endif
                         </button>
                     </div>
 

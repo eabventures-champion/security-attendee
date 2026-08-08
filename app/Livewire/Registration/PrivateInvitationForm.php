@@ -276,15 +276,23 @@ class PrivateInvitationForm extends Component
 
     public function confirmRsvp()
     {
+        // Check registration deadline
+        if ($this->event->is_registration_closed) {
+            $deadlineStr = $this->event->registration_deadline ? $this->event->registration_deadline->format('M d, Y @ g:i A') : '';
+            session()->flash('error', "⛔ Registration Closed: The registration deadline for this event passed on {$deadlineStr}. Attendance confirmation is closed.");
+            return;
+        }
+
         $this->validate();
 
         $isSingleUseSecureToken = ($this->invitationTokenObj && $this->invitationTokenObj->isValid());
+        $isPublicEvent = !$this->event->is_private;
 
-        // Single-Use Links (Generated via "Secure Link (Closed eg. Ticketing)" modal with max_uses):
-        // Automatically set to Verified and issue QR pass instantly because admin explicitly generated & issued this token link.
-        // Permanent Multi-Use Links (Image 3 - "Secret Private General Invitation" / "Secret Private VVIP Invitation"):
-        // Verification status remains Pending requiring Org Admin approval in dashboard.
-        if ($isSingleUseSecureToken) {
+        // Auto-verify and issue QR pass instantly if:
+        // 1. Registered via a single-use token link (generated via "Secure Link (Closed eg. Ticketing)" modal)
+        // 2. OR the event is a Public Event (!is_private)
+        // Only private events with permanent multi-use links require Org Admin approval.
+        if ($isSingleUseSecureToken || $isPublicEvent) {
             $verificationStatus = VerificationStatus::Verified;
             $verifiedAt = now();
         } else {
@@ -420,6 +428,12 @@ class PrivateInvitationForm extends Component
 
     public function claimDirectPass(): void
     {
+        if ($this->event->is_registration_closed) {
+            $deadlineStr = $this->event->registration_deadline ? $this->event->registration_deadline->format('M d, Y @ g:i A') : '';
+            session()->flash('error', "⛔ Registration Closed: The registration deadline for this event passed on {$deadlineStr}. Pass claiming is closed.");
+            return;
+        }
+
         if ($this->isTokenConsumed || ($this->invitationTokenObj && !$this->hasValidToken)) {
             session()->flash('error', '⛔ Access Denied: This single-use invitation pass has already been claimed and downloaded.');
             return;

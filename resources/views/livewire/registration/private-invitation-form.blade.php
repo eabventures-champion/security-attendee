@@ -220,6 +220,19 @@
                       }"
                       @submit="clearDraft()"
                       class="space-y-4">
+                    @if($event->is_registration_closed)
+                        <div class="p-5 rounded-2xl bg-rose-500/20 border border-rose-500/40 backdrop-blur-md animate-fadeIn text-center space-y-3">
+                            <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-rose-500/30 text-rose-300 border border-rose-500/50 uppercase tracking-wider inline-flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                                REGISTRATION CLOSED
+                            </span>
+                            <h3 class="text-lg font-black text-white">Registration Deadline Passed</h3>
+                            <p class="text-xs text-rose-200 font-medium max-w-md mx-auto leading-relaxed">
+                                Registration for this event officially closed on <strong>{{ $event->registration_deadline ? $event->registration_deadline->format('F j, Y @ g:i A') : '' }}</strong>. Attendance confirmations are no longer accepted.
+                            </p>
+                        </div>
+                    @endif
+
                     @if($isTokenConsumed)
                         <div class="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 backdrop-blur-md animate-fadeIn space-y-3">
                             <div class="flex items-center gap-2">

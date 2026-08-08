@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\Event;
 use App\Models\Attendee;
+use App\Models\QrCode;
 use App\Enums\EventStatus;
 use App\Enums\VerificationStatus;
 use App\Enums\AccessRole;
@@ -220,6 +221,13 @@ class PublicRegistrationForm extends Component
 
     public function register()
     {
+        // Check registration deadline
+        if ($this->event->is_registration_closed) {
+            $deadlineStr = $this->event->registration_deadline ? $this->event->registration_deadline->format('M d, Y @ g:i A') : '';
+            session()->flash('error', "⛔ Registration Closed: The deadline for this event passed on {$deadlineStr}. Submissions are no longer accepted.");
+            return;
+        }
+
         $this->validate();
 
         // Check capacity
@@ -248,15 +256,35 @@ class PublicRegistrationForm extends Component
             'accessibility_needs' => $this->accessibility_needs ?: null,
             'registration_reason' => $this->registration_reason ?: null,
             'access_role' => AccessRole::GeneralAdmission,
-            'verification_status' => VerificationStatus::Pending,
+            'verification_status' => VerificationStatus::Verified,
+            'verified_at' => now(),
             'consent' => $this->consent,
             'metadata' => [
                 'custom_fields' => $this->custom_answers,
             ],
         ]);
 
-        // Keep qrToken empty so attendee sees Pending Verification screen
-        $this->qrToken = '';
+        // Auto-generate QR code pass for public event registration
+        $token = Str::random(32);
+        $qrCode = QrCode::create([
+            'uuid' => (string) Str::uuid(),
+            'attendee_id' => $attendee->id,
+            'event_id' => $this->event->id,
+            'secure_token' => $token,
+            'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+            'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
+            'issued_at' => now(),
+            'expires_at' => $this->event->ends_at ? $this->event->ends_at->addDays(1) : now()->addYear(),
+            'is_revoked' => false,
+        ]);
+
+        $this->qrToken = $qrCode->secure_token;
+
+        try {
+            Mail::to($attendee->email)->send(new EventRegistrationConfirmation($attendee));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send registration confirmation email: ' . $e->getMessage());
+        }
 
         // Send In-App Admin Notification
         try {
