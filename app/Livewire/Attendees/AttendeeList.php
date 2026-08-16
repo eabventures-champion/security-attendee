@@ -4,6 +4,7 @@ namespace App\Livewire\Attendees;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\Attendee;
@@ -13,13 +14,14 @@ use App\Enums\VerificationStatus;
 use App\Enums\AccessRole;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use App\Mail\AttendeePrivateInvitation;
 
 #[Layout('layouts.app')]
 #[Title('Attendees Management')]
 class AttendeeList extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $eventUuid;
     public $search = '';
@@ -113,6 +115,13 @@ class AttendeeList extends Component
     public string $bulk_emails = '';
     public string $bulk_access_role = 'general_admission';
     public bool $bulk_auto_verify = true;
+
+    // Import CSV fields
+    public bool $showImportCsvModal = false;
+    public string $import_event_id = '';
+    public $csv_file = null;
+    public array $importResults = [];
+    public array $importEventFields = [];
 
     // Secure Single-Use Link Generator fields
     public bool $showLinkGeneratorModal = false;
@@ -752,6 +761,61 @@ class AttendeeList extends Component
         }
     }
 
+    public function markWhatsAppFailed(string $uuid, string $reason = 'Number not on WhatsApp'): void
+    {
+        $attendee = Attendee::where('uuid', $uuid)->first();
+        if (!$attendee) return;
+
+        \App\Models\NotificationLog::create([
+            'uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'attendee_id' => $attendee->id,
+            'event_id' => $attendee->event_id,
+            'user_id' => auth()->id(),
+            'channel' => \App\Enums\NotificationChannel::WhatsApp->value,
+            'type' => \App\Enums\NotificationType::QrDelivery->value,
+            'status' => 'failed',
+            'error_message' => $reason ?: 'Number not registered on WhatsApp',
+            'metadata' => [
+                'recipient_phone' => $attendee->phone,
+                'manual_override' => true,
+            ],
+        ]);
+
+        if ($this->selectedAttendee && $this->selectedAttendee->uuid === $uuid) {
+            $this->selectedAttendee = $attendee->fresh(['event', 'qrCode', 'notificationLogs']);
+        }
+
+        session()->flash('warning', "Status updated to 'WhatsApp Failed' for {$attendee->full_name}.");
+    }
+
+    public function markWhatsAppSent(string $uuid): void
+    {
+        $attendee = Attendee::where('uuid', $uuid)->first();
+        if (!$attendee) return;
+
+        \App\Models\NotificationLog::create([
+            'uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'attendee_id' => $attendee->id,
+            'event_id' => $attendee->event_id,
+            'user_id' => auth()->id(),
+            'channel' => \App\Enums\NotificationChannel::WhatsApp->value,
+            'type' => \App\Enums\NotificationType::QrDelivery->value,
+            'status' => 'delivered',
+            'sent_at' => now(),
+            'error_message' => null,
+            'metadata' => [
+                'recipient_phone' => $attendee->phone,
+                'manual_override' => true,
+            ],
+        ]);
+
+        if ($this->selectedAttendee && $this->selectedAttendee->uuid === $uuid) {
+            $this->selectedAttendee = $attendee->fresh(['event', 'qrCode', 'notificationLogs']);
+        }
+
+        session()->flash('success', "Status updated to 'WhatsApp Sent' for {$attendee->full_name}.");
+    }
+
     public function getFilteredAttendeesQuery()
     {
         $query = Attendee::whereHas('event')
@@ -872,6 +936,472 @@ class AttendeeList extends Component
     public function export()
     {
         // Implement export logic
+    }
+
+    // ─── CSV Import Methods ─────────────────────────────────────
+
+    private const HEADER_FIELD_MAP = [
+        'Full Name' => 'full_name',
+        'Email Address' => 'email',
+        'Phone Number' => 'phone',
+        'Company / Organization' => 'company',
+        'Job Title' => 'job_title',
+        'Country' => 'country',
+        'Gender' => 'gender',
+        'Emergency Contact Name' => 'emergency_contact_name',
+        'Emergency Contact Phone' => 'emergency_contact_phone',
+        'Dietary Preferences' => 'dietary_preferences',
+        'Accessibility Needs' => 'accessibility_needs',
+        'Registration Reason' => 'registration_reason',
+        'Role' => 'access_role',
+        'Verification Status' => 'verification_status',
+    ];
+
+    private const FIELD_LABEL_MAP = [
+        'full_name' => 'Full Name',
+        'email' => 'Email Address',
+        'phone' => 'Phone Number',
+        'company' => 'Company / Organization',
+        'job_title' => 'Job Title',
+        'country' => 'Country',
+        'gender' => 'Gender',
+        'emergency_contact_name' => 'Emergency Contact Name',
+        'emergency_contact_phone' => 'Emergency Contact Phone',
+        'dietary_preferences' => 'Dietary Preferences',
+        'accessibility_needs' => 'Accessibility Needs',
+        'registration_reason' => 'Registration Reason',
+    ];
+
+    public function openImportCsvModal(): void
+    {
+        $this->csv_file = null;
+        $this->importResults = [];
+        $this->importEventFields = [];
+
+        if ($this->eventUuid) {
+            $event = Event::where('uuid', $this->eventUuid)->first();
+            $this->import_event_id = $event ? (string) $event->id : '';
+        } else {
+            $firstEvent = Event::first();
+            $this->import_event_id = $firstEvent ? (string) $firstEvent->id : '';
+        }
+
+        $this->loadImportEventFields();
+        $this->showImportCsvModal = true;
+    }
+
+    public function closeImportCsvModal(): void
+    {
+        $this->showImportCsvModal = false;
+        $this->csv_file = null;
+        $this->importResults = [];
+        $this->import_event_id = '';
+        $this->importEventFields = [];
+    }
+
+    public function updatedImportEventId($value): void
+    {
+        $this->importResults = [];
+        $this->csv_file = null;
+        $this->loadImportEventFields();
+    }
+
+    private function loadImportEventFields(): void
+    {
+        if (empty($this->import_event_id)) {
+            $this->importEventFields = [];
+            return;
+        }
+
+        $event = Event::find($this->import_event_id);
+        if (!$event) {
+            $this->importEventFields = [];
+            return;
+        }
+
+        $config = $event->form_fields_config;
+        $fields = [];
+
+        foreach ($config['standard_fields'] as $key => $status) {
+            if ($status !== 'disabled') {
+                $fields[] = [
+                    'key' => $key,
+                    'label' => self::FIELD_LABEL_MAP[$key] ?? ucwords(str_replace('_', ' ', $key)),
+                    'status' => $status,
+                    'type' => 'standard',
+                ];
+            }
+        }
+
+        foreach ($config['custom_fields'] as $customField) {
+            if (!empty(trim($customField['label'] ?? ''))) {
+                $fields[] = [
+                    'key' => $customField['id'] ?? $customField['label'],
+                    'label' => $customField['label'],
+                    'status' => ($customField['required'] ?? false) ? 'required' : 'optional',
+                    'type' => 'custom',
+                ];
+            }
+        }
+
+        $this->importEventFields = $fields;
+    }
+
+    public function downloadCsvTemplate()
+    {
+        if (empty($this->import_event_id)) {
+            session()->flash('error', 'Please select an event first.');
+            return;
+        }
+
+        $event = Event::find($this->import_event_id);
+        if (!$event) {
+            session()->flash('error', 'Event not found.');
+            return;
+        }
+
+        $config = $event->form_fields_config;
+        $headers = [];
+        $exampleRow = [];
+
+        // Add non-disabled standard fields
+        foreach ($config['standard_fields'] as $key => $status) {
+            if ($status !== 'disabled') {
+                $label = self::FIELD_LABEL_MAP[$key] ?? ucwords(str_replace('_', ' ', $key));
+                $headers[] = $label;
+                $exampleRow[] = $this->getExampleValue($key, $status);
+            }
+        }
+
+        // Add custom fields
+        foreach ($config['custom_fields'] as $customField) {
+            if (!empty(trim($customField['label'] ?? ''))) {
+                $headers[] = $customField['label'];
+                $exampleRow[] = '';
+            }
+        }
+
+        // Always include Role and Verification Status
+        if (!in_array('Role', $headers)) {
+            $headers[] = 'Role';
+            $exampleRow[] = 'general_admission';
+        }
+        if (!in_array('Verification Status', $headers)) {
+            $headers[] = 'Verification Status';
+            $exampleRow[] = 'verified';
+        }
+
+        $safeEventName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event->name);
+        $fileName = "import_template_{$safeEventName}_" . date('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($headers, $exampleRow) {
+            $handle = fopen('php://output', 'w');
+            // Add BOM for Excel compatibility
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, $headers);
+            fputcsv($handle, $exampleRow);
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
+    }
+
+    /**
+     * Normalizes phone number from CSV import (restoring leading 0 stripped by Excel)
+     * into a standard 10-digit Ghana format (0XXXXXXXXX) or valid international digits.
+     */
+    private function normalizePhoneNumber(?string $phone): ?string
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        // Strip all non-digits
+        $digits = preg_replace('/[^0-9]/', '', (string)$phone);
+
+        if (empty($digits)) {
+            return null;
+        }
+
+        // Case 1: Excel stripped leading 0 for 9-digit local numbers (e.g. 547977840, 243036092)
+        if (strlen($digits) === 9) {
+            return '0' . $digits;
+        }
+
+        // Case 2: International Ghana number starting with 233 (e.g. 233547977840 -> 0547977840)
+        if (strlen($digits) === 12 && str_starts_with($digits, '233')) {
+            return '0' . substr($digits, 3);
+        }
+
+        // Case 3: Already 10-digit standard local number (e.g. 0547977840)
+        if (strlen($digits) === 10) {
+            return $digits;
+        }
+
+        return $digits;
+    }
+
+    private function getExampleValue(string $fieldKey, string $status): string
+    {
+        $suffix = $status === 'required' ? ' (required)' : ' (optional)';
+        return match ($fieldKey) {
+            'full_name' => 'John Doe',
+            'email' => 'john@example.com',
+            'phone' => '0241234567',
+            'company' => 'Acme Inc',
+            'job_title' => 'Manager',
+            'country' => 'Ghana',
+            'gender' => 'Male',
+            'emergency_contact_name' => 'Jane Doe',
+            'emergency_contact_phone' => '0209876543',
+            'dietary_preferences' => 'None',
+            'accessibility_needs' => 'None',
+            'registration_reason' => 'Networking',
+            default => '',
+        };
+    }
+
+    public function importCsv(): void
+    {
+        if (empty($this->import_event_id)) {
+            session()->flash('error', 'Please select an event.');
+            return;
+        }
+
+        if (!$this->csv_file) {
+            session()->flash('error', 'Please upload a CSV file.');
+            return;
+        }
+
+        $event = Event::find($this->import_event_id);
+        if (!$event) {
+            session()->flash('error', 'Event not found.');
+            return;
+        }
+
+        $config = $event->form_fields_config;
+        $requiredFields = [];
+        foreach ($config['standard_fields'] as $key => $status) {
+            if ($status === 'required') {
+                $requiredFields[] = $key;
+            }
+        }
+
+        // Parse CSV
+        $path = $this->csv_file->getRealPath();
+        $content = file_get_contents($path);
+        // Remove BOM if present
+        $content = preg_replace('/^\x{FEFF}/u', '', $content);
+        $lines = array_filter(explode("\n", str_replace("\r\n", "\n", $content)), fn($line) => trim($line) !== '');
+
+        if (count($lines) < 2) {
+            session()->flash('error', 'CSV file must contain a header row and at least one data row.');
+            return;
+        }
+
+        // Parse header
+        $headerLine = array_shift($lines);
+        $csvHeaders = str_getcsv($headerLine);
+        $csvHeaders = array_map('trim', $csvHeaders);
+
+        // Build column index map: CSV column index => db field or custom field key
+        $columnMap = [];
+        $customFieldLabels = [];
+        foreach ($config['custom_fields'] as $cf) {
+            if (!empty(trim($cf['label'] ?? ''))) {
+                $customFieldLabels[strtolower(trim($cf['label']))] = $cf['id'] ?? $cf['label'];
+            }
+        }
+
+        foreach ($csvHeaders as $index => $header) {
+            $normalizedHeader = trim($header);
+            // Check standard field map
+            if (isset(self::HEADER_FIELD_MAP[$normalizedHeader])) {
+                $columnMap[$index] = ['type' => 'standard', 'field' => self::HEADER_FIELD_MAP[$normalizedHeader]];
+            }
+            // Check custom fields (case-insensitive)
+            elseif (isset($customFieldLabels[strtolower($normalizedHeader)])) {
+                $columnMap[$index] = ['type' => 'custom', 'field' => $customFieldLabels[strtolower($normalizedHeader)], 'label' => $normalizedHeader];
+            }
+        }
+
+        $imported = 0;
+        $skipped = 0;
+        $skipReasons = [];
+        $errors = [];
+        $organizationId = $event->organization_id;
+        $validRoles = array_column(AccessRole::cases(), 'value');
+        $validStatuses = array_column(VerificationStatus::cases(), 'value');
+
+        // Track seen emails and phones within the CSV to prevent intra-file duplicates
+        $seenEmails = [];
+        $seenPhones = [];
+
+        foreach ($lines as $lineIndex => $line) {
+            $rowNumber = $lineIndex + 2; // +2 because header is row 1, and we shifted it
+            $values = str_getcsv($line);
+
+            $rowData = [];
+            $customData = [];
+
+            foreach ($columnMap as $colIndex => $mapping) {
+                $value = trim($values[$colIndex] ?? '');
+                if ($mapping['type'] === 'standard') {
+                    $rowData[$mapping['field']] = $value;
+                } else {
+                    $customData[$mapping['field']] = $value;
+                }
+            }
+
+            // Validate required fields
+            $missingFields = [];
+            foreach ($requiredFields as $reqField) {
+                if (empty($rowData[$reqField] ?? '')) {
+                    $label = self::FIELD_LABEL_MAP[$reqField] ?? $reqField;
+                    $missingFields[] = $label;
+                }
+            }
+
+            if (!empty($missingFields)) {
+                $errors[] = "Row {$rowNumber}: Missing required fields — " . implode(', ', $missingFields);
+                continue;
+            }
+
+            // Must have email at minimum for deduplication
+            if (empty($rowData['email'] ?? '')) {
+                $errors[] = "Row {$rowNumber}: Email address is required.";
+                continue;
+            }
+
+            // Validate email format
+            if (!filter_var($rowData['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Row {$rowNumber}: Invalid email address '{$rowData['email']}'.";
+                continue;
+            }
+
+            // Normalize phone numbers (handles Excel stripping leading 0 e.g. 547977840 -> 0547977840)
+            if (isset($rowData['phone'])) {
+                $rowData['phone'] = $this->normalizePhoneNumber($rowData['phone']);
+            }
+            if (isset($rowData['emergency_contact_phone'])) {
+                $rowData['emergency_contact_phone'] = $this->normalizePhoneNumber($rowData['emergency_contact_phone']);
+            }
+
+            $email = strtolower(trim($rowData['email']));
+            $phone = !empty($rowData['phone'] ?? '') ? trim($rowData['phone']) : null;
+
+            // Check for duplicate email within this CSV file
+            if (isset($seenEmails[$email])) {
+                $skipped++;
+                $skipReasons[] = "Row {$rowNumber}: Duplicate email '{$rowData['email']}' (same as row {$seenEmails[$email]})";
+                continue;
+            }
+
+            // Check for duplicate phone within this CSV file
+            if ($phone && isset($seenPhones[$phone])) {
+                $skipped++;
+                $skipReasons[] = "Row {$rowNumber}: Duplicate phone '{$phone}' (same as row {$seenPhones[$phone]})";
+                continue;
+            }
+
+            // Check for duplicate email in database
+            $emailExists = Attendee::where('event_id', $event->id)
+                ->where('email', $rowData['email'])
+                ->exists();
+
+            if ($emailExists) {
+                $skipped++;
+                $skipReasons[] = "Row {$rowNumber}: Email '{$rowData['email']}' is already registered for this event";
+                continue;
+            }
+
+            // Check for duplicate phone in database (checks 0547977840, 547977840, and 233547977840)
+            if ($phone) {
+                $phoneExists = Attendee::where('event_id', $event->id)
+                    ->where(function($q) use ($phone) {
+                        $q->where('phone', $phone);
+                        if (str_starts_with($phone, '0')) {
+                            $q->orWhere('phone', substr($phone, 1))
+                              ->orWhere('phone', '233' . substr($phone, 1));
+                        }
+                    })
+                    ->exists();
+
+                if ($phoneExists) {
+                    $skipped++;
+                    $skipReasons[] = "Row {$rowNumber}: Phone '{$phone}' is already registered for this event";
+                    continue;
+                }
+            }
+
+            // Track this row's email and phone as seen
+            $seenEmails[$email] = $rowNumber;
+            if ($phone) {
+                $seenPhones[$phone] = $rowNumber;
+            }
+
+            // Determine role and verification status
+            $role = $rowData['access_role'] ?? 'general_admission';
+            if (!in_array($role, $validRoles)) {
+                $role = 'general_admission';
+            }
+            unset($rowData['access_role']);
+
+            $verificationStatus = $rowData['verification_status'] ?? 'verified';
+            if (!in_array($verificationStatus, $validStatuses)) {
+                $verificationStatus = 'verified';
+            }
+            unset($rowData['verification_status']);
+
+            // Build metadata with custom fields
+            $metadata = !empty($customData) ? $customData : null;
+
+            try {
+                $attendee = Attendee::create(array_merge($rowData, [
+                    'uuid' => (string) Str::uuid(),
+                    'event_id' => $event->id,
+                    'organization_id' => $organizationId,
+                    'access_role' => $role,
+                    'verification_status' => $verificationStatus,
+                    'verified_at' => $verificationStatus === 'verified' ? now() : null,
+                    'consent' => true,
+                    'metadata' => $metadata,
+                ]));
+
+                // Auto-generate QR code for verified attendees
+                if ($verificationStatus === 'verified') {
+                    QrCode::create([
+                        'uuid' => (string) Str::uuid(),
+                        'attendee_id' => $attendee->id,
+                        'event_id' => $event->id,
+                        'secure_token' => Str::random(32),
+                        'issued_at' => now(),
+                        'is_revoked' => false,
+                    ]);
+                }
+
+                $imported++;
+            } catch (\Exception $e) {
+                $errors[] = "Row {$rowNumber}: " . $e->getMessage();
+            }
+        }
+
+        $this->importResults = [
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'skip_reasons' => $skipReasons,
+            'errors' => $errors,
+            'total_rows' => count($lines),
+        ];
+
+        $this->csv_file = null;
+
+        if ($imported > 0) {
+            session()->flash('success', "{$imported} attendee(s) imported successfully" . ($skipped > 0 ? ", {$skipped} duplicate(s) skipped" : '') . '.');
+        } elseif ($skipped > 0) {
+            session()->flash('warning', "No new attendees imported. {$skipped} duplicate(s) skipped.");
+        }
     }
 
     public function assignGateToAttendee($uuid, $gateId)
@@ -1004,6 +1534,9 @@ class AttendeeList extends Component
             'showAddModal' => $this->showAddModal,
             'showDetailsModal' => $this->showDetailsModal,
             'showBulkInviteModal' => $this->showBulkInviteModal,
+            'showImportCsvModal' => $this->showImportCsvModal,
+            'importResults' => $this->importResults,
+            'importEventFields' => $this->importEventFields,
             'showLinkGeneratorModal' => $this->showLinkGeneratorModal,
             'gen_access_role' => $this->gen_access_role,
             'gen_email' => $this->gen_email,

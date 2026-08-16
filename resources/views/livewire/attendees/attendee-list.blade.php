@@ -12,6 +12,12 @@
                 Export CSV
             </button>
 
+            <!-- Import CSV -->
+            <button wire:click="openImportCsvModal" class="px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m4-8l-4-4m0 0L13 8m4-4v12"></path></svg>
+                Import CSV
+            </button>
+
             <!-- Secure Link Generator -->
             <button wire:click="openLinkGeneratorModal" class="px-3.5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
                 <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
@@ -688,24 +694,39 @@
                                         @endphp
 
                                         @if($waStatus === 'delivered' || $waStatus === 'sent')
-                                            <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="WhatsApp Pass Delivered! Click to resend via WhatsApp" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors cursor-pointer">
-                                                <svg class="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                <span>WhatsApp Sent</span>
-                                            </button>
+                                            <div class="inline-flex items-center gap-1.5 bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20">
+                                                <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="WhatsApp Pass Dispatched! Click to open chat again" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span>WhatsApp Sent</span>
+                                                </button>
+                                                <button type="button" wire:click="markWhatsAppFailed('{{ $attendee->uuid }}')" title="Not on WhatsApp? Click to mark as Failed" class="text-[10px] text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 px-1 py-0.5 rounded font-semibold transition-colors cursor-pointer border-l border-blue-500/20 pl-1.5">
+                                                    ✕ Not on WA
+                                                </button>
+                                            </div>
                                         @elseif($waStatus === 'failed')
-                                            <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="Contact not WhatsApp compliant or phone missing. Click to retry" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors cursor-pointer">
-                                                <svg class="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                <span>WhatsApp Failed</span>
-                                            </button>
+                                            <div class="inline-flex items-center gap-1.5 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">
+                                                <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="{{ $waLog->error_message ?? 'Number is not on WhatsApp or invalid' }}. Click to retry" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span>WhatsApp Failed</span>
+                                                </button>
+                                                <button type="button" wire:click="markWhatsAppSent('{{ $attendee->uuid }}')" title="Confirmed delivered? Click to mark as Sent" class="text-[10px] text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 px-1 py-0.5 rounded font-semibold transition-colors cursor-pointer border-l border-rose-500/20 pl-1.5">
+                                                    ✓ Mark Sent
+                                                </button>
+                                            </div>
                                         @else
-                                            <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="Click to auto-send QR Pass to attendee via WhatsApp" class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer">
-                                                <svg class="w-3.5 h-3.5 fill-current text-slate-400" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
-                                                <span>Send WhatsApp</span>
-                                            </button>
+                                            <div class="inline-flex items-center gap-1.5">
+                                                <button type="button" wire:click="sendWhatsAppPass('{{ $attendee->uuid }}')" title="Click to auto-send QR Pass to attendee via WhatsApp" class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5 fill-current text-slate-400" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                                                    <span>Send WhatsApp</span>
+                                                </button>
+                                                <button type="button" wire:click="markWhatsAppFailed('{{ $attendee->uuid }}')" title="Not on WhatsApp" class="text-[10px] text-slate-500 hover:text-rose-400 transition-colors cursor-pointer">
+                                                    ✕
+                                                </button>
+                                            </div>
                                         @endif
                                     </div>
                                 @else
@@ -1051,8 +1072,24 @@
                                 : "https://api.whatsapp.com/send?text={$whatsappMessage}";
                             $qrImageUrl = $qrPassImageUrl;
                         @endphp
-                        <div class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2 mt-3">
-                            <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Reshare Pass Options</span>
+                        <div class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-3 mt-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Reshare Pass Options</span>
+                                @php
+                                    $modalWaLog = $selectedAttendee->notificationLogs ? $selectedAttendee->notificationLogs->where('channel', \App\Enums\NotificationChannel::WhatsApp)->sortByDesc('created_at')->first() : null;
+                                    $modalWaStatus = $modalWaLog ? $modalWaLog->status : null;
+                                @endphp
+                                @if($modalWaStatus === 'delivered' || $modalWaStatus === 'sent')
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-500 bg-blue-500/20 px-2 py-0.5 rounded-md">
+                                        ✓ WhatsApp Sent
+                                    </span>
+                                @elseif($modalWaStatus === 'failed')
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 bg-rose-500/20 px-2 py-0.5 rounded-md" title="{{ $modalWaLog->error_message ?? '' }}">
+                                        ✕ WhatsApp Failed
+                                    </span>
+                                @endif
+                            </div>
+
                             <div class="flex flex-wrap gap-2">
                                 <!-- Resend via Email -->
                                 <button type="button" wire:click="resendPassEmail('{{ $selectedAttendee->uuid }}')" wire:loading.attr="disabled" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
@@ -1063,10 +1100,10 @@
 
                                 <!-- Share via WhatsApp -->
                                 @if(!empty($selectedAttendee->phone))
-                                    <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <button type="button" wire:click="sendWhatsAppPass('{{ $selectedAttendee->uuid }}')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                                         <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
-                                        Share on WhatsApp
-                                    </a>
+                                        Send on WhatsApp
+                                    </button>
                                 @endif
 
                                 <!-- Download QR Image -->
@@ -1075,6 +1112,22 @@
                                     Download Image
                                 </a>
                             </div>
+
+                            @if($modalWaStatus === 'delivered' || $modalWaStatus === 'sent')
+                                <div class="pt-2 border-t border-blue-500/20 flex justify-between items-center text-[11px]">
+                                    <span class="text-slate-400">Did WhatsApp report the number is not registered?</span>
+                                    <button type="button" wire:click="markWhatsAppFailed('{{ $selectedAttendee->uuid }}')" class="text-rose-400 hover:text-rose-300 font-bold underline cursor-pointer">
+                                        Mark as Not on WhatsApp
+                                    </button>
+                                </div>
+                            @elseif($modalWaStatus === 'failed')
+                                <div class="pt-2 border-t border-rose-500/20 flex justify-between items-center text-[11px]">
+                                    <span class="text-rose-400 font-medium">{{ $modalWaLog->error_message ?? 'Number not registered on WhatsApp' }}</span>
+                                    <button type="button" wire:click="markWhatsAppSent('{{ $selectedAttendee->uuid }}')" class="text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer">
+                                        Mark as Sent
+                                    </button>
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -1637,4 +1690,166 @@ sarah@company.com, alex@tech.org"></textarea>
             </div>
         </div>
     @endif
+
+    <!-- ═══ Import CSV Modal ═══ -->
+    @if($showImportCsvModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-white/10">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m4-8l-4-4m0 0L13 8m4-4v12"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900 dark:text-white">Import Attendees from CSV</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Upload a CSV file to bulk-register attendees for an event.</p>
+                        </div>
+                    </div>
+                    <button wire:click="closeImportCsvModal" class="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Step 1: Select Event -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Target Event</label>
+                    <select wire:model.live="import_event_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="">— Select an event —</option>
+                        @foreach($events as $ev)
+                            <option value="{{ $ev->id }}">{{ $ev->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Step 2: Field Preview & Template Download -->
+                @if(!empty($import_event_id) && !empty($importEventFields))
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">CSV Template Fields</label>
+                            <button wire:click="downloadCsvTemplate" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Download Template
+                            </button>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($importEventFields as $field)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold
+                                        {{ $field['status'] === 'required'
+                                            ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                                            : 'bg-slate-200/60 dark:bg-white/10 text-slate-600 dark:text-slate-400 border border-slate-300/40 dark:border-white/10' }}">
+                                        {{ $field['label'] }}
+                                        @if($field['status'] === 'required')
+                                            <span class="text-red-500">*</span>
+                                        @endif
+                                    </span>
+                                @endforeach
+                                {{-- Always-present system columns --}}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Role</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Verification Status</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-3"><span class="text-red-500 font-bold">*</span> = Required field. Download the template to get the exact column headers with example data.</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5"><span class="text-emerald-500 font-bold">💡 Phone Helper:</span> Contacts (e.g. <code class="text-[10px] bg-slate-200/80 dark:bg-white/10 px-1 py-0.5 rounded">0547977840</code> or Excel-trimmed <code class="text-[10px] bg-slate-200/80 dark:bg-white/10 px-1 py-0.5 rounded">547977840</code>) are automatically normalized to 10 digits and formatted for WhatsApp pass delivery.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Upload CSV -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Upload CSV File</label>
+                        <div class="relative">
+                            <input type="file" wire:model="csv_file" accept=".csv" class="block w-full text-xs text-slate-500 dark:text-slate-400
+                                file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0
+                                file:text-xs file:font-bold
+                                file:bg-emerald-50 dark:file:bg-emerald-500/10 file:text-emerald-700 dark:file:text-emerald-400
+                                hover:file:bg-emerald-100 dark:hover:file:bg-emerald-500/20
+                                file:cursor-pointer file:transition-all
+                                border border-dashed border-slate-300 dark:border-white/20 rounded-xl p-3" />
+                            <div wire:loading wire:target="csv_file" class="absolute inset-0 bg-white/80 dark:bg-slate-900/80 rounded-xl flex items-center justify-center">
+                                <div class="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Uploading file...
+                                </div>
+                            </div>
+                        </div>
+                        @error('csv_file') <span class="text-red-500 text-[11px] mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Import Results -->
+                    @if(!empty($importResults))
+                        <div class="space-y-3">
+                            <!-- Summary Stats -->
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                                    <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ $importResults['imported'] ?? 0 }}</div>
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-500 mt-0.5">Imported</div>
+                                </div>
+                                <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                                    <div class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ $importResults['skipped'] ?? 0 }}</div>
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500 mt-0.5">Skipped</div>
+                                </div>
+                                <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+                                    <div class="text-2xl font-black text-red-600 dark:text-red-400">{{ count($importResults['errors'] ?? []) }}</div>
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-500 mt-0.5">Errors</div>
+                                </div>
+                            </div>
+
+                            <!-- Skipped Details (Duplicates) -->
+                            @if(!empty($importResults['skip_reasons']))
+                                <div class="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 max-h-40 overflow-y-auto custom-scrollbar">
+                                    <p class="text-xs font-bold text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        Skipped (Duplicates Prevention)
+                                    </p>
+                                    <ul class="space-y-1">
+                                        @foreach($importResults['skip_reasons'] as $reason)
+                                            <li class="text-[11px] text-amber-600 dark:text-amber-400 font-medium">• {{ $reason }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <!-- Error Details -->
+                            @if(!empty($importResults['errors']))
+                                <div class="p-4 rounded-2xl bg-red-500/5 border border-red-500/20 max-h-40 overflow-y-auto custom-scrollbar">
+                                    <p class="text-xs font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Import Errors
+                                    </p>
+                                    <ul class="space-y-1">
+                                        @foreach($importResults['errors'] as $error)
+                                            <li class="text-[11px] text-red-600 dark:text-red-400 font-medium">• {{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                @endif
+
+                <!-- Action Buttons -->
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 dark:border-white/10">
+                    <button wire:click="closeImportCsvModal" type="button" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 font-semibold text-xs transition-all cursor-pointer">
+                        {{ !empty($importResults) ? 'Done' : 'Cancel' }}
+                    </button>
+                    @if(!empty($import_event_id) && empty($importResults))
+                        <button wire:click="importCsv" wire:loading.attr="disabled" type="button" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" {{ !$csv_file ? 'disabled' : '' }}>
+                            <span wire:loading.remove wire:target="importCsv">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m4-8l-4-4m0 0L13 8m4-4v12"></path></svg>
+                                Import Attendees
+                            </span>
+                            <span wire:loading wire:target="importCsv" class="flex items-center gap-1.5">
+                                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Importing...
+                            </span>
+                        </button>
+                    @endif
+                </div>
+
+            </div>
+        </div>
+    @endif
+
 </div>

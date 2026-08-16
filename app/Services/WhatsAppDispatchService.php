@@ -39,8 +39,10 @@ class WhatsAppDispatchService
         $rawPhone = $attendee->phone;
         $cleanPhone = preg_replace('/[^0-9]/', '', (string)$rawPhone);
 
-        // Standardize local Ghana number (e.g. 0530956778 -> 233530956778)
-        if (!empty($cleanPhone) && str_starts_with($cleanPhone, '0')) {
+        // Standardize local Ghana number (e.g. 0547977840 -> 233547977840, or 547977840 from Excel -> 233547977840)
+        if (strlen($cleanPhone) === 9) {
+            $cleanPhone = '233' . $cleanPhone;
+        } elseif (!empty($cleanPhone) && str_starts_with($cleanPhone, '0')) {
             $cleanPhone = '233' . substr($cleanPhone, 1);
         }
 
@@ -49,17 +51,31 @@ class WhatsAppDispatchService
 
         $messageText = "Hello {$attendee->full_name},\n\nHere is your official digital entry pass for *{$eventName}*:\n\n🎟️ *Pass Token ID:* {$qrCodeToken}\n\n📷 *View/Download Your Entry Pass QR Code:* \n{$qrImageUrl}\n\nPlease present this QR code at check-in.";
 
-        // Validate WhatsApp compliance (Phone must exist and be 10-15 digits long)
+        // Valid Ghana mobile network prefixes (MTN, Telecel, AirtelTigo)
+        // MTN: 24, 54, 55, 59, 53 | Telecel: 20, 50 | AirtelTigo: 27, 57, 26, 56
+        $validGhanaMobilePrefixes = ['24', '54', '55', '59', '53', '20', '50', '27', '57', '26', '56'];
+
+        // Validate basic phone length (10-15 digits)
         $isCompliant = !empty($cleanPhone) && strlen($cleanPhone) >= 10 && strlen($cleanPhone) <= 15;
+        $errorMessage = null;
+
+        // If Ghana number (233XXXXXXXXX = 12 digits), verify it has a valid mobile network prefix
+        if ($isCompliant && str_starts_with($cleanPhone, '233') && strlen($cleanPhone) === 12) {
+            $mobilePrefix = substr($cleanPhone, 3, 2);
+            if (!in_array($mobilePrefix, $validGhanaMobilePrefixes)) {
+                $isCompliant = false;
+                $errorMessage = "Number +{$cleanPhone} uses prefix '0{$mobilePrefix}', which is not a valid WhatsApp mobile prefix in Ghana.";
+            }
+        } elseif (!$isCompliant) {
+            $errorMessage = 'Phone number is missing or non-WhatsApp compliant.';
+        }
 
         if ($isCompliant) {
             $whatsappUrl = "https://api.whatsapp.com/send?phone={$cleanPhone}&text=" . rawurlencode($messageText);
             $status = 'delivered';
-            $errorMessage = null;
         } else {
             $whatsappUrl = "https://api.whatsapp.com/send?text=" . rawurlencode($messageText);
             $status = 'failed';
-            $errorMessage = 'Phone number is missing or non-WhatsApp compliant.';
         }
 
         // Log to notification_logs table
