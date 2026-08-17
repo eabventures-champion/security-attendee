@@ -32,6 +32,8 @@ class PublicMemberCardApplication extends Component
     public string $completion_year = '';
     public $photo = null;
     public array $custom_field_values = [];
+    public ?string $duplicateEmailWarning = null;
+    public bool $isDuplicateEmail = false;
 
     // Configurations
     public array $defaultFieldDefs = [];
@@ -42,6 +44,33 @@ class PublicMemberCardApplication extends Component
     // State
     public bool $submitted = false;
     public ?VirtualIdCard $generatedCard = null;
+
+    public function updatedEmail($value): void
+    {
+        $this->checkDuplicateEmail($value);
+    }
+
+    public function checkDuplicateEmail(?string $email): void
+    {
+        $email = trim((string)$email);
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL) || !$this->organization) {
+            $this->duplicateEmailWarning = null;
+            $this->isDuplicateEmail = false;
+            return;
+        }
+
+        $existing = VirtualIdCard::where('organization_id', $this->organization->id)
+            ->where('email', strtolower($email))
+            ->first();
+
+        if ($existing) {
+            $this->isDuplicateEmail = true;
+            $this->duplicateEmailWarning = "⚠️ A virtual ID card is already registered with this email for {$existing->full_name} ({$existing->member_id_number}).";
+        } else {
+            $this->isDuplicateEmail = false;
+            $this->duplicateEmailWarning = null;
+        }
+    }
 
     public function mount($org_slug = null, $orgSlug = null)
     {

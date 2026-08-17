@@ -62,9 +62,34 @@
                     <!-- Email & Phone -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         <div>
-                            <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">Email Address *</label>
-                            <input type="email" wire:model="email" required placeholder="your.name@example.com" class="w-full bg-slate-800/80 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
-                            @error('email') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">Email Address *</label>
+                                @if($isDuplicateEmail)
+                                    <span class="text-[10px] font-bold text-rose-400 flex items-center gap-1 animate-pulse">
+                                        ⚠️ Already Registered
+                                    </span>
+                                @elseif($email && filter_var($email, FILTER_VALIDATE_EMAIL))
+                                    <span class="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                                        ✓ Available
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="relative">
+                                <input type="email" 
+                                       wire:model.live.debounce.300ms="email" 
+                                       required 
+                                       placeholder="your.name@example.com" 
+                                       class="w-full bg-slate-800/80 border {{ $isDuplicateEmail ? 'border-rose-500 ring-2 ring-rose-500/30' : 'border-white/10' }} rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
+                                <div wire:loading wire:target="email" class="absolute right-3 top-3 text-slate-400 text-xs">
+                                    <svg class="animate-spin h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                </div>
+                            </div>
+                            @if($duplicateEmailWarning)
+                                <div class="mt-1.5 p-2 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[10.5px] font-semibold">
+                                    {{ $duplicateEmailWarning }}
+                                </div>
+                            @endif
+                            @error('email') <span class="text-rose-400 text-[11px] block mt-1">{{ $message }}</span> @enderror
                         </div>
                         <div>
                             <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">WhatsApp / Phone</label>

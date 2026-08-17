@@ -279,13 +279,13 @@
     <!-- ==================== MODAL 1: ADD / EDIT MEMBER ==================== -->
     @if($showMemberModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
+            <div class="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
                     <div class="space-y-0.5">
-                        <h3 class="text-lg font-black text-slate-900 dark:text-white">
+                        <h3 class="text-lg font-black text-white">
                             {{ $editingMemberId ? 'Edit Member Virtual ID' : 'Add New Member Virtual ID' }}
                         </h3>
-                        <p class="text-xs text-slate-500">Enter member credentials to auto-generate their digital ID pass.</p>
+                        <p class="text-xs text-slate-400">Enter member credentials to auto-generate their digital ID pass.</p>
                     </div>
                     <button wire:click="closeMemberModal" class="text-slate-400 hover:text-white cursor-pointer">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -295,60 +295,86 @@
                 <form wire:submit.prevent="saveMember" class="space-y-4 text-xs">
                     
                     <!-- Photo Upload with Silhouette Live Preview -->
-                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5">
+                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-800/80 border border-white/10 text-white">
                         <div class="w-16 h-20 rounded-xl border-2 border-blue-500/40 bg-slate-900 overflow-hidden shrink-0 flex items-center justify-center shadow">
                             @if($photo)
                                 <img src="{{ $photo->temporaryUrl() }}" alt="Preview" class="w-full h-full object-cover">
                             @elseif($existing_photo_path)
                                 <img src="{{ asset('storage/' . $existing_photo_path) }}" alt="Preview" class="w-full h-full object-cover">
                             @else
-                                <div class="flex flex-col items-center justify-center text-slate-500">
+                                <div class="flex flex-col items-center justify-center text-slate-400">
                                     <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                                     <span class="text-[8px] font-bold">Silhouette</span>
                                 </div>
                             @endif
                         </div>
                         <div class="space-y-1.5 flex-1">
-                            <label class="block font-bold text-slate-700 dark:text-slate-200">Profile Photo</label>
-                            <input type="file" wire:model="photo" accept="image/*" class="text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
-                            <p class="text-[11px] text-slate-500">Leave blank to automatically use a corporate silhouette on the ID card.</p>
+                            <label class="block font-bold text-slate-200">Profile Photo</label>
+                            <input type="file" wire:model="photo" accept="image/*" class="text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                            <p class="text-[11px] text-slate-400">Leave blank to automatically use a corporate silhouette on the ID card.</p>
                         </div>
                     </div>
 
                     <!-- Member Full Name -->
                     <div>
-                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Full Name *</label>
-                        <input type="text" wire:model="full_name" required placeholder="e.g. Kwame Mensah" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">Full Name *</label>
+                        <input type="text" wire:model="full_name" required placeholder="e.g. Kwame Mensah" class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
                         @error('full_name') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- ID Number & Email -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Member ID Number *</label>
-                            <input type="text" wire:model="member_id_number" required placeholder="e.g. LAW-2026-001" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white font-mono font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">Member ID Number *</label>
+                            <input type="text" wire:model="member_id_number" required placeholder="e.g. FALAS-2026-001" class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white font-mono font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
                             @error('member_id_number') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Email (for Card Dispatch)</label>
-                            <input type="email" wire:model="email" placeholder="member@example.com" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">Email (for Card Dispatch)</label>
+                                @if($isDuplicateEmail)
+                                    <span class="text-[10.5px] font-bold text-rose-400 flex items-center gap-1 animate-pulse">
+                                        ⚠️ Already Registered
+                                    </span>
+                                @elseif($email && filter_var($email, FILTER_VALIDATE_EMAIL))
+                                    <span class="text-[10.5px] font-bold text-emerald-400 flex items-center gap-1">
+                                        ✓ Available
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="relative">
+                                <input type="email" 
+                                       wire:model.live.debounce.300ms="email" 
+                                       placeholder="member@example.com" 
+                                       class="w-full bg-slate-800 border {{ $isDuplicateEmail ? 'border-rose-500 ring-2 ring-rose-500/30' : 'border-white/10' }} rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
+                                <div wire:loading wire:target="email" class="absolute right-3 top-3 text-slate-400 text-xs">
+                                    <svg class="animate-spin h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                </div>
+                            </div>
+                            @if($duplicateEmailWarning)
+                                <div class="mt-1.5 p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-semibold flex items-center gap-2">
+                                    <svg class="w-4 h-4 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <span>{{ $duplicateEmailWarning }}</span>
+                                </div>
+                            @endif
+                            @error('email') <span class="text-rose-400 text-[11px] block mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
                     <!-- Phone Number & Institution/Faculty of Law -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Phone (for WhatsApp Dispatch)</label>
-                            <input type="text" wire:model="phone" placeholder="+233..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">Phone (for WhatsApp Dispatch)</label>
+                            <input type="text" wire:model="phone" placeholder="+233..." class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-1">
-                                <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">Institution/Faculty of Law</label>
-                                <button type="button" wire:click="openInstitutionsModal" class="text-orange-500 hover:text-orange-600 text-[10px] font-bold hover:underline cursor-pointer flex items-center gap-0.5">
+                                <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">Institution/Faculty of Law</label>
+                                <button type="button" wire:click="openInstitutionsModal" class="text-orange-400 hover:text-orange-300 text-[10px] font-bold hover:underline cursor-pointer flex items-center gap-0.5">
                                     <span>+ Manage List</span>
                                 </button>
                             </div>
-                            <select wire:model="institution" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-semibold text-xs">
+                            <select wire:model="institution" class="w-full bg-slate-800 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-semibold text-xs">
                                 <option value="">-- Select Institution / Faculty --</option>
                                 @foreach($institutionList as $inst)
                                     <option value="{{ $inst }}">{{ $inst }}</option>
@@ -360,34 +386,34 @@
                     <!-- Admission & Completion Years -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Admission Year</label>
-                            <input type="text" wire:model="admission_year" placeholder="e.g. 2023" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">Admission Year</label>
+                            <input type="text" wire:model="admission_year" placeholder="e.g. 2023" class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Completion Year</label>
-                            <input type="text" wire:model="completion_year" placeholder="e.g. 2026" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">Completion Year</label>
+                            <input type="text" wire:model="completion_year" placeholder="e.g. 2026" class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
                         </div>
                     </div>
 
                     <!-- Dynamic Custom Fields (If Any) -->
                     @if(!empty($customFieldDefs))
-                        <div class="pt-2 border-t border-slate-100 dark:border-white/10 space-y-3">
-                            <span class="font-extrabold text-purple-600 dark:text-purple-400 block uppercase tracking-wider text-[11px]">
+                        <div class="pt-2 border-t border-white/10 space-y-3">
+                            <span class="font-extrabold text-purple-400 block uppercase tracking-wider text-[11px]">
                                 Custom Card Fields
                             </span>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 @foreach($customFieldDefs as $cf)
                                     <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">{{ $cf['label'] }}</label>
+                                        <label class="block font-bold text-slate-300 mb-1">{{ $cf['label'] }}</label>
                                         @if(($cf['type'] ?? '') === 'select' || !empty($cf['options']))
-                                            <select wire:model="member_custom_fields.{{ $cf['key'] }}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-xs font-semibold">
+                                            <select wire:model="member_custom_fields.{{ $cf['key'] }}" class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-xs font-semibold">
                                                 <option value="">-- Select {{ $cf['label'] }} --</option>
                                                 @foreach($cf['options'] ?? ['Yes', 'No'] as $opt)
                                                     <option value="{{ $opt }}">{{ $opt }}</option>
                                                 @endforeach
                                             </select>
                                         @else
-                                            <input type="{{ $cf['type'] ?? 'text' }}" wire:model="member_custom_fields.{{ $cf['key'] }}" placeholder="Value for {{ $cf['label'] }}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                            <input type="{{ $cf['type'] ?? 'text' }}" wire:model="member_custom_fields.{{ $cf['key'] }}" placeholder="Value for {{ $cf['label'] }}" class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder-slate-500">
                                         @endif
                                     </div>
                                 @endforeach
@@ -396,8 +422,8 @@
                     @endif
 
                     <!-- Modal Actions -->
-                    <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 dark:border-white/10">
-                        <button type="button" wire:click="closeMemberModal" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer">
+                    <div class="pt-4 flex justify-end gap-3 border-t border-white/10">
+                        <button type="button" wire:click="closeMemberModal" class="px-5 py-2.5 rounded-xl border border-white/20 text-slate-300 font-semibold text-xs hover:bg-white/5 transition-all cursor-pointer">
                             Cancel
                         </button>
                         <button type="submit" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all cursor-pointer">
@@ -413,11 +439,11 @@
     <!-- ==================== MODAL 2: FIELDS & LOGO CUSTOMIZER ==================== -->
     @if($showFieldCustomizerModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
+            <div class="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
                     <div class="space-y-0.5">
-                        <h3 class="text-lg font-black text-slate-900 dark:text-white">Customize ID Card Fields &amp; Logo</h3>
-                        <p class="text-xs text-slate-500">Upload institution branding logo and configure standard &amp; custom fields.</p>
+                        <h3 class="text-lg font-black text-white">Customize ID Card Fields &amp; Logo</h3>
+                        <p class="text-xs text-slate-400">Upload institution branding logo and configure standard &amp; custom fields.</p>
                     </div>
                     <button wire:click="$set('showFieldCustomizerModal', false)" class="text-slate-400 hover:text-white cursor-pointer">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -425,15 +451,15 @@
                 </div>
 
                 <!-- 1. Institution Logo Upload -->
-                <div class="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-3">
+                <div class="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="font-extrabold text-purple-600 dark:text-purple-400 text-xs uppercase tracking-wider">Institution Branding Logo</span>
+                        <span class="font-extrabold text-purple-400 text-xs uppercase tracking-wider">Institution Branding Logo</span>
                         @if($existing_institution_logo_path)
-                            <button type="button" wire:click="removeInstitutionLogo" class="text-rose-500 hover:underline text-[11px] font-bold">Remove Logo</button>
+                            <button type="button" wire:click="removeInstitutionLogo" class="text-rose-400 hover:underline text-[11px] font-bold">Remove Logo</button>
                         @endif
                     </div>
                     <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 rounded-xl border border-purple-500/30 bg-slate-900 flex items-center justify-center p-2 overflow-hidden shrink-0">
+                        <div class="w-16 h-16 rounded-xl border border-purple-500/30 bg-slate-800 flex items-center justify-center p-2 overflow-hidden shrink-0">
                             @if($institution_logo)
                                 <img src="{{ $institution_logo->temporaryUrl() }}" alt="Logo" class="w-full h-full object-contain">
                             @elseif($existing_institution_logo_path)
@@ -443,21 +469,21 @@
                             @endif
                         </div>
                         <div class="space-y-1 flex-1">
-                            <input type="file" wire:model="institution_logo" accept="image/*" class="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer">
-                            <p class="text-[11px] text-slate-500">Logo is rendered at the top of the ID card badge.</p>
+                            <input type="file" wire:model="institution_logo" accept="image/*" class="text-xs text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer">
+                            <p class="text-[11px] text-slate-400">Logo is rendered at the top of the ID card badge.</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- 2. Default Fields Management -->
                 <div class="space-y-2">
-                    <span class="font-extrabold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider block">Standard ID Fields</span>
+                    <span class="font-extrabold text-slate-300 text-xs uppercase tracking-wider block">Standard ID Fields</span>
                     <div class="space-y-1.5">
                         @foreach($defaultFieldDefs as $idx => $df)
-                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-white/5 text-xs">
+                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800 border border-white/10 text-xs">
                                 <div class="flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                                    <input type="text" wire:model="defaultFieldDefs.{{ $idx }}.label" class="bg-transparent font-bold text-slate-900 dark:text-white border-b border-dashed border-slate-400 focus:outline-none text-xs">
+                                    <input type="text" wire:model="defaultFieldDefs.{{ $idx }}.label" class="bg-transparent font-bold text-white border-b border-dashed border-slate-500 focus:outline-none text-xs">
                                     <span class="text-[10px] text-slate-400 font-mono">({{ $df['key'] }})</span>
                                 </div>
                                 <button type="button" wire:click="removeDefaultField({{ $idx }})" class="text-rose-400 hover:text-rose-500 p-1" title="Hide/Delete field">
@@ -469,12 +495,12 @@
                 </div>
 
                 <!-- 3. Dynamic Custom Fields -->
-                <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-white/10">
-                    <span class="font-extrabold text-purple-600 dark:text-purple-400 text-xs uppercase tracking-wider block">Add Dynamic Custom Field</span>
+                <div class="space-y-3 pt-2 border-t border-white/10">
+                    <span class="font-extrabold text-purple-400 text-xs uppercase tracking-wider block">Add Dynamic Custom Field</span>
                     <div class="space-y-2">
                         <div class="flex items-center gap-2">
-                            <input type="text" wire:model="newFieldLabel" placeholder="e.g. Blood Group, Chapter, Alumni Status..." class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <select wire:model.live="newFieldType" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none font-bold">
+                            <input type="text" wire:model="newFieldLabel" placeholder="e.g. Blood Group, Chapter, Alumni Status..." class="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <select wire:model.live="newFieldType" class="bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none font-bold">
                                 <option value="text">Text Input</option>
                                 <option value="number">Number Input</option>
                                 <option value="date">Date Picker</option>
@@ -490,7 +516,7 @@
                         @if($newFieldType === 'dropdown')
                             <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-1">
                                 <label class="block font-bold text-purple-300 text-[11px]">Dropdown Options (comma-separated):</label>
-                                <input type="text" wire:model="newFieldOptions" placeholder="e.g. Option 1, Option 2, Option 3" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <input type="text" wire:model="newFieldOptions" placeholder="e.g. Option 1, Option 2, Option 3" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
                             </div>
                         @endif
                     </div>
@@ -520,8 +546,8 @@
                     @endif
                 </div>
 
-                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 dark:border-white/10">
-                    <button type="button" wire:click="$set('showFieldCustomizerModal', false)" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer">
+                <div class="pt-4 flex justify-end gap-3 border-t border-white/10">
+                    <button type="button" wire:click="$set('showFieldCustomizerModal', false)" class="px-5 py-2.5 rounded-xl border border-white/20 text-slate-300 font-semibold text-xs hover:bg-white/5 transition-all cursor-pointer">
                         Cancel
                     </button>
                     <button type="button" wire:click="saveFieldDefinitions" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all cursor-pointer">
@@ -538,11 +564,11 @@
             $expectedFields = $this->getExpectedImportFields();
         @endphp
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
+            <div class="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
                     <div class="space-y-0.5">
-                        <h3 class="text-lg font-black text-slate-900 dark:text-white">Import Members from Spreadsheet</h3>
-                        <p class="text-xs text-slate-500">Upload Excel (.xlsx, .xls) or CSV (.csv) containing your member records.</p>
+                        <h3 class="text-lg font-black text-white">Import Members from Spreadsheet</h3>
+                        <p class="text-xs text-slate-400">Upload Excel (.xlsx, .xls) or CSV (.csv) containing your member records.</p>
                     </div>
                     <button wire:click="closeUploadModal" class="text-slate-400 hover:text-white cursor-pointer">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -553,21 +579,21 @@
                     <!-- Dropzone with Template Download Action -->
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <span class="font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">Upload Spreadsheet</span>
-                            <button type="button" wire:click="downloadSampleCsv" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+                            <span class="font-extrabold text-slate-300 uppercase tracking-wider text-[11px]">Upload Spreadsheet</span>
+                            <button type="button" wire:click="downloadSampleCsv" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:underline cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 <span>Download Matching Sample (.CSV)</span>
                             </button>
                         </div>
 
-                        <label class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-slate-50/50 dark:bg-white/[0.02] hover:bg-emerald-500/5 group">
-                            <div class="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 mb-2 group-hover:scale-110 transition-transform">
+                        <label class="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-white/[0.02] hover:bg-emerald-500/5 group">
+                            <div class="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 mb-2 group-hover:scale-110 transition-transform">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             </div>
-                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            <span class="text-xs font-bold text-slate-200">
                                 Click or Drag Spreadsheet Here (.xlsx, .xls, .csv)
                             </span>
-                            <p class="text-[11px] text-slate-500 mt-1">
+                            <p class="text-[11px] text-slate-400 mt-1">
                                 System auto-detects columns and maps them to your active field settings.
                             </p>
                             <input type="file" wire:model="excel_file" accept=".xlsx,.xls,.csv,.txt" class="hidden">
@@ -575,9 +601,9 @@
                     </div>
 
                     <!-- Expected Spreadsheet Columns Requirements (Synchronized with Field Customizer) -->
-                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5 space-y-2.5">
+                    <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/10 space-y-2.5">
                         <div class="flex items-center justify-between">
-                            <span class="font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px]">
+                            <span class="font-extrabold text-slate-200 uppercase tracking-wider text-[11px]">
                                 Expected Column Headers in Spreadsheet:
                             </span>
                             <span class="text-[10px] text-slate-400 font-mono">Matched automatically</span>
@@ -585,11 +611,11 @@
 
                         <div class="flex flex-wrap gap-1.5">
                             @foreach($expectedFields as $ef)
-                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg {{ ($ef['type'] ?? '') === 'custom' || ($ef['type'] ?? '') === 'select' ? 'bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-300' : 'bg-slate-200/70 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-white/10' }} text-[11px] font-semibold">
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg {{ ($ef['type'] ?? '') === 'custom' || ($ef['type'] ?? '') === 'select' ? 'bg-purple-500/15 border border-purple-500/30 text-purple-300' : 'bg-slate-700/60 text-slate-200 border border-white/10' }} text-[11px] font-semibold">
                                     <span class="w-1.5 h-1.5 rounded-full {{ ($ef['type'] ?? '') === 'custom' || ($ef['type'] ?? '') === 'select' ? 'bg-purple-400' : 'bg-blue-400' }}"></span>
                                     <span>{{ $ef['label'] }}</span>
                                     @if($ef['required'])
-                                        <span class="text-rose-500 font-bold">*</span>
+                                        <span class="text-rose-400 font-bold">*</span>
                                     @endif
                                     @if(($ef['type'] ?? '') === 'custom' || ($ef['type'] ?? '') === 'select')
                                         <span class="text-[9px] uppercase px-1 rounded bg-purple-500/20 text-purple-300">Custom</span>
@@ -598,7 +624,7 @@
                             @endforeach
                         </div>
 
-                        <p class="text-[10.5px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-white/5">
+                        <p class="text-[10.5px] text-slate-400 pt-1 border-t border-white/10">
                             💡 <strong>Uniform Auto-Generation:</strong> <em>Member ID Numbers</em>, <em>Branding Logos</em>, and <em>Cryptographic QR Tokens</em> are generated and applied uniformly by the system upon entry.
                         </p>
                     </div>
@@ -606,7 +632,7 @@
                     <!-- Parsed Rows Preview -->
                     @if($uploadedCount > 0)
                         <div class="space-y-2 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25">
-                            <div class="flex items-center justify-between font-bold text-emerald-600 dark:text-emerald-400">
+                            <div class="flex items-center justify-between font-bold text-emerald-400">
                                 <span>✨ {{ $uploadedCount }} Member Record(s) Ready to Import</span>
                             </div>
                             <div class="max-h-48 overflow-y-auto space-y-1.5 font-mono text-[11px] bg-slate-900/50 p-2.5 rounded-xl border border-emerald-500/20">
@@ -640,8 +666,8 @@
                     @endif
                 </div>
 
-                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 dark:border-white/10">
-                    <button type="button" wire:click="closeUploadModal" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer">
+                <div class="pt-4 flex justify-end gap-3 border-t border-white/10">
+                    <button type="button" wire:click="closeUploadModal" class="px-5 py-2.5 rounded-xl border border-white/20 text-slate-300 font-semibold text-xs hover:bg-white/5 transition-all cursor-pointer">
                         Cancel
                     </button>
                     <button type="button" 
@@ -788,7 +814,7 @@
         </div>
     @endif
 
-    <!-- ==================== MODAL 5: SHARE APPLICATION LINK ==================== -->
+    <!-- ==================== MODAL 4: SHARE APPLICATION LINK ==================== -->
     @if($showShareLinkModal)
         @php
             $shareUrl = $this->getShareableApplicationUrl();
@@ -797,13 +823,13 @@
             $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($shareUrl);
         @endphp
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
+            <div class="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
                     <div class="space-y-0.5">
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
                             Public Registration Link
                         </div>
-                        <h3 class="text-lg font-black text-slate-900 dark:text-white">Share Member Registration Link</h3>
+                        <h3 class="text-lg font-black text-white">Share Member Registration Link</h3>
                     </div>
                     <button wire:click="closeShareLinkModal" class="text-slate-400 hover:text-white cursor-pointer">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -811,15 +837,15 @@
                 </div>
 
                 <div class="space-y-4 text-xs">
-                    <p class="text-slate-600 dark:text-slate-400">
+                    <p class="text-slate-300">
                         Share this public registration link with your members or students. Once they submit their details, their record is added directly to your database and their official Virtual ID Card is instantly generated.
                     </p>
 
                     <!-- Copyable Link Input with Copy & Open Buttons -->
                     <div class="space-y-1.5">
-                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">Direct Registration URL</label>
+                        <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">Direct Registration URL</label>
                         <div class="flex items-center gap-2">
-                            <input id="shareable-app-url-input" type="text" readonly value="{{ $shareUrl }}" class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-blue-600 dark:text-blue-400 font-mono font-bold focus:outline-none select-all cursor-pointer" onclick="this.select()">
+                            <input id="shareable-app-url-input" type="text" readonly value="{{ $shareUrl }}" class="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-blue-400 font-mono font-bold focus:outline-none select-all cursor-pointer" onclick="this.select()">
                             
                             <button type="button" 
                                     onclick="copyShareUrl()" 
@@ -845,19 +871,19 @@
                     </div>
 
                     <!-- QR Code to Scan & Apply on Mobile -->
-                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5 flex items-center gap-4">
+                    <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center gap-4">
                         <div class="p-2 rounded-xl bg-white shadow shrink-0">
                             <img src="{{ $qrUrl }}" alt="QR Application" class="w-20 h-20 rounded-lg">
                         </div>
                         <div class="space-y-1">
-                            <span class="font-extrabold text-slate-900 dark:text-white block">Scan to Apply on Mobile</span>
-                            <p class="text-[11px] text-slate-500">Project or print this QR code at admission booths, lecture halls, or orientation events.</p>
+                            <span class="font-extrabold text-white block">Scan to Apply on Mobile</span>
+                            <p class="text-[11px] text-slate-400">Project or print this QR code at admission booths, lecture halls, or orientation events.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-3 flex justify-end border-t border-slate-100 dark:border-white/10">
-                    <button type="button" wire:click="closeShareLinkModal" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer">
+                <div class="pt-3 flex justify-end border-t border-white/10">
+                    <button type="button" wire:click="closeShareLinkModal" class="px-5 py-2.5 rounded-xl border border-white/20 text-slate-300 font-semibold text-xs hover:bg-white/5 transition-all cursor-pointer">
                         Done
                     </button>
                 </div>
@@ -865,37 +891,37 @@
         </div>
     @endif
 
-    <!-- Modal 5: Manage Institution & Faculty Dropdown Names -->
+    <!-- ==================== MODAL 5: MANAGE INSTITUTIONS ==================== -->
     @if($showInstitutionsModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl p-6 space-y-5 max-h-[92vh] overflow-y-auto">
                 
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
                     <div class="space-y-1">
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-black uppercase tracking-wider border border-orange-500/20">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/10 text-orange-400 text-[10px] font-black uppercase tracking-wider border border-orange-500/20">
                             Dropdown Configuration
                         </div>
-                        <h3 class="text-lg font-black text-slate-900 dark:text-white">🏛️ Manage Institution &amp; Faculty Names</h3>
+                        <h3 class="text-lg font-black text-white">🏛️ Manage Institution &amp; Faculty Names</h3>
                     </div>
                     <button wire:click="closeInstitutionsModal" class="text-slate-400 hover:text-white cursor-pointer">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                <p class="text-xs text-slate-600 dark:text-slate-400">
+                <p class="text-xs text-slate-400">
                     These institutions populate the <strong>Institution/Faculty of Law</strong> dropdown for manual entry, spreadsheet imports, and public self-registration forms.
                 </p>
 
                 <!-- Add Single Institution -->
-                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5 space-y-2">
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">Add Single Institution / Faculty</label>
+                <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/10 space-y-2">
+                    <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">Add Single Institution / Faculty</label>
                     <div class="flex gap-2">
                         <input type="text" 
                                wire:model="newInstitutionName" 
                                wire:keydown.enter="addInstitution"
                                placeholder="e.g. University of Ghana, School of Law" 
-                               class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                               class="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-orange-500 focus:outline-none placeholder-slate-500">
                         <button type="button" 
                                 wire:click="addInstitution" 
                                 class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow transition-all cursor-pointer shrink-0 active:scale-95">
@@ -907,10 +933,10 @@
                 <!-- Upload List or Reset -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Upload CSV/TXT File -->
-                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5 space-y-2.5 flex flex-col justify-between">
+                    <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/10 space-y-2.5 flex flex-col justify-between">
                         <div>
-                            <span class="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px] block">📁 Upload File (.TXT or .CSV)</span>
-                            <p class="text-[11px] text-slate-500 mt-1">Upload a text file with one institution name per line.</p>
+                            <span class="font-bold text-slate-300 uppercase tracking-wider text-[11px] block">📁 Upload File (.TXT or .CSV)</span>
+                            <p class="text-[11px] text-slate-400 mt-1">Upload a text file with one institution name per line.</p>
                         </div>
                         <div class="space-y-2">
                             <input type="file" wire:model="institutions_file" accept=".txt,.csv" class="block w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-500/20 file:text-orange-400 hover:file:bg-orange-500/30 cursor-pointer">
@@ -923,15 +949,15 @@
                     </div>
 
                     <!-- Reset to Default 19 Standard Law Faculties -->
-                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5 space-y-2.5 flex flex-col justify-between">
+                    <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/10 space-y-2.5 flex flex-col justify-between">
                         <div>
-                            <span class="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px] block">🔄 Reset Defaults</span>
-                            <p class="text-[11px] text-slate-500 mt-1">Restore the 19 accredited Ghanaian Universities and Law Faculties list.</p>
+                            <span class="font-bold text-slate-300 uppercase tracking-wider text-[11px] block">🔄 Reset Defaults</span>
+                            <p class="text-[11px] text-slate-400 mt-1">Restore the 19 accredited Ghanaian Universities and Law Faculties list.</p>
                         </div>
                         <button type="button" 
                                 wire:click="resetDefaultInstitutions" 
                                 wire:confirm="Are you sure you want to reset to the default 19 standard law faculties list?"
-                                class="w-full py-2 rounded-xl border border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all cursor-pointer">
+                                class="w-full py-2 rounded-xl border border-white/10 hover:bg-white/10 text-slate-300 font-bold text-xs transition-all cursor-pointer">
                             Restore 19 Defaults
                         </button>
                     </div>
@@ -940,21 +966,21 @@
                 <!-- Current Institutions List Table -->
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
+                        <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">
                             Configured Institutions ({{ count($institutionList) }})
                         </label>
                     </div>
 
-                    <div class="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden divide-y divide-slate-100 dark:divide-white/5 max-h-60 overflow-y-auto bg-slate-50/50 dark:bg-slate-800/30">
+                    <div class="border border-white/10 rounded-2xl overflow-hidden divide-y divide-white/5 max-h-60 overflow-y-auto bg-slate-800/50">
                         @forelse($institutionList as $idx => $instName)
-                            <div class="flex items-center justify-between px-3.5 py-2 hover:bg-white dark:hover:bg-slate-800/80 transition-colors text-xs">
+                            <div class="flex items-center justify-between px-3.5 py-2 hover:bg-slate-800 transition-colors text-xs">
                                 <div class="flex items-center gap-2">
                                     <span class="font-mono text-slate-400 text-[10px] w-5 text-right">{{ $idx + 1 }}.</span>
-                                    <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $instName }}</span>
+                                    <span class="font-semibold text-slate-200">{{ $instName }}</span>
                                 </div>
                                 <button type="button" 
                                         wire:click="removeInstitution({{ $idx }})" 
-                                        class="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                        class="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
                                         title="Remove from list">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
@@ -965,7 +991,7 @@
                     </div>
                 </div>
 
-                <div class="pt-3 flex justify-end border-t border-slate-100 dark:border-white/10">
+                <div class="pt-3 flex justify-end border-t border-white/10">
                     <button type="button" wire:click="closeInstitutionsModal" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow transition-all cursor-pointer">
                         Done
                     </button>

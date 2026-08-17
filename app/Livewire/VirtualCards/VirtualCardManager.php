@@ -43,6 +43,8 @@ class VirtualCardManager extends Component
     public $photo = null;
     public ?string $existing_photo_path = null;
     public array $member_custom_fields = [];
+    public ?string $duplicateEmailWarning = null;
+    public bool $isDuplicateEmail = false;
 
     // Excel / CSV Bulk Upload Modal
     public bool $showUploadModal = false;
@@ -420,6 +422,45 @@ class VirtualCardManager extends Component
         $this->resetMemberForm();
     }
 
+    public function updatedEmail($value): void
+    {
+        $this->checkDuplicateEmail($value);
+    }
+
+    public function checkDuplicateEmail(?string $email): void
+    {
+        $email = trim((string)$email);
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->duplicateEmailWarning = null;
+            $this->isDuplicateEmail = false;
+            return;
+        }
+
+        $org = $this->getOrganization();
+        if (!$org) {
+            $this->duplicateEmailWarning = null;
+            $this->isDuplicateEmail = false;
+            return;
+        }
+
+        $query = VirtualIdCard::where('organization_id', $org->id)
+            ->where('email', strtolower($email));
+
+        if ($this->editingMemberId) {
+            $query->where('id', '!=', $this->editingMemberId);
+        }
+
+        $existingCard = $query->first();
+
+        if ($existingCard) {
+            $this->isDuplicateEmail = true;
+            $this->duplicateEmailWarning = "⚠️ Member card already registered with this email: {$existingCard->full_name} ({$existingCard->member_id_number})";
+        } else {
+            $this->isDuplicateEmail = false;
+            $this->duplicateEmailWarning = null;
+        }
+    }
+
     public function resetMemberForm(): void
     {
         $this->editingMemberId = null;
@@ -434,6 +475,8 @@ class VirtualCardManager extends Component
         $this->photo = null;
         $this->existing_photo_path = null;
         $this->member_custom_fields = [];
+        $this->duplicateEmailWarning = null;
+        $this->isDuplicateEmail = false;
         $this->resetErrorBag();
     }
 
@@ -454,6 +497,20 @@ class VirtualCardManager extends Component
         if (!$org) {
             session()->flash('error', 'Organization context required.');
             return;
+        }
+
+        if ($this->email) {
+            $dup = VirtualIdCard::where('organization_id', $org->id)
+                ->where('email', strtolower(trim($this->email)))
+                ->when($this->editingMemberId, fn($q) => $q->where('id', '!=', $this->editingMemberId))
+                ->first();
+
+            if ($dup) {
+                $this->isDuplicateEmail = true;
+                $this->duplicateEmailWarning = "⚠️ A virtual ID card is already registered with this email: {$dup->full_name} ({$dup->member_id_number})";
+                $this->addError('email', "A virtual ID card is already registered with this email ({$dup->full_name} - {$dup->member_id_number}).");
+                return;
+            }
         }
 
         $photoPath = $this->existing_photo_path;
