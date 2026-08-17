@@ -14,6 +14,7 @@ use App\Enums\VerificationStatus;
 use App\Enums\AccessRole;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Mail\AttendeePrivateInvitation;
 
@@ -707,8 +708,13 @@ class AttendeeList extends Component
     {
         $attendee = Attendee::where('uuid', $uuid)->first();
         if ($attendee) {
-            $attendee->delete();
-            session()->flash('success', 'Attendee removed successfully.');
+            DB::transaction(function () use ($attendee) {
+                \App\Models\CheckIn::where('attendee_id', $attendee->id)->delete();
+                \App\Models\QrCode::where('attendee_id', $attendee->id)->delete();
+                \App\Models\NotificationLog::where('attendee_id', $attendee->id)->delete();
+                $attendee->forceDelete();
+            });
+            session()->flash('success', 'Attendee permanently deleted from the database.');
         }
     }
 
@@ -887,7 +893,17 @@ class AttendeeList extends Component
         $this->selectAll = $value;
     }
 
-    public function bulkDeleteAttendees()
+    public function selectAllFilteredAttendees(): void
+    {
+        $this->selectedAttendees = $this->getFilteredAttendeesQuery()
+            ->pluck('uuid')
+            ->map(fn($uuid) => (string) $uuid)
+            ->toArray();
+        $this->selectAll = true;
+        $this->selectAllOnPage = true;
+    }
+
+    public function bulkDeleteAttendees(): void
     {
         if (empty($this->selectedAttendees)) return;
 
@@ -896,15 +912,41 @@ class AttendeeList extends Component
         $attendeeIds = $attendees->pluck('id')->toArray();
 
         if (!empty($attendeeIds)) {
-            \App\Models\CheckIn::whereIn('attendee_id', $attendeeIds)->delete();
-            \App\Models\QrCode::whereIn('attendee_id', $attendeeIds)->delete();
-            Attendee::whereIn('id', $attendeeIds)->delete();
+            DB::transaction(function () use ($attendeeIds) {
+                \App\Models\CheckIn::whereIn('attendee_id', $attendeeIds)->delete();
+                \App\Models\QrCode::whereIn('attendee_id', $attendeeIds)->delete();
+                \App\Models\NotificationLog::whereIn('attendee_id', $attendeeIds)->delete();
+                Attendee::whereIn('id', $attendeeIds)->forceDelete();
+            });
         }
 
         $this->selectedAttendees = [];
         $this->selectAllOnPage = false;
         $this->selectAll = false;
-        session()->flash('success', "{$count} attendee(s) deleted successfully.");
+        session()->flash('success', "{$count} attendee(s) permanently deleted from the database.");
+    }
+
+    public function deleteAllFilteredAttendees(): void
+    {
+        $attendees = $this->getFilteredAttendeesQuery()->get();
+        $count = $attendees->count();
+        if ($count === 0) return;
+
+        $attendeeIds = $attendees->pluck('id')->toArray();
+
+        if (!empty($attendeeIds)) {
+            DB::transaction(function () use ($attendeeIds) {
+                \App\Models\CheckIn::whereIn('attendee_id', $attendeeIds)->delete();
+                \App\Models\QrCode::whereIn('attendee_id', $attendeeIds)->delete();
+                \App\Models\NotificationLog::whereIn('attendee_id', $attendeeIds)->delete();
+                Attendee::whereIn('id', $attendeeIds)->forceDelete();
+            });
+        }
+
+        $this->selectedAttendees = [];
+        $this->selectAllOnPage = false;
+        $this->selectAll = false;
+        session()->flash('success', "All {$count} attendee(s) in the table have been permanently deleted from the database.");
     }
 
     public function bulkChangeRole($newRole)

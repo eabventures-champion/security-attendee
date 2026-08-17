@@ -35,6 +35,17 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> 
                 Add
             </button>
+
+            @if(($totalCount ?? 0) > 0)
+                <!-- Delete All in Table -->
+                <button wire:click="deleteAllFilteredAttendees" 
+                        wire:confirm="⚠️ PERMANENT DATABASE DELETION: Are you sure you want to permanently delete ALL {{ number_format($totalCount) }} attendee(s) currently shown in this table? This will permanently delete their records, QR passes, and check-ins from the database. This action CANNOT be undone." 
+                        class="px-3.5 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0" 
+                        title="Permanently delete all attendees currently shown in this table from the database">
+                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Delete All ({{ number_format($totalCount) }})
+                </button>
+            @endif
         </div>
     </div>
 
@@ -143,14 +154,26 @@
 
     <!-- Bulk Actions Bar -->
     @if(count($selectedAttendees ?? []) > 0)
-        <div class="bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10 border border-blue-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fadeIn">
-            <div class="flex items-center gap-3">
+        <div class="bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10 border border-blue-500/30 rounded-2xl p-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 animate-fadeIn">
+            <div class="flex items-center gap-3 flex-wrap">
                 <div class="p-2 rounded-xl bg-blue-500/20">
                     <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                 </div>
-                <div>
-                    <span class="text-sm font-bold text-slate-900 dark:text-white">{{ count($selectedAttendees ?? []) }} attendee(s) selected</span>
-                    <button wire:click="$set('selectedAttendees', [])" class="ml-2 text-xs text-blue-500 hover:text-blue-400 font-semibold cursor-pointer">Clear selection</button>
+                <div class="space-y-0.5">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ number_format(count($selectedAttendees)) }} attendee(s) selected</span>
+                        <button wire:click="$set('selectedAttendees', [])" class="text-xs text-rose-500 hover:text-rose-400 font-semibold cursor-pointer underline">Clear selection</button>
+                    </div>
+                    @if(count($selectedAttendees) < ($totalCount ?? 0))
+                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                            {{ count($selectedAttendees) }} on this page selected. 
+                            <button type="button" wire:click="selectAllFilteredAttendees" class="text-blue-600 dark:text-blue-400 font-extrabold hover:underline cursor-pointer">Select all {{ number_format($totalCount) }} attendees across all pages</button>
+                        </p>
+                    @else
+                        <p class="text-xs font-bold text-purple-600 dark:text-purple-300">
+                            ✨ All {{ number_format(count($selectedAttendees)) }} attendees matching this view are selected.
+                        </p>
+                    @endif
                 </div>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
@@ -177,9 +200,9 @@
                 </div>
 
                 <!-- Bulk Delete -->
-                <button wire:click="bulkDeleteAttendees" wire:confirm="Are you sure you want to delete {{ count($selectedAttendees) }} selected attendee(s)? This action cannot be undone." class="px-4 py-2 rounded-xl bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/25 text-rose-400 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
+                <button wire:click="bulkDeleteAttendees" wire:confirm="⚠️ PERMANENT DATABASE DELETION: Are you sure you want to permanently delete {{ count($selectedAttendees) }} selected attendee(s) from the database? This action will remove all passes, check-ins, and data, and CANNOT be undone." class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold transition-all shadow-md shadow-rose-500/20 flex items-center gap-2 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    Delete Selected
+                    Delete Selected ({{ count($selectedAttendees) }})
                 </button>
             </div>
         </div>
