@@ -1333,20 +1333,20 @@ sarah@company.com, alex@tech.org"></textarea>
                                             @php $currSt = $gen_standard_fields[$key] ?? 'disabled'; @endphp
                                             <div class="p-2.5 px-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-xs">
                                                 <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate flex-1">{{ $label }}</span>
-                                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/10 shrink-0">
+                                                <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 dark:border-white/10 shrink-0 shadow-inner">
                                                     <button type="button" 
                                                             wire:click="setGenFieldStatus('{{ $key }}', 'disabled')" 
-                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'disabled' ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'disabled' ? 'bg-slate-800 text-slate-200 shadow-sm border border-slate-700 font-extrabold' : 'text-slate-400 hover:text-slate-200' }}">
                                                         Disabled
                                                     </button>
                                                     <button type="button" 
                                                             wire:click="setGenFieldStatus('{{ $key }}', 'optional')" 
-                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'optional' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 font-extrabold shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'optional' ? 'bg-blue-600 text-white font-black shadow-md shadow-blue-500/30 border border-blue-400' : 'text-slate-400 hover:text-blue-300' }}">
                                                         Optional
                                                     </button>
                                                     <button type="button" 
                                                             wire:click="setGenFieldStatus('{{ $key }}', 'required')" 
-                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'required' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'required' ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30 border border-amber-400' : 'text-slate-400 hover:text-amber-300' }}">
                                                         Required
                                                     </button>
                                                 </div>
