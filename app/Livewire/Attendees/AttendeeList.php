@@ -977,7 +977,131 @@ class AttendeeList extends Component
 
     public function export()
     {
-        // Implement export logic
+        if (!empty($this->selectedAttendees)) {
+            $attendees = Attendee::with(['event', 'latestCheckIn', 'qrCode'])
+                ->whereIn('uuid', $this->selectedAttendees)
+                ->latest()
+                ->get();
+        } else {
+            $attendees = $this->getFilteredAttendeesQuery()
+                ->with(['event', 'latestCheckIn', 'qrCode'])
+                ->latest()
+                ->get();
+        }
+
+        if ($attendees->isEmpty()) {
+            session()->flash('warning', 'No attendees found to export with the current filters.');
+            return null;
+        }
+
+        // Collect custom extra fields from events / metadata
+        $customFieldHeaders = [];
+        foreach ($attendees as $att) {
+            if ($att->event && !empty($att->event->form_fields_config['custom_fields'])) {
+                foreach ($att->event->form_fields_config['custom_fields'] as $cf) {
+                    $cId = $cf['id'] ?? ($cf['label'] ?? '');
+                    $cLabel = $cf['label'] ?? $cId;
+                    if ($cId && !isset($customFieldHeaders[$cId])) {
+                        $customFieldHeaders[$cId] = $cLabel;
+                    }
+                }
+            }
+            if (is_array($att->metadata)) {
+                foreach ($att->metadata as $mKey => $mVal) {
+                    if (!isset($customFieldHeaders[$mKey])) {
+                        $customFieldHeaders[$mKey] = Str::headline($mKey);
+                    }
+                }
+            }
+        }
+
+        $eventName = 'attendees';
+        if ($this->eventUuid) {
+            $selectedEvent = Event::where('uuid', $this->eventUuid)->first();
+            if ($selectedEvent) {
+                $eventName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $selectedEvent->name);
+            }
+        }
+
+        $fileName = "{$eventName}_export_" . date('Y-m-d_His') . '.csv';
+
+        return response()->streamDownload(function () use ($attendees, $customFieldHeaders) {
+            $handle = fopen('php://output', 'w');
+
+            // UTF-8 BOM for Microsoft Excel compatibility
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            $baseHeaders = [
+                'Full Name',
+                'Email Address',
+                'Phone Number',
+                'Event Name',
+                'Access Role',
+                'Verification Status',
+                'Check-In Status',
+                'Checked-In At',
+                'Company / Organization',
+                'Job Title',
+                'Country',
+                'Gender',
+                'Emergency Contact Name',
+                'Emergency Contact Phone',
+                'Dietary Preferences',
+                'Accessibility Needs',
+                'Registration Reason',
+                'Registration Date',
+            ];
+
+            $allHeaders = array_merge($baseHeaders, array_values($customFieldHeaders));
+            fputcsv($handle, $allHeaders);
+
+            foreach ($attendees as $attendee) {
+                $roleLabel = is_object($attendee->access_role) ? $attendee->access_role->label() : ($attendee->access_role ?? 'General Admission');
+                $statusLabel = is_object($attendee->verification_status) ? $attendee->verification_status->value : ($attendee->verification_status ?? 'verified');
+                $isCheckedIn = $attendee->latestCheckIn && (is_object($attendee->latestCheckIn->scan_result) ? $attendee->latestCheckIn->scan_result->value === 'granted' : $attendee->latestCheckIn->scan_result === 'granted');
+                $checkInTime = ($isCheckedIn && $attendee->latestCheckIn->scanned_at) ? $attendee->latestCheckIn->scanned_at->format('Y-m-d H:i:s') : 'N/A';
+
+                $row = [
+                    $attendee->full_name,
+                    $attendee->email,
+                    $attendee->phone ?? '',
+                    $attendee->event->name ?? 'N/A',
+                    $roleLabel,
+                    ucfirst((string) $statusLabel),
+                    $isCheckedIn ? 'Checked In' : 'Not Checked In',
+                    $checkInTime,
+                    $attendee->company ?? '',
+                    $attendee->job_title ?? '',
+                    $attendee->country ?? '',
+                    $attendee->gender ?? '',
+                    $attendee->emergency_contact_name ?? '',
+                    $attendee->emergency_contact_phone ?? '',
+                    $attendee->dietary_preferences ?? '',
+                    $attendee->accessibility_needs ?? '',
+                    $attendee->registration_reason ?? '',
+                    $attendee->created_at ? $attendee->created_at->format('Y-m-d H:i:s') : '',
+                ];
+
+                // Append any custom extra fields
+                foreach (array_keys($customFieldHeaders) as $cKey) {
+                    $val = '';
+                    if (is_array($attendee->metadata)) {
+                        $val = $attendee->metadata[$cKey] ?? '';
+                        if (is_array($val)) {
+                            $val = implode(', ', $val);
+                        }
+                    }
+                    $row[] = (string) $val;
+                }
+
+                fputcsv($handle, $row);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
     }
 
     // ─── CSV Import Methods ─────────────────────────────────────
