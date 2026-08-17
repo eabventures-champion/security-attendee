@@ -113,9 +113,17 @@ class AttendeeList extends Component
     public bool $auto_generate_qr = true;
 
     // Bulk invite fields
+    public string $bulk_invite_type = 'form'; // 'form' (Option A) or 'direct' (Option B)
+    public string $bulk_input_mode = 'emails_only'; // 'emails_only' (1), 'names_and_emails' (2), or 'excel_import' (3)
     public string $bulk_emails = '';
+    public string $bulk_names_emails = '';
     public string $bulk_access_role = 'general_admission';
     public bool $bulk_auto_verify = true;
+    public $bulk_excel_file = null;
+    public string $bulk_uploaded_file_name = '';
+    public int $bulk_imported_count = 0;
+    public bool $bulk_resend_to_existing = false; // Default false: only send to non-duplicates
+    public bool $bulk_show_duplicate_details = false;
 
     // Import CSV fields
     public bool $showImportCsvModal = false;
@@ -353,7 +361,10 @@ class AttendeeList extends Component
 
     public function openBulkInviteModal()
     {
+        $this->bulk_invite_type = 'form';
+        $this->bulk_input_mode = 'emails_only';
         $this->bulk_emails = '';
+        $this->bulk_names_emails = '';
         $this->bulk_access_role = 'general_admission';
         $this->bulk_auto_verify = true;
 
@@ -376,6 +387,348 @@ class AttendeeList extends Component
     {
         $this->showBulkInviteModal = false;
         $this->bulk_emails = '';
+        $this->bulk_names_emails = '';
+        $this->bulk_excel_file = null;
+        $this->bulk_uploaded_file_name = '';
+        $this->bulk_imported_count = 0;
+    }
+
+    /**
+     * Livewire Lifecycle hook when an Excel/CSV file is uploaded in the Bulk Invite modal
+     */
+    public function updatedBulkExcelFile()
+    {
+        $this->validate([
+            'bulk_excel_file' => 'nullable|file|mimes:csv,txt,xlsx,xls|max:10240',
+        ]);
+
+        if (!$this->bulk_excel_file) return;
+
+        try {
+            $path = $this->bulk_excel_file->getRealPath();
+            $ext = strtolower($this->bulk_excel_file->getClientOriginalExtension());
+            $origName = $this->bulk_excel_file->getClientOriginalName();
+
+            $rows = $this->parseSpreadsheetRows($path, $ext);
+            $extracted = $this->extractRecipientsFromRows($rows);
+
+            if (empty($extracted)) {
+                session()->flash('error', "No valid email addresses found in '{$origName}'. Please check the file formatting.");
+                $this->bulk_excel_file = null;
+                return;
+            }
+
+            $emailsList = [];
+            $namesEmailsList = [];
+
+            foreach ($extracted as $item) {
+                $emailsList[] = $item['email'];
+                if (!empty($item['name'])) {
+                    $namesEmailsList[] = "{$item['name']}, {$item['email']}";
+                } else {
+                    $namesEmailsList[] = $item['email'];
+                }
+            }
+
+            $this->bulk_emails = implode("\n", $emailsList);
+            $this->bulk_names_emails = implode("\n", $namesEmailsList);
+            $this->bulk_uploaded_file_name = $origName;
+            $this->bulk_imported_count = count($extracted);
+
+            session()->flash('success', "📁 Successfully imported {$this->bulk_imported_count} recipient(s) from '{$origName}'!");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to parse Excel/CSV in Bulk Invite: ' . $e->getMessage());
+            session()->flash('error', 'Failed to read file: ' . $e->getMessage());
+        }
+    }
+
+    public function clearBulkUploadedFile(): void
+    {
+        $this->bulk_excel_file = null;
+        $this->bulk_uploaded_file_name = '';
+        $this->bulk_imported_count = 0;
+        $this->bulk_emails = '';
+        $this->bulk_names_emails = '';
+    }
+
+    /**
+     * Read raw rows from CSV or XLSX file
+     */
+    protected function parseSpreadsheetRows(string $filePath, string $extension): array
+    {
+        $rows = [];
+        $ext = strtolower($extension);
+
+        if ($ext === 'csv' || $ext === 'txt') {
+            $handle = fopen($filePath, 'r');
+            if ($handle) {
+                while (($data = fgetcsv($handle, 2000, ',')) !== false) {
+                    if (count($data) === 1 && str_contains($data[0], ';')) {
+                        $data = str_getcsv($data[0], ';');
+                    } elseif (count($data) === 1 && str_contains($data[0], "\t")) {
+                        $data = str_getcsv($data[0], "\t");
+                    }
+                    $rows[] = array_map('trim', $data);
+                }
+                fclose($handle);
+            }
+        } elseif ($ext === 'xlsx') {
+            $zip = new \ZipArchive();
+            if ($zip->open($filePath) === true) {
+                $sharedStrings = [];
+                if ($zip->locateName('xl/sharedStrings.xml') !== false) {
+                    $xml = simplexml_load_string($zip->getFromName('xl/sharedStrings.xml'));
+                    if ($xml) {
+                        foreach ($xml->si as $val) {
+                            $sharedStrings[] = (string)($val->t ?? ($val->r ? $val->r->t : ''));
+                        }
+                    }
+                }
+
+                $sheetContent = $zip->getFromName('xl/worksheets/sheet1.xml');
+                if (!$sheetContent) {
+                    for ($i = 0; $i < $zip->numFiles; $i++) {
+                        $name = $zip->getNameIndex($i);
+                        if (str_starts_with($name, 'xl/worksheets/sheet') && str_ends_with($name, '.xml')) {
+                            $sheetContent = $zip->getFromIndex($i);
+                            break;
+                        }
+                    }
+                }
+
+                if ($sheetContent) {
+                    $sheetXml = simplexml_load_string($sheetContent);
+                    if ($sheetXml && isset($sheetXml->sheetData->row)) {
+                        foreach ($sheetXml->sheetData->row as $rowNode) {
+                            $row = [];
+                            foreach ($rowNode->c as $cell) {
+                                $val = (string)$cell->v;
+                                $type = (string)$cell['t'];
+                                if ($type === 's' && isset($sharedStrings[(int)$val])) {
+                                    $val = $sharedStrings[(int)$val];
+                                } elseif ($type === 'inlineStr' && isset($cell->is->t)) {
+                                    $val = (string)$cell->is->t;
+                                }
+                                $row[] = trim($val);
+                            }
+                            if (!empty(array_filter($row, fn($v) => $v !== ''))) {
+                                $rows[] = $row;
+                            }
+                        }
+                    }
+                }
+                $zip->close();
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Automatically extract names and emails from raw spreadsheet rows
+     */
+    protected function extractRecipientsFromRows(array $rows): array
+    {
+        if (empty($rows)) return [];
+
+        $emailCol = -1;
+        $nameCol = -1;
+        $startIndex = 0;
+
+        // Check first row for header names
+        $firstRow = $rows[0];
+        foreach ($firstRow as $idx => $cell) {
+            $clean = strtolower(trim((string)$cell));
+            if (in_array($clean, ['email', 'email address', 'e-mail', 'mail', 'email_address', 'contact email'])) {
+                $emailCol = $idx;
+            } elseif (in_array($clean, ['name', 'full name', 'fullname', 'attendee name', 'attendee', 'first name', 'guest name', 'full_name'])) {
+                $nameCol = $idx;
+            }
+        }
+
+        if ($emailCol !== -1) {
+            $startIndex = 1; // Header found, skip header
+        } else {
+            // Find which column has valid email addresses
+            for ($c = 0; $c < count($firstRow); $c++) {
+                if (isset($firstRow[$c]) && preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', trim($firstRow[$c]))) {
+                    $emailCol = $c;
+                    break;
+                }
+            }
+            if ($emailCol !== -1 && $nameCol === -1) {
+                $nameCol = ($emailCol === 0) ? (isset($firstRow[1]) ? 1 : -1) : 0;
+            }
+        }
+
+        $extracted = [];
+        for ($i = $startIndex; $i < count($rows); $i++) {
+            $row = $rows[$i];
+            if (empty($row)) continue;
+
+            $email = '';
+            $name = '';
+
+            if ($emailCol !== -1 && isset($row[$emailCol])) {
+                $email = trim((string)$row[$emailCol]);
+            } else {
+                foreach ($row as $cell) {
+                    if (preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', trim((string)$cell))) {
+                        $email = trim((string)$cell);
+                        break;
+                    }
+                }
+            }
+
+            if ($nameCol !== -1 && isset($row[$nameCol])) {
+                $name = trim((string)$row[$nameCol]);
+            }
+
+            if ($email && preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+                $extracted[] = [
+                    'name' => $name,
+                    'email' => strtolower($email),
+                ];
+            }
+        }
+
+        return $extracted;
+    }
+
+    /**
+     * Parse input text into normalized recipient records with name & email
+     */
+    public function parseBulkRecipients(): array
+    {
+        $recipients = [];
+        $input = ($this->bulk_input_mode === 'names_and_emails') ? $this->bulk_names_emails : $this->bulk_emails;
+
+        if (empty(trim((string)$input))) {
+            return [];
+        }
+
+        if ($this->bulk_input_mode === 'emails_only') {
+            // Comma, semicolon, whitespace, or newline separated emails
+            $rawItems = array_filter(array_map('trim', preg_split('/[\r\n,;]+/', (string)$input)));
+            foreach ($rawItems as $item) {
+                if (preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $item)) {
+                    $namePart = explode('@', $item)[0];
+                    $fullName = ucwords(str_replace(['.', '_', '-'], ' ', $namePart));
+                    $recipients[] = [
+                        'email' => strtolower($item),
+                        'name' => $fullName,
+                        'has_custom_name' => false,
+                    ];
+                }
+            }
+        } else {
+            // Mode: names_and_emails
+            // Split by lines
+            $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', (string)$input)));
+            foreach ($lines as $line) {
+                $name = '';
+                $email = '';
+
+                // Pattern 1: Angled brackets "John Doe <john@example.com>" or "John Doe [john@example.com]"
+                if (preg_match('/^(.*?)[<\[(]([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})[>\])]$/', $line, $matches)) {
+                    $name = trim($matches[1], " \t\n\r\0\x0B,\"-'");
+                    $email = strtolower(trim($matches[2]));
+                }
+                // Pattern 2: Delimited by comma, tab, colon, pipe, or hyphen: "John Doe, john@example.com" or "John Doe\tjohn@example.com"
+                elseif (preg_match('/^(.*?)(?:,|\t|:|\||-)\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/', $line, $matches)) {
+                    $name = trim($matches[1], " \t\n\r\0\x0B,\"-'");
+                    $email = strtolower(trim($matches[2]));
+                }
+                // Pattern 3: Email anywhere in line: "john@example.com John Doe"
+                elseif (preg_match('/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/', $line, $matches)) {
+                    $email = strtolower(trim($matches[1]));
+                    $remaining = trim(str_replace($matches[1], '', $line), " \t\n\r\0\x0B,\"-'<>:;");
+                    $name = !empty($remaining) ? $remaining : '';
+                }
+
+                if ($email && preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+                    $hasCustomName = !empty($name);
+                    if (empty($name)) {
+                        $namePart = explode('@', $email)[0];
+                        $name = ucwords(str_replace(['.', '_', '-'], ' ', $namePart));
+                    }
+                    $recipients[] = [
+                        'email' => $email,
+                        'name' => $name,
+                        'has_custom_name' => $hasCustomName,
+                    ];
+                }
+            }
+        }
+
+        // Deduplicate by email
+        $uniqueRecipients = [];
+        $seenEmails = [];
+        foreach ($recipients as $rec) {
+            if (!in_array($rec['email'], $seenEmails)) {
+                $seenEmails[] = $rec['email'];
+                $uniqueRecipients[] = $rec;
+            }
+        }
+
+        return $uniqueRecipients;
+    }
+
+    /**
+     * Analyze parsed recipients against the database for the target event
+     */
+    public function getBulkRecipientsAnalysis(): array
+    {
+        $recipients = $this->parseBulkRecipients();
+        if (empty($recipients) || empty($this->new_event_id)) {
+            return [
+                'total' => count($recipients),
+                'new' => count($recipients),
+                'existing' => 0,
+                'existing_emails' => [],
+                'new_recipients' => $recipients,
+                'existing_recipients' => [],
+            ];
+        }
+
+        $emails = array_map('strtolower', array_column($recipients, 'email'));
+        $existingAttendees = Attendee::where('event_id', $this->new_event_id)
+            ->whereIn('email', $emails)
+            ->get(['id', 'full_name', 'email', 'access_role', 'verification_status', 'created_at'])
+            ->keyBy(fn($item) => strtolower(trim((string)$item->email)));
+
+        $newRecipients = [];
+        $existingRecipients = [];
+
+        foreach ($recipients as $r) {
+            $emailKey = strtolower($r['email']);
+            if (isset($existingAttendees[$emailKey])) {
+                $dbAttendee = $existingAttendees[$emailKey];
+                $existingRecipients[] = array_merge($r, [
+                    'db_id' => $dbAttendee->id,
+                    'db_name' => $dbAttendee->full_name,
+                    'db_role' => is_object($dbAttendee->access_role) ? $dbAttendee->access_role->label() : ucwords(str_replace('_', ' ', (string)$dbAttendee->access_role)),
+                    'db_status' => is_object($dbAttendee->verification_status) ? $dbAttendee->verification_status->label() : ucwords((string)$dbAttendee->verification_status),
+                    'db_registered_at' => $dbAttendee->created_at ? $dbAttendee->created_at->format('M d, Y') : 'Prior',
+                ]);
+            } else {
+                $newRecipients[] = $r;
+            }
+        }
+
+        return [
+            'total' => count($recipients),
+            'new' => count($newRecipients),
+            'existing' => count($existingRecipients),
+            'existing_emails' => array_keys($existingAttendees->toArray()),
+            'new_recipients' => $newRecipients,
+            'existing_recipients' => $existingRecipients,
+        ];
+    }
+
+    public function toggleDuplicateDetails(): void
+    {
+        $this->bulk_show_duplicate_details = !$this->bulk_show_duplicate_details;
     }
 
     public function sendBulkInvitations()
@@ -386,88 +739,147 @@ class AttendeeList extends Component
             return;
         }
 
-        // Parse comma or newline separated email list
-        $emailList = array_filter(array_map('trim', preg_split('/[\s,]+/', $this->bulk_emails)));
+        $analysis = $this->getBulkRecipientsAnalysis();
+        $recipients = $this->parseBulkRecipients();
 
-        if (empty($emailList)) {
-            // Bulk resend invitation to all existing attendees of this event who need pass
-            $attendees = Attendee::where('event_id', $event->id)->get();
-            $sentCount = 0;
-            foreach ($attendees as $attendee) {
-                // Ensure unique QR pass code exists
-                if (!$attendee->qrCode) {
-                    QrCode::create([
-                        'uuid' => (string) \Illuminate\Support\Str::uuid(),
-                        'attendee_id' => $attendee->id,
-                        'event_id' => $event->id,
-                        'secure_token' => \Illuminate\Support\Str::random(32),
-                        'issued_at' => now(),
-                        'is_revoked' => false,
-                    ]);
-                    $attendee->load('qrCode');
-                }
+        if (empty($recipients)) {
+            // If both inputs are completely blank, resend invitations to all existing attendees of this event
+            $rawInput = ($this->bulk_input_mode === 'names_and_emails') ? $this->bulk_names_emails : $this->bulk_emails;
+            if (empty(trim((string)$rawInput))) {
+                $attendees = Attendee::where('event_id', $event->id)->get();
+                $sentCount = 0;
+                foreach ($attendees as $attendee) {
+                    // Ensure unique QR pass code exists
+                    if (!$attendee->qrCode) {
+                        QrCode::create([
+                            'uuid' => (string) Str::uuid(),
+                            'attendee_id' => $attendee->id,
+                            'event_id' => $event->id,
+                            'secure_token' => Str::random(32),
+                            'issued_at' => now(),
+                            'is_revoked' => false,
+                        ]);
+                        $attendee->load('qrCode');
+                    }
 
-                try {
-                    Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee));
-                    $sentCount++;
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error("Failed to send invitation to {$attendee->email}: " . $e->getMessage());
+                    try {
+                        Mail::to($attendee->email)->queue(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
+                        $sentCount++;
+                    } catch (\Exception $e) {
+                        try {
+                            Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
+                            $sentCount++;
+                        } catch (\Exception $ex) {
+                            \Illuminate\Support\Facades\Log::error("Failed to send invitation to {$attendee->email}: " . $ex->getMessage());
+                        }
+                    }
                 }
+                session()->flash('success', "Bulk invitations dispatched to {$sentCount} existing attendees with unique security passes.");
+                $this->closeBulkInviteModal();
+                return;
+            } else {
+                session()->flash('error', 'No valid email addresses found in the input. Please check the formatting.');
+                return;
             }
-            session()->flash('success', "Bulk invitations dispatched to {$sentCount} existing attendees with unique security passes.");
+        }
+
+        // By default, only send to non-duplicates (the new recipients), unless resend to existing is checked
+        $processRecipients = $this->bulk_resend_to_existing ? $recipients : $analysis['new_recipients'];
+
+        if (empty($processRecipients)) {
+            if ($analysis['existing'] > 0 && !$this->bulk_resend_to_existing) {
+                session()->flash('warning', "⚠️ All {$analysis['existing']} recipient(s) are already registered in the database for this event. No new invitations were sent. (To re-send passes to these existing attendees, check the 'Also re-send passes to existing attendees' box).");
+            } else {
+                session()->flash('error', 'No valid recipients available to invite.');
+            }
             $this->closeBulkInviteModal();
             return;
         }
 
-        // Bulk invite new email recipients
+        // Bulk invite recipients
+        $newCreatedCount = 0;
+        $reInvitedCount = 0;
         $sentCount = 0;
-        foreach ($emailList as $email) {
-            if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
-                continue;
-            }
+
+        foreach ($processRecipients as $item) {
+            $email = $item['email'];
+            $name = $item['name'];
+            $hasCustomName = $item['has_custom_name'];
 
             // Check if attendee exists for this event
             $attendee = Attendee::where('event_id', $event->id)->where('email', $email)->first();
 
-            if (!$attendee) {
-                $namePart = explode('@', $email)[0];
-                $fullName = ucwords(str_replace(['.', '_', '-'], ' ', $namePart));
+            $isVerified = ($this->bulk_auto_verify || $this->bulk_invite_type === 'direct');
 
+            if (!$attendee) {
                 $attendee = Attendee::create([
-                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'uuid' => (string) Str::uuid(),
                     'event_id' => $event->id,
                     'organization_id' => $event->organization_id,
-                    'full_name' => $fullName,
+                    'full_name' => $name,
                     'email' => $email,
                     'access_role' => $this->bulk_access_role,
-                    'verification_status' => $this->bulk_auto_verify ? VerificationStatus::Verified : VerificationStatus::Pending,
-                    'verified_at' => $this->bulk_auto_verify ? now() : null,
+                    'verification_status' => $isVerified ? VerificationStatus::Verified : VerificationStatus::Pending,
+                    'verified_at' => $isVerified ? now() : null,
                     'consent' => true,
                 ]);
+                $newCreatedCount++;
+            } else {
+                // If existing attendee, update name if custom name provided, and update role
+                $updateData = [
+                    'access_role' => $this->bulk_access_role,
+                ];
+                if ($hasCustomName) {
+                    $updateData['full_name'] = $name;
+                }
+                if ($isVerified && $attendee->verification_status !== VerificationStatus::Verified) {
+                    $updateData['verification_status'] = VerificationStatus::Verified;
+                    $updateData['verified_at'] = now();
+                }
+                $attendee->update($updateData);
+                $reInvitedCount++;
             }
 
             // Generate unique QR Code pass if not existing
             if (!$attendee->qrCode) {
+                $token = Str::random(32);
                 QrCode::create([
-                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'uuid' => (string) Str::uuid(),
                     'attendee_id' => $attendee->id,
                     'event_id' => $event->id,
-                    'secure_token' => \Illuminate\Support\Str::random(32),
+                    'secure_token' => $token,
+                    'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+                    'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
                     'issued_at' => now(),
+                    'expires_at' => $event->ends_at ? $event->ends_at->addDays(1) : now()->addYear(),
                     'is_revoked' => false,
                 ]);
                 $attendee->load('qrCode');
             }
 
             try {
-                Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee));
+                Mail::to($attendee->email)->queue(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
                 $sentCount++;
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to send bulk invitation to {$email}: " . $e->getMessage());
+                try {
+                    Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
+                    $sentCount++;
+                } catch (\Exception $ex) {
+                    \Illuminate\Support\Facades\Log::error("Failed to send bulk invitation to {$email}: " . $ex->getMessage());
+                }
             }
         }
 
-        session()->flash('success', "Successfully created & sent unique invitations to {$sentCount} attendees.");
+        $flowLabel = ($this->bulk_invite_type === 'direct') ? 'Option B (1-Click Instant Pass)' : 'Option A (Form RSVP)';
+        
+        if ($newCreatedCount > 0 && $reInvitedCount > 0) {
+            session()->flash('success', "🎉 Bulk Invitations Dispatched via {$flowLabel}: {$newCreatedCount} new recipient(s) invited & {$reInvitedCount} existing attendee pass(es) re-sent.");
+        } elseif ($newCreatedCount > 0) {
+            session()->flash('success', "🎉 Bulk Invitations Dispatched via {$flowLabel}: {$newCreatedCount} new attendee(s) invited.");
+        } else {
+            session()->flash('success', "🎉 Bulk Invitations Dispatched via {$flowLabel}: {$reInvitedCount} existing attendee pass(es) re-sent & updated.");
+        }
+
         $this->closeBulkInviteModal();
     }
 
@@ -607,14 +1019,7 @@ class AttendeeList extends Component
                 \Illuminate\Support\Facades\Log::error('Failed to send approval confirmation email: ' . $e->getMessage());
             }
 
-            // Auto-Dispatch WhatsApp Pass & Log Delivery Status
-            try {
-                \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to auto-dispatch WhatsApp pass on approval: ' . $e->getMessage());
-            }
-
-            session()->flash('success', "Attendee '{$attendee->full_name}' approved & verified! Official QR pass dispatched.");
+            session()->flash('success', "Attendee '{$attendee->full_name}' approved & verified! Official QR pass dispatched via email.");
         }
     }
 
@@ -650,12 +1055,6 @@ class AttendeeList extends Component
                 Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send bulk approval confirmation email: ' . $e->getMessage());
-            }
-
-            try {
-                \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to auto-dispatch bulk WhatsApp pass: ' . $e->getMessage());
             }
 
             $approvedCount++;

@@ -62,6 +62,111 @@ class PublicRegistrationForm extends Component
         if (!$this->event) {
             abort(404, 'Event not found or not currently active.');
         }
+
+        // Check for query parameters or token from email invitations
+        $tokenString = request()->query('token');
+        $emailParam = request()->query('email');
+        $nameParam = request()->query('name');
+        $isDirect = request()->boolean('direct') || request()->query('direct') === '1';
+
+        $attendee = null;
+
+        if ($tokenString) {
+            $qr = QrCode::where('secure_token', $tokenString)->where('event_id', $this->event->id)->first();
+            if ($qr && $qr->attendee) {
+                $attendee = $qr->attendee;
+            } else {
+                $attendee = Attendee::where('uuid', $tokenString)->where('event_id', $this->event->id)->first();
+            }
+        }
+
+        if (!$attendee && $emailParam) {
+            $attendee = Attendee::where('email', $emailParam)->where('event_id', $this->event->id)->first();
+        }
+
+        if ($attendee) {
+            $this->email = $attendee->email;
+            if (!empty($attendee->full_name) && !str_starts_with(strtolower($attendee->full_name), 'guest')) {
+                $this->full_name = $attendee->full_name;
+            }
+            if ($attendee->phone) {
+                $this->phone = $attendee->phone;
+            }
+        }
+
+        if (empty($this->email) && $emailParam) {
+            $this->email = $emailParam;
+        }
+
+        if (empty($this->full_name) && $nameParam) {
+            $this->full_name = $nameParam;
+        }
+
+        // Option B: Direct 1-Click Instant Pass Confirmation (No Form Required)
+        if ($isDirect) {
+            $this->processDirectConfirmation($attendee);
+        }
+    }
+
+    /**
+     * Handle Direct 1-Click Pass Confirmation
+     */
+    protected function processDirectConfirmation(?Attendee $attendee = null): void
+    {
+        $emailValue = $this->email ?: ($attendee ? $attendee->email : null);
+        $nameValue = $this->full_name ?: ($attendee ? $attendee->full_name : 'Guest Attendee');
+
+        if (!$attendee && $emailValue) {
+            $attendee = Attendee::where('event_id', $this->event->id)->where('email', $emailValue)->first();
+        }
+
+        if (!$attendee) {
+            $emailValue = $emailValue ?: ('guest_' . Str::random(8) . '@attendee.local');
+            $attendee = Attendee::create([
+                'uuid' => (string) Str::uuid(),
+                'event_id' => $this->event->id,
+                'organization_id' => $this->event->organization_id,
+                'full_name' => $nameValue,
+                'email' => $emailValue,
+                'access_role' => AccessRole::GeneralAdmission,
+                'verification_status' => VerificationStatus::Verified,
+                'verified_at' => now(),
+                'consent' => true,
+            ]);
+        } else {
+            $attendee->update([
+                'verification_status' => VerificationStatus::Verified,
+                'verified_at' => $attendee->verified_at ?: now(),
+                'full_name' => ($nameValue !== 'Guest Attendee' && !empty($nameValue)) ? $nameValue : $attendee->full_name,
+            ]);
+        }
+
+        $qrCode = $attendee->qrCode;
+        if (!$qrCode) {
+            $token = Str::random(32);
+            $qrCode = QrCode::create([
+                'uuid' => (string) Str::uuid(),
+                'attendee_id' => $attendee->id,
+                'event_id' => $this->event->id,
+                'secure_token' => $token,
+                'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+                'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
+                'issued_at' => now(),
+                'expires_at' => $this->event->ends_at ? $this->event->ends_at->addDays(1) : now()->addYear(),
+                'is_revoked' => false,
+            ]);
+        }
+
+        $this->full_name = $attendee->full_name;
+        $this->email = $attendee->email;
+        $this->qrToken = $qrCode->secure_token;
+        $this->isSuccess = true;
+
+        try {
+            Mail::to($attendee->email)->send(new EventRegistrationConfirmation($attendee));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send direct registration confirmation email: ' . $e->getMessage());
+        }
     }
 
     public function rules()
@@ -70,6 +175,11 @@ class PublicRegistrationForm extends Component
         $config = $this->event ? $this->event->form_fields_config : Event::defaultFormFieldsConfig();
         $stdConfig = $config['standard_fields'];
         $customConfig = $config['custom_fields'];
+
+        $existingAttendeeId = null;
+        if ($this->email && $eventId) {
+            $existingAttendeeId = Attendee::where('event_id', $eventId)->where('email', $this->email)->value('id');
+        }
 
         $rules = [];
 
@@ -89,14 +199,14 @@ class PublicRegistrationForm extends Component
                 'email',
                 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
                 'max:255',
-                Rule::unique('attendees', 'email')->where(fn ($query) => $query->where('event_id', $eventId))
+                Rule::unique('attendees', 'email')->where(fn ($query) => $query->where('event_id', $eventId))->ignore($existingAttendeeId)
             ];
         } else {
             $rules['email'] = [
                 'nullable',
                 'email',
                 'max:255',
-                Rule::unique('attendees', 'email')->where(fn ($query) => $query->where('event_id', $eventId)->whereNotNull('email'))
+                Rule::unique('attendees', 'email')->where(fn ($query) => $query->where('event_id', $eventId)->whereNotNull('email'))->ignore($existingAttendeeId)
             ];
         }
 
@@ -107,7 +217,7 @@ class PublicRegistrationForm extends Component
                 'required',
                 'string',
                 'regex:/^[0-9]{10}$/',
-                Rule::unique('attendees', 'phone')->where(fn ($query) => $query->where('event_id', $eventId)->whereNotNull('phone')->where('phone', '!=', ''))
+                Rule::unique('attendees', 'phone')->where(fn ($query) => $query->where('event_id', $eventId)->whereNotNull('phone')->where('phone', '!=', ''))->ignore($existingAttendeeId)
             ];
         } elseif ($phoneState === 'optional') {
             $rules['phone'] = [
@@ -239,30 +349,59 @@ class PublicRegistrationForm extends Component
         $fullNameValue = trim((string)$this->full_name) ?: 'Guest Attendee';
         $emailValue = trim((string)$this->email) ?: ('guest_' . Str::random(8) . '@attendee.local');
 
-        $attendee = Attendee::create([
-            'uuid' => (string) Str::uuid(),
-            'event_id' => $this->event->id,
-            'organization_id' => $this->event->organization_id,
-            'full_name' => $fullNameValue,
-            'email' => $emailValue,
-            'phone' => $this->phone ?: null,
-            'company' => $this->company ?: null,
-            'job_title' => $this->job_title ?: null,
-            'country' => $this->country ?: null,
-            'gender' => $this->gender ?: null,
-            'emergency_contact_name' => $this->emergency_contact_name ?: null,
-            'emergency_contact_phone' => $this->emergency_contact_phone ?: null,
-            'dietary_preferences' => $this->dietary_preferences ?: null,
-            'accessibility_needs' => $this->accessibility_needs ?: null,
-            'registration_reason' => $this->registration_reason ?: null,
-            'access_role' => AccessRole::GeneralAdmission,
-            'verification_status' => VerificationStatus::Verified,
-            'verified_at' => now(),
-            'consent' => $this->consent,
-            'metadata' => [
-                'custom_fields' => $this->custom_answers,
-            ],
-        ]);
+        $existingAttendee = Attendee::where('event_id', $this->event->id)->where('email', $emailValue)->first();
+
+        if ($existingAttendee) {
+            $existingMetadata = is_array($existingAttendee->metadata) ? $existingAttendee->metadata : [];
+            $existingMetadata['custom_fields'] = array_merge(
+                $existingMetadata['custom_fields'] ?? [],
+                $this->custom_answers
+            );
+
+            $existingAttendee->update([
+                'full_name' => $fullNameValue,
+                'phone' => $this->phone ?: $existingAttendee->phone,
+                'company' => $this->company ?: $existingAttendee->company,
+                'job_title' => $this->job_title ?: $existingAttendee->job_title,
+                'country' => $this->country ?: $existingAttendee->country,
+                'gender' => $this->gender ?: $existingAttendee->gender,
+                'emergency_contact_name' => $this->emergency_contact_name ?: $existingAttendee->emergency_contact_name,
+                'emergency_contact_phone' => $this->emergency_contact_phone ?: $existingAttendee->emergency_contact_phone,
+                'dietary_preferences' => $this->dietary_preferences ?: $existingAttendee->dietary_preferences,
+                'accessibility_needs' => $this->accessibility_needs ?: $existingAttendee->accessibility_needs,
+                'registration_reason' => $this->registration_reason ?: $existingAttendee->registration_reason,
+                'verification_status' => VerificationStatus::Verified,
+                'verified_at' => now(),
+                'consent' => $this->consent,
+                'metadata' => $existingMetadata,
+            ]);
+            $attendee = $existingAttendee;
+        } else {
+            $attendee = Attendee::create([
+                'uuid' => (string) Str::uuid(),
+                'event_id' => $this->event->id,
+                'organization_id' => $this->event->organization_id,
+                'full_name' => $fullNameValue,
+                'email' => $emailValue,
+                'phone' => $this->phone ?: null,
+                'company' => $this->company ?: null,
+                'job_title' => $this->job_title ?: null,
+                'country' => $this->country ?: null,
+                'gender' => $this->gender ?: null,
+                'emergency_contact_name' => $this->emergency_contact_name ?: null,
+                'emergency_contact_phone' => $this->emergency_contact_phone ?: null,
+                'dietary_preferences' => $this->dietary_preferences ?: null,
+                'accessibility_needs' => $this->accessibility_needs ?: null,
+                'registration_reason' => $this->registration_reason ?: null,
+                'access_role' => AccessRole::GeneralAdmission,
+                'verification_status' => VerificationStatus::Verified,
+                'verified_at' => now(),
+                'consent' => $this->consent,
+                'metadata' => [
+                    'custom_fields' => $this->custom_answers,
+                ],
+            ]);
+        }
 
         // Auto-generate QR code pass for public event registration
         $token = Str::random(32);
@@ -284,13 +423,6 @@ class PublicRegistrationForm extends Component
             Mail::to($attendee->email)->send(new EventRegistrationConfirmation($attendee));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send registration confirmation email: ' . $e->getMessage());
-        }
-
-        // Trigger Automatic WhatsApp QR Pass Dispatch & Status Logging
-        try {
-            \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to auto-dispatch WhatsApp QR pass: ' . $e->getMessage());
         }
 
         // Send In-App Admin Notification

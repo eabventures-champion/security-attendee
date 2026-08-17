@@ -2,29 +2,28 @@
 
 namespace App\Mail;
 
+use App\Models\VirtualIdCard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Attendee;
-use App\Models\Event;
 
-class EventRegistrationConfirmation extends Mailable implements ShouldQueue
+class MemberVirtualIdCardMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public Attendee $attendee;
-    public Event $event;
+    public VirtualIdCard $card;
+    public string $cardUrl;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Attendee $attendee)
+    public function __construct(VirtualIdCard $card)
     {
-        $this->attendee = $attendee;
-        $this->event = $attendee->event;
+        $this->card = $card;
+        $this->cardUrl = route('virtual-cards.public.view', ['uuid' => $card->uuid]);
     }
 
     /**
@@ -32,8 +31,9 @@ class EventRegistrationConfirmation extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        $orgName = $this->card->organization ? $this->card->organization->name : config('app.name');
         return new Envelope(
-            subject: 'Registration Confirmation: ' . ($this->event->name ?? 'Event Registration'),
+            subject: "🪪 Your Official Virtual ID Card — {$this->card->full_name} ({$this->card->member_id_number})",
         );
     }
 
@@ -43,7 +43,7 @@ class EventRegistrationConfirmation extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.event-registration-confirmation',
+            view: 'emails.member-virtual-id-card',
         );
     }
 

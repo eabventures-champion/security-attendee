@@ -11,30 +11,45 @@ use Illuminate\Queue\SerializesModels;
 use App\Models\Attendee;
 use App\Models\Event;
 
-class AttendeePrivateInvitation extends Mailable
+class AttendeePrivateInvitation extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public Attendee $attendee;
     public Event $event;
     public string $inviteUrl;
+    public string $inviteType; // 'form' or 'direct'
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Attendee $attendee)
+    public function __construct(Attendee $attendee, string $inviteType = 'form')
     {
         $this->attendee = $attendee;
         $this->event = $attendee->event;
+        $this->inviteType = $inviteType;
 
-        // Generate invitation URL with unique QR token
+        // Generate invitation URL with unique QR token and parameters
         $qrCode = $attendee->qrCode;
         $token = $qrCode ? $qrCode->secure_token : $attendee->uuid;
 
+        $queryParams = [
+            'token' => $token,
+            'email' => $attendee->email,
+        ];
+
+        if (!empty($attendee->full_name) && !str_starts_with(strtolower($attendee->full_name), 'guest')) {
+            $queryParams['name'] = $attendee->full_name;
+        }
+
+        if ($this->inviteType === 'direct') {
+            $queryParams['direct'] = '1';
+        }
+
         if ($this->event->is_private) {
-            $this->inviteUrl = route('events.public.invite', ['event_slug' => $this->event->slug, 'token' => $token]);
+            $this->inviteUrl = route('events.public.invite', array_merge(['event_slug' => $this->event->slug], $queryParams));
         } else {
-            $this->inviteUrl = route('events.public.register', ['event_slug' => $this->event->slug, 'token' => $token]);
+            $this->inviteUrl = route('events.public.register', array_merge(['event_slug' => $this->event->slug], $queryParams));
         }
     }
 

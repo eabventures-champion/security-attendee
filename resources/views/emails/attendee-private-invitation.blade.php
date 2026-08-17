@@ -237,7 +237,11 @@
             <div class="content">
                 <div class="greeting">Hello {{ $attendee->full_name }},</div>
                 <div class="message">
-                    You have received a personal invitation to attend <strong style="color: #ffffff;">{{ $event->name }}</strong>. Your unique entry pass has been pre-generated with security verification.
+                    @if(($inviteType ?? 'form') === 'direct')
+                        You have received a personal invitation to attend <strong style="color: #ffffff;">{{ $event->name }}</strong>. Your unique digital entry pass is ready — click below to immediately confirm and access your official pass without filling any form.
+                    @else
+                        You have received a personal invitation to attend <strong style="color: #ffffff;">{{ $event->name }}</strong>. Please click below to confirm your pass and complete your registration details.
+                    @endif
                 </div>
 
                 <div class="card">
@@ -327,7 +331,13 @@
                     </table>
                 </div>
 
-                <a href="{{ $inviteUrl }}" class="button">Access & Confirm Pass</a>
+                <a href="{{ $inviteUrl }}" class="button">
+                    @if(($inviteType ?? 'form') === 'direct')
+                        Access & Confirm Invitation
+                    @else
+                        Access & Confirm Pass
+                    @endif
+                </a>
             </div>
 
             <div class="footer">

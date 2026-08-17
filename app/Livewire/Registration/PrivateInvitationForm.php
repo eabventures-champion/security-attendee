@@ -72,8 +72,12 @@ class PrivateInvitationForm extends Component
             $this->isNoDetailsMode = true;
         }
 
-        // Check for secure single-use invitation token
+        // Check for secure single-use invitation token or bulk invite token
         $tokenString = request()->query('token');
+        $emailParam = request()->query('email');
+        $nameParam = request()->query('name');
+        $isDirect = request()->boolean('direct') || request()->query('direct') === '1';
+
         if ($tokenString) {
             $inv = EventInvitation::where('event_id', $this->event->id)
                 ->where('token', $tokenString)
@@ -103,12 +107,39 @@ class PrivateInvitationForm extends Component
                     }
                 }
             } else {
-                $this->isTokenConsumed = true;
-                $this->tokenNotice = 'Invalid invitation link token. Access denied.';
+                // Check if token is Attendee QR Token or Attendee UUID (from Bulk Invites)
+                $qr = QrCode::where('secure_token', $tokenString)->where('event_id', $this->event->id)->first();
+                $att = $qr ? $qr->attendee : Attendee::where('uuid', $tokenString)->where('event_id', $this->event->id)->first();
+
+                if ($att) {
+                    $this->hasValidToken = true;
+                    $this->email = $att->email;
+                    if (!empty($att->full_name) && !str_starts_with(strtolower($att->full_name), 'guest')) {
+                        $this->full_name = $att->full_name;
+                    }
+                    if ($att->access_role === AccessRole::Vvip || $att->access_role === AccessRole::Vip) {
+                        $this->isVip = true;
+                    }
+                } else {
+                    $this->isTokenConsumed = true;
+                    $this->tokenNotice = 'Invalid invitation link token. Access denied.';
+                }
             }
         } else {
             // Public invitation (No token required)
             $this->hasValidToken = true;
+        }
+
+        if (empty($this->email) && $emailParam) {
+            $this->email = $emailParam;
+        }
+        if (empty($this->full_name) && $nameParam) {
+            $this->full_name = $nameParam;
+        }
+
+        // Option B: Direct 1-Click Instant Pass Confirmation
+        if ($isDirect && $this->hasValidToken) {
+            $this->claimDirectPass();
         }
     }
 
@@ -405,13 +436,6 @@ class PrivateInvitationForm extends Component
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send confirmation email for single-use token link: ' . $e->getMessage());
             }
-
-            // Trigger Automatic WhatsApp QR Pass Dispatch & Status Logging
-            try {
-                \App\Services\WhatsAppDispatchService::dispatchQrPass($attendee);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to auto-dispatch WhatsApp QR pass: ' . $e->getMessage());
-            }
         } else {
             // Leave $qrToken empty so attendee sees Pending Verification screen
             $this->qrToken = '';
@@ -452,30 +476,50 @@ class PrivateInvitationForm extends Component
 
         $guestNumber = rand(1000, 9999);
         $roleLabel = ($targetRole === AccessRole::Vvip || $targetRole === AccessRole::Vip) ? 'VVIP' : 'General';
-        $guestName = "{$roleLabel} Guest Pass #{$guestNumber}";
-        $guestEmail = 'guest_' . Str::random(8) . '@attendflow.pass';
+        
+        $finalEmail = !empty($this->email) ? $this->email : ('guest_' . Str::random(8) . '@attendflow.pass');
+        $finalName = (!empty($this->full_name) && !str_starts_with(strtolower($this->full_name), 'guest')) 
+            ? $this->full_name 
+            : "{$roleLabel} Guest Pass #{$guestNumber}";
 
-        // Create Auto-Verified Attendee Record
-        $attendee = Attendee::create([
-            'uuid' => (string) Str::uuid(),
-            'event_id' => $this->event->id,
-            'organization_id' => $this->event->organization_id,
-            'full_name' => $guestName,
-            'email' => $guestEmail,
-            'phone' => '000' . rand(1000000, 9999999),
-            'access_role' => $targetRole,
-            'verification_status' => VerificationStatus::Verified,
-            'consent' => true
-        ]);
+        // Check if attendee already exists for this event
+        $existing = Attendee::where('event_id', $this->event->id)->where('email', $finalEmail)->first();
 
-        // Consume Single-Use Token immediately
+        if ($existing) {
+            $existing->update([
+                'verification_status' => VerificationStatus::Verified,
+                'verified_at' => $existing->verified_at ?: now(),
+                'full_name' => (!empty($this->full_name) && !str_starts_with(strtolower($this->full_name), 'guest')) ? $this->full_name : $existing->full_name,
+                'access_role' => $targetRole,
+            ]);
+            $attendee = $existing;
+        } else {
+            // Create Auto-Verified Attendee Record
+            $attendee = Attendee::create([
+                'uuid' => (string) Str::uuid(),
+                'event_id' => $this->event->id,
+                'organization_id' => $this->event->organization_id,
+                'full_name' => $finalName,
+                'email' => $finalEmail,
+                'phone' => !empty($this->phone) ? $this->phone : ('000' . rand(1000000, 9999999)),
+                'access_role' => $targetRole,
+                'verification_status' => VerificationStatus::Verified,
+                'verified_at' => now(),
+                'consent' => true
+            ]);
+        }
+
+        $this->full_name = $attendee->full_name;
+        $this->email = $attendee->email;
+
+        // Consume Single-Use Token immediately if token object exists
         if ($this->invitationTokenObj) {
             $this->invitationTokenObj->increment('use_count');
             $this->invitationTokenObj->refresh();
 
             $updateData = ['used_at' => now()];
             if ($this->invitationTokenObj->max_uses == 1) {
-                $updateData['email'] = $guestEmail;
+                $updateData['email'] = $attendee->email;
             }
             $this->invitationTokenObj->update($updateData);
 
@@ -485,23 +529,32 @@ class PrivateInvitationForm extends Component
             }
         }
 
-        // Generate QrCode for verified attendee
-        $token = Str::random(32);
-        $qrCode = QrCode::create([
-            'uuid' => (string) Str::uuid(),
-            'attendee_id' => $attendee->id,
-            'event_id' => $this->event->id,
-            'secure_token' => $token,
-            'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
-            'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
-            'issued_at' => now(),
-            'expires_at' => $this->event->ends_at ? $this->event->ends_at->addDays(1) : now()->addYear(),
-            'is_revoked' => false,
-        ]);
+        // Generate QrCode for verified attendee if not exists
+        $qrCode = $attendee->qrCode;
+        if (!$qrCode) {
+            $token = Str::random(32);
+            $qrCode = QrCode::create([
+                'uuid' => (string) Str::uuid(),
+                'attendee_id' => $attendee->id,
+                'event_id' => $this->event->id,
+                'secure_token' => $token,
+                'encrypted_payload' => base64_encode(json_encode(['token' => $token, 'attendee_uuid' => $attendee->uuid])),
+                'digital_signature' => hash_hmac('sha256', $token, config('app.key')),
+                'issued_at' => now(),
+                'expires_at' => $this->event->ends_at ? $this->event->ends_at->addDays(1) : now()->addYear(),
+                'is_revoked' => false,
+            ]);
+        }
 
         $this->qrToken = $qrCode->secure_token;
         $this->isSuccess = true;
         $this->isClaimed = true;
+
+        try {
+            Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send confirmation email on direct pass claim: ' . $e->getMessage());
+        }
 
         session()->flash('success', '🎉 Your Digital Pass has been generated! Click below to download your QR Code.');
     }

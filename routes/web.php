@@ -40,6 +40,14 @@ Route::get('/events/{event_slug}/register', PublicRegistrationForm::class)
 Route::get('/events/{event_slug}/invite', PrivateInvitationForm::class)
     ->name('events.public.invite');
 
+// Public Virtual ID Card Pass View & Download
+Route::get('/virtual-cards/view/{uuid}', [App\Http\Controllers\VirtualCardPublicViewController::class, 'show'])
+    ->name('virtual-cards.public.view');
+
+// Public Member Self-Service Virtual ID Card Registration / Application
+Route::get('/virtual-cards/apply/{org_slug}', App\Livewire\VirtualCards\PublicMemberCardApplication::class)
+    ->name('virtual-cards.public.apply');
+
 // Email Verification
 Route::get('/verify/{token}', [App\Http\Controllers\VerificationController::class, 'verify'])
     ->name('verification.verify');
@@ -107,6 +115,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class])->gro
 
     // Resource Center & Support
     Route::get('/resources', App\Livewire\Resources\ResourceIndex::class)->name('resources.index');
+
+    // Virtual ID Cards Generator & Management
+    Route::get('/virtual-id-cards', App\Livewire\VirtualCards\VirtualCardManager::class)->name('virtual-cards.index');
 
     // Settings
     Route::get('/settings', App\Livewire\Settings\OrganizationSettings::class)->name('settings.index');

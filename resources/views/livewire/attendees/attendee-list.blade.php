@@ -1,53 +1,61 @@
 <div class="space-y-8 font-inter">
     <!-- Header -->
-    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div>
-            <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Attendees</h1>
-            <p class="text-slate-600 dark:text-slate-400 mt-1 font-medium text-sm">Manage registrations, verifications, and access control.</p>
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-1">
+        <div class="space-y-1">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Attendees</h1>
+                <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-sm">
+                    {{ number_format($totalCount) }} Registered
+                </span>
+                @if(($totalCount ?? 0) > 0)
+                    <!-- Delete All next to count badge -->
+                    <button wire:click="deleteAllFilteredAttendees" 
+                            wire:confirm="⚠️ PERMANENT DATABASE DELETION: Are you sure you want to permanently delete ALL {{ number_format($totalCount) }} attendee(s) currently shown in this table? This will permanently delete their records, QR passes, and check-ins from the database. This action CANNOT be undone." 
+                            class="px-2.5 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm hover:shadow active:scale-95" 
+                            title="Permanently delete all attendees currently shown in this table from the database">
+                        <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <span>Delete All ({{ number_format($totalCount) }})</span>
+                    </button>
+                @endif
+            </div>
+            <p class="text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap">
+                Manage registrations, security passes, verifications, and access control.
+            </p>
         </div>
-        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-start xl:justify-end gap-2 sm:gap-2.5 shrink-0 w-full xl:w-auto">
+
+        <!-- Right-Aligned Premium Action Toolbar -->
+        <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2 sm:gap-2.5 shrink-0">
             <!-- Export CSV -->
-            <button wire:click="export" wire:loading.attr="disabled" class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50">
-                <svg wire:loading.remove wire:target="export" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                <svg wire:loading wire:target="export" class="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <span wire:loading.remove wire:target="export">Export CSV</span>
+            <button wire:click="export" wire:loading.attr="disabled" class="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm hover:shadow active:scale-95" title="Export attendee list to CSV">
+                <svg wire:loading.remove wire:target="export" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <svg wire:loading wire:target="export" class="animate-spin w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span wire:loading.remove wire:target="export">Export</span>
                 <span wire:loading wire:target="export">Exporting...</span>
             </button>
 
             <!-- Import CSV -->
-            <button wire:click="openImportCsvModal" class="px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m4-8l-4-4m0 0L13 8m4-4v12"></path></svg>
-                Import CSV
+            <button wire:click="openImportCsvModal" class="h-10 px-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95" title="Import attendee list from CSV">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m4-8l-4-4m0 0L13 8m4-4v12"></path></svg>
+                Import
             </button>
 
-            <!-- Secure Link Generator -->
-            <button wire:click="openLinkGeneratorModal" class="px-3.5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
-                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                Secure Link (Closed eg. Ticketing)
+            <!-- Secure Single-Use Link Generator -->
+            <button wire:click="openLinkGeneratorModal" class="h-10 px-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95" title="Generate single-use private/ticketing invitation pass link">
+                <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                Secure Link
             </button>
 
             <!-- Bulk Invitations -->
-            <button wire:click="openBulkInviteModal" class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> 
+            <button wire:click="openBulkInviteModal" class="h-10 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> 
                 Bulk Invite
             </button>
 
             <!-- Add Attendee -->
-            <button wire:click="openAddModal" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> 
+            <button wire:click="openAddModal" class="h-10 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg> 
                 Add
             </button>
-
-            @if(($totalCount ?? 0) > 0)
-                <!-- Delete All in Table -->
-                <button wire:click="deleteAllFilteredAttendees" 
-                        wire:confirm="⚠️ PERMANENT DATABASE DELETION: Are you sure you want to permanently delete ALL {{ number_format($totalCount) }} attendee(s) currently shown in this table? This will permanently delete their records, QR passes, and check-ins from the database. This action CANNOT be undone." 
-                        class="px-3.5 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0" 
-                        title="Permanently delete all attendees currently shown in this table from the database">
-                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    Delete All ({{ number_format($totalCount) }})
-                </button>
-            @endif
         </div>
     </div>
 
@@ -1177,8 +1185,8 @@
 
     <!-- Bulk Send Invitations Modal -->
     @if($showBulkInviteModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl max-w-xl w-full p-6 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
                 
                 <!-- Modal Header -->
                 <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-white/10">
@@ -1188,7 +1196,7 @@
                         </div>
                         <div>
                             <h3 class="text-lg font-black text-slate-900 dark:text-white">Bulk Send Invitations</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Issue private invitation passes with unique security QR tokens.</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Issue private invitations with customizable confirmation flows.</p>
                         </div>
                     </div>
                     <button wire:click="closeBulkInviteModal" class="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer">
@@ -1197,59 +1205,313 @@
                 </div>
 
                 <form wire:submit.prevent="sendBulkInvitations" class="space-y-4">
-                    <!-- Event Selection -->
+                    <!-- Target Event Selection -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Target Event</label>
-                        <select wire:model.live="new_event_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Target Event</label>
+                        <select wire:model.live="new_event_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
                             @foreach($events as $ev)
                                 <option value="{{ $ev->id }}">{{ $ev->name }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    <!-- Email List -->
+                    <!-- Flow Option Selector (Option A vs Option B) -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Email Addresses</label>
-                        <textarea wire:model="bulk_emails" rows="5" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter comma or line separated emails e.g.:
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                            Invitation Flow &amp; Confirmation Type
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <!-- Option A -->
+                            <button type="button" 
+                                    wire:click="$set('bulk_invite_type', 'form')" 
+                                    class="p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer {{ $bulk_invite_type === 'form' ? 'border-purple-500 bg-purple-500/10 text-white font-extrabold shadow-md' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
+                                <div class="flex items-center gap-1.5 text-xs font-extrabold text-purple-600 dark:text-purple-400">
+                                    <span>📋</span>
+                                    <span>Option A: Form RSVP Entry</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 leading-snug">
+                                    Recipient clicks <strong>"Access &amp; Confirm Pass"</strong> and fills/confirms registration details before receiving QR code.
+                                </p>
+                            </button>
+
+                            <!-- Option B -->
+                            <button type="button" 
+                                    wire:click="$set('bulk_invite_type', 'direct')" 
+                                    class="p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer {{ $bulk_invite_type === 'direct' ? 'border-purple-500 bg-purple-500/10 text-white font-extrabold shadow-md' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
+                                <div class="flex items-center gap-1.5 text-xs font-extrabold text-purple-600 dark:text-purple-400">
+                                    <span>⚡</span>
+                                    <span>Option B: 1-Click Instant Pass</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 leading-snug">
+                                    Recipient clicks <strong>"Access &amp; Confirm Invitation"</strong> and directly receives their official digital QR pass without any form.
+                                </p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Input Format Selector (1. Only Emails vs 2. Names & Respective Emails vs 3. Import Excel / CSV) -->
+                    <div class="space-y-2.5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                Recipient Input Format
+                            </label>
+                            <div class="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-white/10 shrink-0">
+                                <button type="button" 
+                                        wire:click="$set('bulk_input_mode', 'emails_only')" 
+                                        class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer {{ $bulk_input_mode === 'emails_only' ? 'bg-purple-600 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                                    1. Only Emails
+                                </button>
+                                <button type="button" 
+                                        wire:click="$set('bulk_input_mode', 'names_and_emails')" 
+                                        class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer {{ $bulk_input_mode === 'names_and_emails' ? 'bg-purple-600 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                                    2. Names &amp; Emails
+                                </button>
+                                <button type="button" 
+                                        wire:click="$set('bulk_input_mode', 'excel_import')" 
+                                        class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 {{ $bulk_input_mode === 'excel_import' ? 'bg-emerald-600 text-white shadow' : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10' }}">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span>3. Excel / CSV</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Active Uploaded File Banner (if a file was imported) -->
+                        @if($bulk_uploaded_file_name)
+                            <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs animate-fadeIn">
+                                <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-bold truncate">
+                                    <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="truncate">Imported from <code>{{ $bulk_uploaded_file_name }}</code> ({{ $bulk_imported_count }} records)</span>
+                                </div>
+                                <button type="button" wire:click="clearBulkUploadedFile" class="text-xs text-rose-500 hover:text-rose-600 font-bold px-2 py-0.5 rounded hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0" title="Clear file and inputs">
+                                    ✕ Clear
+                                </button>
+                            </div>
+                        @endif
+
+                        @if($bulk_input_mode === 'emails_only')
+                            <div class="space-y-1.5">
+                                <div class="relative">
+                                    <textarea wire:model.live.debounce.300ms="bulk_emails" 
+                                              rows="4" 
+                                              class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3.5 text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                                              placeholder="Enter comma or line separated emails e.g.:
 david@example.com
 sarah@company.com, alex@tech.org"></textarea>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Leave blank to re-send unique passes to all attendees registered for this event.</p>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                                    Enter one or more email addresses separated by commas or newlines. Leave blank to re-send to all attendees.
+                                </p>
+                            </div>
+                        @elseif($bulk_input_mode === 'names_and_emails')
+                            <div class="space-y-1.5">
+                                <div class="relative">
+                                    <textarea wire:model.live.debounce.300ms="bulk_names_emails" 
+                                              rows="4" 
+                                              class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3.5 text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                                              placeholder="Enter full name with email per line e.g.:
+John Doe, john@example.com
+Sarah Connor <sarah@company.com>
+Alex Johnson - alex@tech.org"></textarea>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                                    Supports <code>Name, email</code>, <code>Name &lt;email&gt;</code>, <code>Name - email</code>, or copy-pasting 2 columns directly from Excel.
+                                </p>
+                            </div>
+                        @else
+                            <!-- Dedicated Excel / CSV Upload Dropzone -->
+                            <div class="space-y-3">
+                                <label class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-400 rounded-2xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-slate-50/50 dark:bg-white/[0.02] hover:bg-emerald-500/5 group">
+                                    <div class="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-2 group-hover:scale-110 transition-transform">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                        Click to Upload Excel (.xlsx, .xls) or CSV (.csv) File
+                                    </span>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Spreadsheet with columns <code>Name</code> and <code>Email</code> (or email-only column).
+                                    </p>
+                                    <input type="file" wire:model="bulk_excel_file" accept=".xlsx,.xls,.csv,.txt" class="hidden">
+                                </label>
+
+                                <div wire:loading wire:target="bulk_excel_file" class="w-full text-center py-2 text-xs font-bold text-emerald-500 flex items-center justify-center gap-2">
+                                    <svg class="animate-spin h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <span>Reading and extracting spreadsheet data...</span>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Live Parsed Recipients Analysis & Duplicate Detection -->
+                        @php
+                            $bulkAnalysis = $this->getBulkRecipientsAnalysis();
+                        @endphp
+                        @if($bulkAnalysis['total'] > 0)
+                            <div class="space-y-2.5 animate-fadeIn">
+                                @if($bulkAnalysis['existing'] === 0)
+                                    <!-- 100% New (No Duplicates) -->
+                                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between text-xs">
+                                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                            <span>{{ $bulkAnalysis['total'] }} new recipient{{ $bulkAnalysis['total'] > 1 ? 's' : '' }} ready to invite (0 duplicates)</span>
+                                        </div>
+                                        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate max-w-[200px]">
+                                            {{ $bulkAnalysis['new_recipients'][0]['name'] }} ({{ $bulkAnalysis['new_recipients'][0]['email'] }}){{ $bulkAnalysis['total'] > 1 ? ', +' . ($bulkAnalysis['total'] - 1) . ' more' : '' }}
+                                        </span>
+                                    </div>
+                                @elseif($bulkAnalysis['new'] === 0)
+                                    <!-- 100% Duplicates -->
+                                    <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2.5">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="flex items-center gap-2 font-black text-amber-600 dark:text-amber-400">
+                                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                <span>Duplicate Notice: All {{ $bulkAnalysis['total'] }} recipient(s) are already registered in this event.</span>
+                                            </div>
+                                            <button type="button" wire:click="toggleDuplicateDetails" class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer shrink-0">
+                                                {{ $bulk_show_duplicate_details ? '▲ Hide List' : '▼ View Duplicates (' . $bulkAnalysis['existing'] . ')' }}
+                                            </button>
+                                        </div>
+
+                                        <p class="text-[11px] text-slate-600 dark:text-slate-400">
+                                            There are <strong>0 new recipients</strong> in this list. By default, duplicate records are skipped.
+                                        </p>
+
+                                        <!-- Duplicate Attendees List Drawer -->
+                                        @if($bulk_show_duplicate_details)
+                                            <div class="mt-2 max-h-48 overflow-y-auto rounded-xl border border-amber-500/20 bg-slate-900/50 p-2 space-y-1.5 font-mono text-[11px]">
+                                                @foreach($bulkAnalysis['existing_recipients'] as $idx => $dup)
+                                                    <div class="flex items-center justify-between p-1.5 rounded-lg bg-white/5 border border-white/5">
+                                                        <div class="truncate mr-2">
+                                                            <span class="text-slate-400">{{ $idx + 1 }}.</span>
+                                                            <span class="font-bold text-slate-200">{{ $dup['db_name'] ?? $dup['name'] }}</span>
+                                                            <span class="text-amber-400/90">&lt;{{ $dup['email'] }}&gt;</span>
+                                                        </div>
+                                                        <div class="flex items-center gap-1.5 shrink-0 text-[10px]">
+                                                            <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold uppercase">{{ $dup['db_role'] ?? 'General' }}</span>
+                                                            <span class="text-slate-500">{{ $dup['db_registered_at'] ?? '' }}</span>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+
+                                        <label class="flex items-center space-x-2 pt-2 border-t border-amber-500/20 cursor-pointer">
+                                            <input wire:model.live="bulk_resend_to_existing" type="checkbox" class="form-checkbox h-4 w-4 text-amber-600 rounded border-slate-300">
+                                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                Re-send invitations &amp; update passes for these {{ $bulkAnalysis['existing'] }} existing attendees
+                                            </span>
+                                        </label>
+                                    </div>
+                                @else
+                                    <!-- Mixed: Some New, Some Duplicates -->
+                                    <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2.5">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <span class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-black">
+                                                    ✨ {{ $bulkAnalysis['new'] }} Non-Duplicate (New)
+                                                </span>
+                                                <span class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 font-black">
+                                                    ⚠️ {{ $bulkAnalysis['existing'] }} Duplicate (Already in DB)
+                                                </span>
+                                            </div>
+                                            <button type="button" wire:click="toggleDuplicateDetails" class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer shrink-0">
+                                                {{ $bulk_show_duplicate_details ? '▲ Hide List' : '▼ View Duplicates (' . $bulkAnalysis['existing'] . ')' }}
+                                            </button>
+                                        </div>
+
+                                        <p class="text-[11px] text-slate-600 dark:text-slate-400">
+                                            Clicking <strong>Dispatch Bulk Invitations</strong> will send invitations <strong>only to the {{ $bulkAnalysis['new'] }} new recipients</strong>.
+                                        </p>
+
+                                        <!-- Duplicate Attendees List Drawer -->
+                                        @if($bulk_show_duplicate_details)
+                                            <div class="mt-2 max-h-48 overflow-y-auto rounded-xl border border-amber-500/20 bg-slate-900/50 p-2 space-y-1.5 font-mono text-[11px]">
+                                                @foreach($bulkAnalysis['existing_recipients'] as $idx => $dup)
+                                                    <div class="flex items-center justify-between p-1.5 rounded-lg bg-white/5 border border-white/5">
+                                                        <div class="truncate mr-2">
+                                                            <span class="text-slate-400">{{ $idx + 1 }}.</span>
+                                                            <span class="font-bold text-slate-200">{{ $dup['db_name'] ?? $dup['name'] }}</span>
+                                                            <span class="text-amber-400/90">&lt;{{ $dup['email'] }}&gt;</span>
+                                                        </div>
+                                                        <div class="flex items-center gap-1.5 shrink-0 text-[10px]">
+                                                            <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold uppercase">{{ $dup['db_role'] ?? 'General' }}</span>
+                                                            <span class="text-slate-500">{{ $dup['db_registered_at'] ?? '' }}</span>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+
+                                        <label class="flex items-center space-x-2 pt-2 border-t border-amber-500/20 cursor-pointer">
+                                            <input wire:model.live="bulk_resend_to_existing" type="checkbox" class="form-checkbox h-4 w-4 text-amber-600 rounded border-slate-300">
+                                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                Also re-send passes to the {{ $bulkAnalysis['existing'] }} existing duplicate attendees
+                                            </span>
+                                        </label>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Access Role & Verification -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Access Role</label>
-                            <select wire:model="bulk_access_role" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Access Role</label>
+                            <select wire:model="bulk_access_role" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
                                 @foreach(\App\Enums\AccessRole::cases() as $role)
                                     <option value="{{ $role->value }}">{{ $role->label() }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="flex items-center pt-6">
+                        <div class="flex items-center pt-4 sm:pt-6">
                             <label class="flex items-center space-x-2 cursor-pointer">
                                 <input wire:model="bulk_auto_verify" type="checkbox" class="form-checkbox h-4 w-4 text-purple-600 rounded border-slate-300 dark:border-white/20">
-                                <span class="text-xs text-slate-700 dark:text-slate-300 font-semibold">Pre-verify & Approve Pass</span>
+                                <span class="text-xs text-slate-700 dark:text-slate-300 font-semibold">Pre-verify &amp; Approve Pass</span>
                             </label>
                         </div>
                     </div>
 
-                    <!-- Security Notice -->
-                    <div class="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs space-y-1">
+                    <!-- Flow Information Box -->
+                    <div class="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs space-y-1">
                         <span class="font-extrabold text-purple-600 dark:text-purple-400 block flex items-center gap-1.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            Security & Unique Tokens
+                            {{ $bulk_invite_type === 'direct' ? 'Option B: Direct Pass Confirmation' : 'Option A: Form RSVP Confirmation' }}
                         </span>
-                        <p class="text-slate-600 dark:text-slate-400">Each recipient receives an email with a unique pass link and single-use security token for scanning.</p>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            @if($bulk_invite_type === 'direct')
+                                Each recipient receives an email with <strong>"Access &amp; Confirm Invitation"</strong>. Clicking it confirms their pass instantly and renders their official QR code.
+                            @else
+                                Each recipient receives an email with <strong>"Access &amp; Confirm Pass"</strong>. Clicking it opens the registration form with pre-filled {{ $bulk_input_mode === 'names_and_emails' ? 'Name & Email' : 'Email' }}, and QR pass is issued upon submission.
+                            @endif
+                        </p>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 dark:border-white/10">
+                    <div class="pt-3 flex justify-end gap-3 border-t border-slate-100 dark:border-white/10">
                         <button wire:click="closeBulkInviteModal" type="button" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 font-semibold text-xs transition-all cursor-pointer">
                             Cancel
                         </button>
-                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2 cursor-pointer">
-                            <span wire:loading.remove>Dispatch Bulk Invitations</span>
+                        
+                        @php
+                            $canDispatch = ($bulkAnalysis['total'] === 0) || ($bulkAnalysis['new'] > 0) || $bulk_resend_to_existing;
+                        @endphp
+                        
+                        <button type="submit" 
+                                wire:loading.attr="disabled" 
+                                @if(!$canDispatch) disabled @endif
+                                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span wire:loading.remove>
+                                @if($bulkAnalysis['total'] === 0)
+                                    Re-send Passes to All Event Attendees
+                                @elseif($bulkAnalysis['new'] > 0 && !$bulk_resend_to_existing)
+                                    Dispatch to {{ $bulkAnalysis['new'] }} Non-Duplicate Recipient{{ $bulkAnalysis['new'] > 1 ? 's' : '' }}
+                                @elseif($bulkAnalysis['new'] > 0 && $bulk_resend_to_existing)
+                                    Dispatch to All {{ $bulkAnalysis['total'] }} Recipients ({{ $bulkAnalysis['new'] }} New + {{ $bulkAnalysis['existing'] }} Existing)
+                                @elseif($bulk_resend_to_existing)
+                                    Re-dispatch Passes to {{ $bulkAnalysis['existing'] }} Existing Attendees
+                                @else
+                                    All {{ $bulkAnalysis['existing'] }} Recipients Already Registered (0 New)
+                                @endif
+                            </span>
                             <span wire:loading class="flex items-center gap-1.5">
                                 <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 Sending Invitations...
