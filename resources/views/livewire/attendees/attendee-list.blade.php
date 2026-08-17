@@ -1333,10 +1333,10 @@ sarah@company.com, alex@tech.org"></textarea>
                                             @php $currSt = $gen_standard_fields[$key] ?? 'disabled'; @endphp
                                             <div class="p-2.5 px-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-xs">
                                                 <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate flex-1">{{ $label }}</span>
-                                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+                                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/10 shrink-0">
                                                     <button type="button" 
                                                             wire:click="setGenFieldStatus('{{ $key }}', 'disabled')" 
-                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'disabled' ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ $currSt === 'disabled' ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                                                         Disabled
                                                     </button>
                                                     <button type="button" 
@@ -1373,7 +1373,7 @@ sarah@company.com, alex@tech.org"></textarea>
                                         </div>
                                     @else
                                         <div class="space-y-2">
-                                            @foreach($gen_custom_fields as $index => $field)
+                                             @foreach($gen_custom_fields as $index => $field)
                                                 <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
                                                     <div class="flex items-center justify-between">
                                                         <span class="text-xs font-black text-purple-600 dark:text-purple-400 uppercase">Question #{{ $index + 1 }}</span>
@@ -1381,15 +1381,15 @@ sarah@company.com, alex@tech.org"></textarea>
                                                     </div>
                                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         <div class="sm:col-span-2">
-                                                            <input type="text" wire:model.blur="gen_custom_fields.{{ $index }}.label" wire:change="persistGenFormFields" placeholder="Question label / question text..." class="w-full px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium outline-none">
+                                                            <input type="text" wire:model.blur="gen_custom_fields.{{ $index }}.label" wire:change="persistGenFormFields" placeholder="Question label / question text..." class="w-full px-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                                         </div>
                                                         <div>
-                                                            <select wire:model.live="gen_custom_fields.{{ $index }}.type" wire:change="persistGenFormFields" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium outline-none cursor-pointer">
-                                                                <option value="text">Short Text</option>
-                                                                <option value="number">Number</option>
-                                                                <option value="textarea">Paragraph</option>
-                                                                <option value="select">Dropdown</option>
-                                                                <option value="checkbox">Checkbox</option>
+                                                            <select wire:model.live="gen_custom_fields.{{ $index }}.type" wire:change="persistGenFormFields" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium outline-none cursor-pointer">
+                                                                <option value="text" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Short Text</option>
+                                                                <option value="number" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Number</option>
+                                                                <option value="textarea" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Paragraph</option>
+                                                                <option value="select" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Dropdown</option>
+                                                                <option value="checkbox" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Checkbox</option>
                                                             </select>
                                                         </div>
                                                     </div>

@@ -50,9 +50,13 @@
     <style>
         [x-cloak] { display: none !important; }
         /* Global dropdown option dark mode visibility fix */
-        .dark select option, select option {
+        .dark select option {
             background-color: #0f172a !important;
             color: #f8fafc !important;
+        }
+        html:not(.dark) select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
         }
     </style>
 </head>

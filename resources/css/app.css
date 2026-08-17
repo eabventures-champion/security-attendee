@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@source "../views";
+@source "../../app";
+@source "../../resources";
 @variant dark (.dark &);
 
 @layer base {

@@ -516,21 +516,20 @@
                                         @foreach($labels as $fieldKey => $fieldLabel)
                                             <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-3">
                                                 <span class="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">{{ $fieldLabel }}</span>
-
-                                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+                                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/10 shrink-0">
                                                     <button type="button" 
                                                             wire:click="$set('form_standard_fields.{{ $fieldKey }}', 'disabled')" 
-                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? 'disabled') === 'disabled' ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? 'disabled') === 'disabled' ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                                                         Disabled
                                                     </button>
                                                     <button type="button" 
                                                             wire:click="$set('form_standard_fields.{{ $fieldKey }}', 'optional')" 
-                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? '') === 'optional' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 font-extrabold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? '') === 'optional' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 font-extrabold shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                                                         Optional
                                                     </button>
                                                     <button type="button" 
                                                             wire:click="$set('form_standard_fields.{{ $fieldKey }}', 'required')" 
-                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? '') === 'required' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                                            class="px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer {{ ($form_standard_fields[$fieldKey] ?? '') === 'required' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                                                         Required
                                                     </button>
                                                 </div>
@@ -562,7 +561,7 @@
                                     @else
                                         <div class="space-y-3">
                                             @foreach($form_custom_fields as $index => $field)
-                                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 space-y-3 animate-fadeIn">
+                                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 space-y-3 animate-fadeIn">
                                                     <div class="flex items-center justify-between gap-3">
                                                         <span class="text-xs font-extrabold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Custom Field #{{ $index + 1 }}</span>
                                                         <button type="button" wire:click="removeCustomField({{ $index }})" class="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer" title="Remove Field">
@@ -576,17 +575,17 @@
                                                             <input type="text" 
                                                                    wire:model="form_custom_fields.{{ $index }}.label" 
                                                                    placeholder="e.g. T-Shirt Size, Table Number, Passport ID..." 
-                                                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none">
+                                                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                                         </div>
 
                                                         <div>
                                                             <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Input Type</label>
-                                                            <select wire:model.live="form_custom_fields.{{ $index }}.type" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none cursor-pointer">
-                                                                <option value="text">Short Text</option>
-                                                                <option value="number">Number</option>
-                                                                <option value="textarea">Paragraph / Long Text</option>
-                                                                <option value="select">Dropdown Select</option>
-                                                                <option value="checkbox">Checkbox (Yes/No)</option>
+                                                            <select wire:model.live="form_custom_fields.{{ $index }}.type" class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none cursor-pointer">
+                                                                <option value="text" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Short Text</option>
+                                                                <option value="number" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Number</option>
+                                                                <option value="textarea" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Paragraph / Long Text</option>
+                                                                <option value="select" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Dropdown Select</option>
+                                                                <option value="checkbox" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Checkbox (Yes/No)</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -597,7 +596,7 @@
                                                             <input type="text" 
                                                                    wire:model="form_custom_fields.{{ $index }}.options" 
                                                                    placeholder="e.g. Small, Medium, Large, Extra Large" 
-                                                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none">
+                                                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-purple-500 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                                         </div>
                                                     @endif
 
