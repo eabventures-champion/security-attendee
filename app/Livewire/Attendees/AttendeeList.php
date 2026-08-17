@@ -1188,22 +1188,25 @@ class AttendeeList extends Component
             }
         }
 
-        // Parse CSV
+        // Parse CSV using fgetcsv to properly handle quoted multi-line cells and exact row numbering
         $path = $this->csv_file->getRealPath();
-        $content = file_get_contents($path);
-        // Remove BOM if present
-        $content = preg_replace('/^\x{FEFF}/u', '', $content);
-        $lines = array_filter(explode("\n", str_replace("\r\n", "\n", $content)), fn($line) => trim($line) !== '');
-
-        if (count($lines) < 2) {
-            session()->flash('error', 'CSV file must contain a header row and at least one data row.');
+        $handle = fopen($path, 'r');
+        if (!$handle) {
+            session()->flash('error', 'Unable to open CSV file.');
             return;
         }
 
-        // Parse header
-        $headerLine = array_shift($lines);
-        $csvHeaders = str_getcsv($headerLine);
-        $csvHeaders = array_map('trim', $csvHeaders);
+        // Read header row
+        $rawHeader = fgetcsv($handle);
+        if (!$rawHeader || empty(array_filter($rawHeader, fn($h) => trim((string)$h) !== ''))) {
+            fclose($handle);
+            session()->flash('error', 'CSV file must contain a valid header row.');
+            return;
+        }
+
+        // Remove UTF-8 BOM from the first header column if present
+        $rawHeader[0] = preg_replace('/^\x{FEFF}/u', '', (string)$rawHeader[0]);
+        $csvHeaders = array_map('trim', $rawHeader);
 
         // Build column index map: CSV column index => db field or custom field key
         $columnMap = [];
@@ -1238,15 +1241,24 @@ class AttendeeList extends Component
         $seenEmails = [];
         $seenPhones = [];
 
-        foreach ($lines as $lineIndex => $line) {
-            $rowNumber = $lineIndex + 2; // +2 because header is row 1, and we shifted it
-            $values = str_getcsv($line);
+        $rowNumber = 1; // Header is row 1
+        $totalRowsProcessed = 0;
+
+        while (($values = fgetcsv($handle)) !== false) {
+            $rowNumber++;
+
+            // Skip entirely blank rows (e.g. trailing empty rows in spreadsheet exports)
+            if (empty(array_filter($values, fn($v) => trim((string)$v) !== ''))) {
+                continue;
+            }
+
+            $totalRowsProcessed++;
 
             $rowData = [];
             $customData = [];
 
             foreach ($columnMap as $colIndex => $mapping) {
-                $value = trim($values[$colIndex] ?? '');
+                $value = isset($values[$colIndex]) ? trim((string)$values[$colIndex]) : '';
                 if ($mapping['type'] === 'standard') {
                     $rowData[$mapping['field']] = $value;
                 } else {
@@ -1387,12 +1399,14 @@ class AttendeeList extends Component
             }
         }
 
+        fclose($handle);
+
         $this->importResults = [
             'imported' => $imported,
             'skipped' => $skipped,
             'skip_reasons' => $skipReasons,
             'errors' => $errors,
-            'total_rows' => count($lines),
+            'total_rows' => $totalRowsProcessed,
         ];
 
         $this->csv_file = null;
