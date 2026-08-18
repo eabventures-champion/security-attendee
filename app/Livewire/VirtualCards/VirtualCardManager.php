@@ -954,11 +954,12 @@ class VirtualCardManager extends Component
 
     protected function queryMembers()
     {
-        $org = $this->getOrganization();
+        $user = auth()->user();
+        $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
         $query = VirtualIdCard::query();
 
-        if ($org) {
-            $query->where('organization_id', $org->id);
+        if (!$isSuperAdmin && $user && $user->organization_id) {
+            $query->where('organization_id', $user->organization_id);
         }
 
         if (!empty($this->search)) {
@@ -984,11 +985,19 @@ class VirtualCardManager extends Component
 
     public function render()
     {
+        $user = auth()->user();
+        $isSuperAdmin = $user ? $user->isSuperAdmin() : false;
         $members = $this->queryMembers()->paginate($this->perPage);
-        $totalCount = VirtualIdCard::count();
-        $activeCount = VirtualIdCard::where('status', 'active')->count();
 
-        $institutions = VirtualIdCard::whereNotNull('institution')
+        $baseCountQuery = VirtualIdCard::query();
+        if (!$isSuperAdmin && $user && $user->organization_id) {
+            $baseCountQuery->where('organization_id', $user->organization_id);
+        }
+
+        $totalCount = (clone $baseCountQuery)->count();
+        $activeCount = (clone $baseCountQuery)->where('status', 'active')->count();
+
+        $institutions = (clone $baseCountQuery)->whereNotNull('institution')
             ->where('institution', '!=', '')
             ->distinct()
             ->pluck('institution');
