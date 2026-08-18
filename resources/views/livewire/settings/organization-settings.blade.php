@@ -65,11 +65,44 @@
                 @endif
             </div>
 
-            <form wire:submit.prevent="saveBrandSettings" class="space-y-4">
+            <form wire:submit.prevent="saveBrandSettings" class="space-y-5">
+                <!-- Logo Upload -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                            Organization / Workspace Logo
+                        </label>
+                        @if($existing_logo_path)
+                            <button type="button" wire:click="removeLogo" class="text-rose-500 hover:underline text-xs font-bold cursor-pointer">
+                                Remove Logo
+                            </button>
+                        @endif
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-200 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                            @if ($logo)
+                                <img src="{{ $logo->temporaryUrl() }}" class="w-full h-full object-contain">
+                            @elseif ($existing_logo_path)
+                                <img src="{{ str_starts_with($existing_logo_path, 'http') ? $existing_logo_path : asset('storage/' . $existing_logo_path) }}" class="w-full h-full object-contain">
+                            @else
+                                <span class="text-xs font-bold text-slate-400">No Logo</span>
+                            @endif
+                        </div>
+                        <div class="space-y-1 flex-1">
+                            <input type="file" wire:model="logo" accept="image/*" class="text-xs text-slate-600 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                                Displays at the top-left of your admin dashboard and sidebar across all pages. PNG, JPG or SVG up to 5MB.
+                            </p>
+                            @error('logo') <span class="text-xs text-rose-500 mt-1 block font-semibold">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Organization Name <span class="text-rose-500">*</span></label>
                         <input wire:model="name" type="text" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">This name replaces "Built Studios" in the top-left sidebar and customer views.</p>
                         @error('name') <span class="text-xs text-rose-500 mt-1 block font-semibold">{{ $message }}</span> @enderror
                     </div>
 
@@ -90,7 +123,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Official Website</label>
-                        <input wire:model="website" type="url" placeholder="https://company.com" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                        <input wire:model="website" type="text" placeholder="https://company.com" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Timezone</label>
@@ -99,14 +132,21 @@
                             <option value="America/New_York">EST (Eastern Standard Time)</option>
                             <option value="Europe/London">GMT (London)</option>
                             <option value="Africa/Lagos">WAT (West Africa Time)</option>
+                            <option value="Africa/Accra">GMT (Accra)</option>
                             <option value="Asia/Tokyo">JST (Tokyo)</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="pt-4 border-t border-slate-100 dark:border-white/10 flex justify-end">
-                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer">
-                        Save Brand Settings
+                    <button type="submit" 
+                            wire:loading.attr="disabled"
+                            class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50">
+                        <span wire:loading.remove wire:target="saveBrandSettings">Save Brand Settings</span>
+                        <span wire:loading wire:target="saveBrandSettings" class="flex items-center gap-2">
+                            <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span>Saving...</span>
+                        </span>
                     </button>
                 </div>
             </form>

@@ -24,6 +24,8 @@ class VirtualIdCard extends Model
         'law_faculty',
         'admission_year',
         'completion_year',
+        'designation',
+        'position',
         'custom_fields',
         'qr_token',
         'status',
@@ -78,9 +80,13 @@ class VirtualIdCard extends Model
         return null;
     }
 
-    public function getInstitutionLogoUrlAttribute(): ?string
+    public function getMainLogoUrlAttribute(): ?string
     {
         // 1. Direct card template override
+        if (!empty($this->card_template['main_logo_path'])) {
+            $path = $this->card_template['main_logo_path'];
+            return str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
+        }
         if (!empty($this->card_template['logo_path'])) {
             $path = $this->card_template['logo_path'];
             return str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
@@ -89,7 +95,7 @@ class VirtualIdCard extends Model
         // 2. Organization ID card config
         if ($this->organization && !empty($this->organization->settings)) {
             $settings = is_array($this->organization->settings) ? $this->organization->settings : json_decode($this->organization->settings, true);
-            $logoPath = $settings['id_card_config']['institution_logo_path'] ?? null;
+            $logoPath = $settings['id_card_config']['main_logo_path'] ?? $settings['id_card_config']['institution_logo_path'] ?? null;
             if ($logoPath) {
                 return str_starts_with($logoPath, 'http') ? $logoPath : asset('storage/' . $logoPath);
             }
@@ -99,6 +105,31 @@ class VirtualIdCard extends Model
         if ($this->organization && !empty($this->organization->logo_path)) {
             $path = $this->organization->logo_path;
             return str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
+        }
+
+        return null;
+    }
+
+    public function getInstitutionLogoUrlAttribute(): ?string
+    {
+        return $this->getMainLogoUrlAttribute();
+    }
+
+    public function getAssociationLogoUrlAttribute(): ?string
+    {
+        // 1. Direct card template override
+        if (!empty($this->card_template['association_logo_path'])) {
+            $path = $this->card_template['association_logo_path'];
+            return str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
+        }
+
+        // 2. Organization ID card config
+        if ($this->organization && !empty($this->organization->settings)) {
+            $settings = is_array($this->organization->settings) ? $this->organization->settings : json_decode($this->organization->settings, true);
+            $logoPath = $settings['id_card_config']['association_logo_path'] ?? null;
+            if ($logoPath) {
+                return str_starts_with($logoPath, 'http') ? $logoPath : asset('storage/' . $logoPath);
+            }
         }
 
         return null;
@@ -115,5 +146,18 @@ class VirtualIdCard extends Model
             // fallback if any generation issue
         }
         return "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" . urlencode($verifyUrl);
+    }
+
+    public function isExecutive(): bool
+    {
+        return strtolower((string)$this->designation) === 'executive';
+    }
+
+    public function getDesignationLabelAttribute(): string
+    {
+        if ($this->isExecutive()) {
+            return !empty($this->position) ? "Executive — {$this->position}" : "Executive";
+        }
+        return "Member";
     }
 }

@@ -26,6 +26,8 @@ class PublicMemberCardApplication extends Component
     public string $full_name = '';
     public string $email = '';
     public string $phone = '';
+    public string $designation = 'member';
+    public string $position = '';
     public string $institution = '';
     public string $law_faculty = '';
     public string $admission_year = '';
@@ -34,12 +36,16 @@ class PublicMemberCardApplication extends Component
     public array $custom_field_values = [];
     public ?string $duplicateEmailWarning = null;
     public bool $isDuplicateEmail = false;
+    public ?string $duplicatePhoneWarning = null;
+    public bool $isDuplicatePhone = false;
 
     // Configurations
     public array $defaultFieldDefs = [];
     public array $customFieldDefs = [];
     public array $institutionList = [];
     public ?string $institution_logo_url = null;
+    public ?string $main_logo_url = null;
+    public ?string $association_logo_url = null;
 
     // State
     public bool $submitted = false;
@@ -72,6 +78,39 @@ class PublicMemberCardApplication extends Component
         }
     }
 
+    public function updatedPhone($value): void
+    {
+        $this->checkDuplicatePhone($value);
+    }
+
+    public function checkDuplicatePhone(?string $phone): void
+    {
+        $phone = trim((string)$phone);
+        $digits = preg_replace('/[^0-9]/', '', $phone);
+        if (empty($phone) || strlen($digits) < 6 || !$this->organization) {
+            $this->duplicatePhoneWarning = null;
+            $this->isDuplicatePhone = false;
+            return;
+        }
+
+        $lastDigits = substr($digits, -8);
+
+        $existing = VirtualIdCard::where('organization_id', $this->organization->id)
+            ->where(function($q) use ($phone, $lastDigits) {
+                $q->where('phone', $phone)
+                  ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', ''), '(', '') LIKE ?", ["%{$lastDigits}%"]);
+            })
+            ->first();
+
+        if ($existing) {
+            $this->isDuplicatePhone = true;
+            $this->duplicatePhoneWarning = "⚠️ A virtual ID card is already registered with this phone number for {$existing->full_name} ({$existing->member_id_number}).";
+        } else {
+            $this->isDuplicatePhone = false;
+            $this->duplicatePhoneWarning = null;
+        }
+    }
+
     public function mount($org_slug = null, $orgSlug = null)
     {
         $slug = $org_slug ?: $orgSlug;
@@ -101,9 +140,16 @@ class PublicMemberCardApplication extends Component
         } else {
             $this->defaultFieldDefs = $idCardConfig['default_fields'] ?? [];
             $this->customFieldDefs = $idCardConfig['custom_fields'] ?? [];
-            if (!empty($idCardConfig['institution_logo_path'])) {
-                $path = $idCardConfig['institution_logo_path'];
-                $this->institution_logo_url = str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
+            
+            $mainLogoPath = $idCardConfig['main_logo_path'] ?? $idCardConfig['institution_logo_path'] ?? null;
+            if ($mainLogoPath) {
+                $this->main_logo_url = str_starts_with($mainLogoPath, 'http') ? $mainLogoPath : asset('storage/' . $mainLogoPath);
+                $this->institution_logo_url = $this->main_logo_url;
+            }
+
+            if (!empty($idCardConfig['association_logo_path'])) {
+                $assocPath = $idCardConfig['association_logo_path'];
+                $this->association_logo_url = str_starts_with($assocPath, 'http') ? $assocPath : asset('storage/' . $assocPath);
             }
         }
 
@@ -133,9 +179,10 @@ class PublicMemberCardApplication extends Component
             ];
         }
 
-        if (empty($this->institution_logo_url) && !empty($this->organization->logo_path)) {
+        if (empty($this->main_logo_url) && !empty($this->organization->logo_path)) {
             $path = $this->organization->logo_path;
-            $this->institution_logo_url = str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
+            $this->main_logo_url = str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
+            $this->institution_logo_url = $this->main_logo_url;
         }
 
         $this->institution = in_array('University of Ghana, School of Law', $this->institutionList)
@@ -152,6 +199,8 @@ class PublicMemberCardApplication extends Component
             'full_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:50',
+            'designation' => 'required|string|in:member,executive',
+            'position' => 'nullable|string|max:255',
             'institution' => 'nullable|string|max:255',
             'admission_year' => 'nullable|string|max:20',
             'completion_year' => 'nullable|string|max:20',
@@ -160,10 +209,37 @@ class PublicMemberCardApplication extends Component
 
         $this->validate($rules);
 
+        if ($this->designation === 'executive' && empty(trim($this->position))) {
+            $this->addError('position', 'Please enter your executive position or leadership title (e.g. President, General Secretary).');
+            return;
+        }
+
         // Check if member already has a card with this email in this organization
         $existing = VirtualIdCard::where('organization_id', $this->organization->id)
             ->where('email', strtolower(trim($this->email)))
             ->first();
+
+        // Check if phone number is already registered
+        if ($this->phone) {
+            $digits = preg_replace('/[^0-9]/', '', $this->phone);
+            if (strlen($digits) >= 6) {
+                $lastDigits = substr($digits, -8);
+                $dupPhone = VirtualIdCard::where('organization_id', $this->organization->id)
+                    ->where(function($q) use ($lastDigits) {
+                        $q->where('phone', trim($this->phone))
+                          ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', ''), '(', '') LIKE ?", ["%{$lastDigits}%"]);
+                    })
+                    ->when($existing, fn($q) => $q->where('id', '!=', $existing->id))
+                    ->first();
+
+                if ($dupPhone) {
+                    $this->isDuplicatePhone = true;
+                    $this->duplicatePhoneWarning = "⚠️ A virtual ID card is already registered with this phone number: {$dupPhone->full_name} ({$dupPhone->member_id_number})";
+                    $this->addError('phone', "A virtual ID card is already registered with this phone number ({$dupPhone->full_name} - {$dupPhone->member_id_number}).");
+                    return;
+                }
+            }
+        }
 
         $photoPath = null;
         if ($this->photo) {
@@ -180,6 +256,8 @@ class PublicMemberCardApplication extends Component
             'email' => strtolower(trim($this->email)),
             'phone' => $this->phone ? trim($this->phone) : null,
             'member_id_number' => $memberId,
+            'designation' => $this->designation ?: 'member',
+            'position' => $this->designation === 'executive' ? trim($this->position) : null,
             'institution' => $this->institution ?: 'University of Ghana, School of Law',
             'law_faculty' => null,
             'admission_year' => $this->admission_year ?: (string)(date('Y') - 3),

@@ -24,6 +24,7 @@ class VirtualCardManager extends Component
     public string $search = '';
     public string $statusFilter = '';
     public string $institutionFilter = '';
+    public string $designationFilter = '';
     public int $perPage = 15;
 
     // Bulk selection
@@ -37,6 +38,8 @@ class VirtualCardManager extends Component
     public string $email = '';
     public string $phone = '';
     public string $member_id_number = '';
+    public string $designation = 'member';
+    public string $position = '';
     public string $institution = 'University of Ghana, School of Law';
     public string $admission_year = '';
     public string $completion_year = '';
@@ -45,6 +48,8 @@ class VirtualCardManager extends Component
     public array $member_custom_fields = [];
     public ?string $duplicateEmailWarning = null;
     public bool $isDuplicateEmail = false;
+    public ?string $duplicatePhoneWarning = null;
+    public bool $isDuplicatePhone = false;
 
     // Excel / CSV Bulk Upload Modal
     public bool $showUploadModal = false;
@@ -54,6 +59,7 @@ class VirtualCardManager extends Component
 
     // Field Customizer & Card Branding Modal
     public bool $showFieldCustomizerModal = false;
+    public string $organization_name = '';
     public array $customFieldDefs = [];
     public array $defaultFieldDefs = [];
     public string $newFieldLabel = '';
@@ -61,13 +67,34 @@ class VirtualCardManager extends Component
     public string $newFieldOptions = ''; // Comma separated options for dropdowns
     public $institution_logo = null;
     public ?string $existing_institution_logo_path = null;
+    public $main_logo = null;
+    public ?string $existing_main_logo_path = null;
+    public $association_logo = null;
+    public ?string $existing_association_logo_path = null;
 
     // Institution Names / Faculties Dropdown Manager Modal
     public bool $showInstitutionsModal = false;
+    public bool $returnToInstitutionsModal = false;
+    public string $institutionModalTab = 'active'; // 'active' (breakdown view) or 'manage' (edit dropdown list)
+    public string $institutionSearch = '';
+    public ?string $previewInstitutionName = null;
+    public string $institutionMemberSearch = '';
     public array $institutionList = [];
     public string $newInstitutionName = '';
     public string $bulkInstitutionsText = '';
     public $institutions_file = null;
+
+    public function openInstitutionMembersPopup(string $institution): void
+    {
+        $this->previewInstitutionName = $institution;
+        $this->institutionMemberSearch = '';
+    }
+
+    public function closeInstitutionMembersPopup(): void
+    {
+        $this->previewInstitutionName = null;
+        $this->institutionMemberSearch = '';
+    }
 
     // Share Registration / Application Link Modal
     public bool $showShareLinkModal = false;
@@ -148,12 +175,21 @@ class VirtualCardManager extends Component
         }
     }
 
-    public function openInstitutionsModal(): void
+    public function openInstitutionsModal(?string $tab = 'active'): void
     {
+        $this->institutionModalTab = $tab ?: 'active';
+        $this->institutionSearch = '';
         $this->newInstitutionName = '';
         $this->bulkInstitutionsText = implode("\n", $this->institutionList);
         $this->institutions_file = null;
         $this->showInstitutionsModal = true;
+    }
+
+    public function filterByInstitution(?string $inst = null): void
+    {
+        $this->institutionFilter = $inst ?: '';
+        $this->showInstitutionsModal = false;
+        $this->resetPage();
     }
 
     public function closeInstitutionsModal(): void
@@ -263,15 +299,18 @@ class VirtualCardManager extends Component
     }
 
     /**
-     * Load or initialize default and custom field configurations & institution logo
+     * Load or initialize default and custom field configurations & branding logos
      */
     public function loadFieldDefinitions(): void
     {
         $org = $this->getOrganization();
+        $this->organization_name = $org->name ?? 'Federation of African Law Students';
         $settings = $org && $org->settings ? (is_array($org->settings) ? $org->settings : json_decode($org->settings, true)) : [];
         $idCardConfig = $settings['id_card_config'] ?? null;
 
-        $this->existing_institution_logo_path = $idCardConfig['institution_logo_path'] ?? ($org->logo_path ?? null);
+        $this->existing_main_logo_path = $idCardConfig['main_logo_path'] ?? $idCardConfig['institution_logo_path'] ?? ($org->logo_path ?? null);
+        $this->existing_association_logo_path = $idCardConfig['association_logo_path'] ?? null;
+        $this->existing_institution_logo_path = $this->existing_main_logo_path;
 
         if (!$idCardConfig) {
             $this->defaultFieldDefs = [
@@ -291,24 +330,49 @@ class VirtualCardManager extends Component
     }
 
     /**
-     * Save Field Definitions and Institution Logo
+     * Save Field Definitions and Branding Logos
      */
     public function saveFieldDefinitions(): void
     {
         $org = $this->getOrganization();
         if ($org) {
-            $logoPath = $this->existing_institution_logo_path;
-            if ($this->institution_logo) {
+            if (!empty(trim($this->organization_name))) {
+                $org->name = trim($this->organization_name);
+            }
+
+            $mainLogoPath = $this->existing_main_logo_path;
+            if ($this->main_logo) {
+                $this->validate([
+                    'main_logo' => 'image|max:5120',
+                ]);
+                $mainLogoPath = $this->main_logo->store('virtual_cards/logos', 'public');
+                $this->existing_main_logo_path = $mainLogoPath;
+                $this->existing_institution_logo_path = $mainLogoPath;
+                $org->logo_path = $mainLogoPath;
+            } elseif ($this->institution_logo) {
                 $this->validate([
                     'institution_logo' => 'image|max:5120',
                 ]);
-                $logoPath = $this->institution_logo->store('virtual_cards/logos', 'public');
-                $this->existing_institution_logo_path = $logoPath;
+                $mainLogoPath = $this->institution_logo->store('virtual_cards/logos', 'public');
+                $this->existing_main_logo_path = $mainLogoPath;
+                $this->existing_institution_logo_path = $mainLogoPath;
+                $org->logo_path = $mainLogoPath;
+            }
+
+            $associationLogoPath = $this->existing_association_logo_path;
+            if ($this->association_logo) {
+                $this->validate([
+                    'association_logo' => 'image|max:5120',
+                ]);
+                $associationLogoPath = $this->association_logo->store('virtual_cards/logos', 'public');
+                $this->existing_association_logo_path = $associationLogoPath;
             }
 
             $settings = $org->settings ? (is_array($org->settings) ? $org->settings : json_decode($org->settings, true)) : [];
             $settings['id_card_config'] = [
-                'institution_logo_path' => $logoPath,
+                'main_logo_path' => $mainLogoPath,
+                'institution_logo_path' => $mainLogoPath, // backwards compatibility
+                'association_logo_path' => $associationLogoPath,
                 'default_fields' => $this->defaultFieldDefs,
                 'custom_fields' => $this->customFieldDefs,
             ];
@@ -316,29 +380,59 @@ class VirtualCardManager extends Component
             $org->save();
         }
 
+        $this->main_logo = null;
         $this->institution_logo = null;
+        $this->association_logo = null;
         $this->showFieldCustomizerModal = false;
-        session()->flash('success', '🪪 ID Card fields configuration and Institution Logo saved successfully.');
+        session()->flash('success', '🪪 ID Card branding, organization details, and fields saved successfully.');
     }
 
-    public function removeInstitutionLogo(): void
+    public function removeMainLogo(): void
     {
         $org = $this->getOrganization();
         if ($org) {
-            if ($this->existing_institution_logo_path && !str_starts_with($this->existing_institution_logo_path, 'http')) {
-                Storage::disk('public')->delete($this->existing_institution_logo_path);
+            if ($this->existing_main_logo_path && !str_starts_with($this->existing_main_logo_path, 'http')) {
+                Storage::disk('public')->delete($this->existing_main_logo_path);
             }
+            $this->existing_main_logo_path = null;
             $this->existing_institution_logo_path = null;
+            $this->main_logo = null;
             $this->institution_logo = null;
 
             $settings = $org->settings ? (is_array($org->settings) ? $org->settings : json_decode($org->settings, true)) : [];
             if (isset($settings['id_card_config'])) {
+                $settings['id_card_config']['main_logo_path'] = null;
                 $settings['id_card_config']['institution_logo_path'] = null;
                 $org->settings = $settings;
                 $org->save();
             }
         }
-        session()->flash('success', 'Institution Logo removed.');
+        session()->flash('success', 'Main Institution Logo removed.');
+    }
+
+    public function removeAssociationLogo(): void
+    {
+        $org = $this->getOrganization();
+        if ($org) {
+            if ($this->existing_association_logo_path && !str_starts_with($this->existing_association_logo_path, 'http')) {
+                Storage::disk('public')->delete($this->existing_association_logo_path);
+            }
+            $this->existing_association_logo_path = null;
+            $this->association_logo = null;
+
+            $settings = $org->settings ? (is_array($org->settings) ? $org->settings : json_decode($org->settings, true)) : [];
+            if (isset($settings['id_card_config'])) {
+                $settings['id_card_config']['association_logo_path'] = null;
+                $org->settings = $settings;
+                $org->save();
+            }
+        }
+        session()->flash('success', 'Association Logo removed.');
+    }
+
+    public function removeInstitutionLogo(): void
+    {
+        $this->removeMainLogo();
     }
 
     public function addCustomField(): void
@@ -400,12 +494,19 @@ class VirtualCardManager extends Component
 
     public function openEditModal(int $id): void
     {
+        if ($this->showInstitutionsModal) {
+            $this->returnToInstitutionsModal = true;
+            $this->showInstitutionsModal = false;
+        }
+
         $card = VirtualIdCard::findOrFail($id);
         $this->editingMemberId = $card->id;
         $this->full_name = $card->full_name;
         $this->email = $card->email ?? '';
         $this->phone = $card->phone ?? '';
         $this->member_id_number = $card->member_id_number;
+        $this->designation = $card->designation ?? 'member';
+        $this->position = $card->position ?? '';
         $this->institution = $card->institution ?? '';
         $this->law_faculty = $card->law_faculty ?? '';
         $this->admission_year = $card->admission_year ?? '';
@@ -420,6 +521,10 @@ class VirtualCardManager extends Component
     {
         $this->showMemberModal = false;
         $this->resetMemberForm();
+        if ($this->returnToInstitutionsModal) {
+            $this->showInstitutionsModal = true;
+            $this->returnToInstitutionsModal = false;
+        }
     }
 
     public function updatedEmail($value): void
@@ -461,13 +566,60 @@ class VirtualCardManager extends Component
         }
     }
 
+    public function updatedPhone($value): void
+    {
+        $this->checkDuplicatePhone($value);
+    }
+
+    public function checkDuplicatePhone(?string $phone): void
+    {
+        $phone = trim((string)$phone);
+        $digits = preg_replace('/[^0-9]/', '', $phone);
+        if (empty($phone) || strlen($digits) < 6) {
+            $this->duplicatePhoneWarning = null;
+            $this->isDuplicatePhone = false;
+            return;
+        }
+
+        $org = $this->getOrganization();
+        if (!$org) {
+            $this->duplicatePhoneWarning = null;
+            $this->isDuplicatePhone = false;
+            return;
+        }
+
+        $lastDigits = substr($digits, -8);
+
+        $query = VirtualIdCard::where('organization_id', $org->id)
+            ->where(function($q) use ($phone, $lastDigits) {
+                $q->where('phone', $phone)
+                  ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', ''), '(', '') LIKE ?", ["%{$lastDigits}%"]);
+            });
+
+        if ($this->editingMemberId) {
+            $query->where('id', '!=', $this->editingMemberId);
+        }
+
+        $existingCard = $query->first();
+
+        if ($existingCard) {
+            $this->isDuplicatePhone = true;
+            $this->duplicatePhoneWarning = "⚠️ Member card already registered with this phone number: {$existingCard->full_name} ({$existingCard->member_id_number})";
+        } else {
+            $this->isDuplicatePhone = false;
+            $this->duplicatePhoneWarning = null;
+        }
+    }
+
     public function resetMemberForm(): void
     {
         $this->editingMemberId = null;
         $this->full_name = '';
         $this->email = '';
         $this->phone = '';
-        $this->member_id_number = '';
+        $this->member_id_number = 'FALAS-' . date('Y') . '-' . str_pad(rand(100, 99999), 5, '0', STR_PAD_LEFT);
+        $this->designation = 'member';
+        $this->position = '';
         $this->institution = 'University of Ghana, School of Law';
         $this->law_faculty = '';
         $this->admission_year = (string) (date('Y') - 3);
@@ -477,6 +629,8 @@ class VirtualCardManager extends Component
         $this->member_custom_fields = [];
         $this->duplicateEmailWarning = null;
         $this->isDuplicateEmail = false;
+        $this->duplicatePhoneWarning = null;
+        $this->isDuplicatePhone = false;
         $this->resetErrorBag();
     }
 
@@ -487,11 +641,18 @@ class VirtualCardManager extends Component
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'member_id_number' => 'required|string|max:100',
+            'designation' => 'required|string|in:member,executive',
+            'position' => 'nullable|string|max:255',
             'institution' => 'nullable|string|max:255',
             'admission_year' => 'nullable|string|max:20',
             'completion_year' => 'nullable|string|max:20',
             'photo' => 'nullable|image|max:5120',
         ]);
+
+        if ($this->designation === 'executive' && empty(trim($this->position))) {
+            $this->addError('position', 'Please enter the executive position or title (e.g. President, General Secretary).');
+            return;
+        }
 
         $org = $this->getOrganization();
         if (!$org) {
@@ -513,6 +674,27 @@ class VirtualCardManager extends Component
             }
         }
 
+        if ($this->phone) {
+            $digits = preg_replace('/[^0-9]/', '', $this->phone);
+            if (strlen($digits) >= 6) {
+                $lastDigits = substr($digits, -8);
+                $dupPhone = VirtualIdCard::where('organization_id', $org->id)
+                    ->where(function($q) use ($lastDigits) {
+                        $q->where('phone', trim($this->phone))
+                          ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', ''), '(', '') LIKE ?", ["%{$lastDigits}%"]);
+                    })
+                    ->when($this->editingMemberId, fn($q) => $q->where('id', '!=', $this->editingMemberId))
+                    ->first();
+
+                if ($dupPhone) {
+                    $this->isDuplicatePhone = true;
+                    $this->duplicatePhoneWarning = "⚠️ A virtual ID card is already registered with this phone number: {$dupPhone->full_name} ({$dupPhone->member_id_number})";
+                    $this->addError('phone', "A virtual ID card is already registered with this phone number ({$dupPhone->full_name} - {$dupPhone->member_id_number}).");
+                    return;
+                }
+            }
+        }
+
         $photoPath = $this->existing_photo_path;
         if ($this->photo) {
             $photoPath = $this->photo->store('virtual_cards/photos', 'public');
@@ -524,6 +706,8 @@ class VirtualCardManager extends Component
             'email' => $this->email ? strtolower(trim($this->email)) : null,
             'phone' => $this->phone ? trim($this->phone) : null,
             'member_id_number' => $this->member_id_number,
+            'designation' => $this->designation ?: 'member',
+            'position' => $this->designation === 'executive' ? trim($this->position) : null,
             'institution' => $this->institution ?: 'University of Ghana, School of Law',
             'law_faculty' => null,
             'admission_year' => $this->admission_year,
@@ -571,6 +755,11 @@ class VirtualCardManager extends Component
 
     public function openCardPreview(int $id): void
     {
+        if ($this->showInstitutionsModal) {
+            $this->returnToInstitutionsModal = true;
+            $this->showInstitutionsModal = false;
+        }
+
         $this->previewCard = VirtualIdCard::findOrFail($id);
         $this->previewSide = 'front';
         $this->showCardPreviewModal = true;
@@ -580,6 +769,10 @@ class VirtualCardManager extends Component
     {
         $this->showCardPreviewModal = false;
         $this->previewCard = null;
+        if ($this->returnToInstitutionsModal) {
+            $this->showInstitutionsModal = true;
+            $this->returnToInstitutionsModal = false;
+        }
     }
 
     public function sendCardEmail(int $id): void
@@ -828,6 +1021,8 @@ class VirtualCardManager extends Component
                     'institution' => $row['institution'] ?: $existing->institution,
                     'admission_year' => $row['admission_year'] ?: $existing->admission_year,
                     'completion_year' => $row['completion_year'] ?: $existing->completion_year,
+                    'designation' => !empty($row['designation']) ? $row['designation'] : $existing->designation,
+                    'position' => !empty($row['position']) ? $row['position'] : $existing->position,
                     'custom_fields' => !empty($row['custom_fields']) ? $row['custom_fields'] : $existing->custom_fields,
                 ]);
                 $updated++;
@@ -845,6 +1040,8 @@ class VirtualCardManager extends Component
                     'law_faculty' => null,
                     'admission_year' => $row['admission_year'] ?: (string)(date('Y') - 3),
                     'completion_year' => $row['completion_year'] ?: (string)date('Y'),
+                    'designation' => !empty($row['designation']) ? $row['designation'] : 'member',
+                    'position' => !empty($row['position']) ? $row['position'] : null,
                     'custom_fields' => $row['custom_fields'] ?? [],
                     'status' => 'active',
                 ]);
@@ -935,6 +1132,8 @@ class VirtualCardManager extends Component
             ['label' => 'Institution / Faculty of Law', 'key' => 'institution', 'required' => false, 'type' => 'text'],
             ['label' => 'Admission Year', 'key' => 'admission_year', 'required' => false, 'type' => 'number'],
             ['label' => 'Completion Year', 'key' => 'completion_year', 'required' => false, 'type' => 'number'],
+            ['label' => 'Designation (Member or Executive)', 'key' => 'designation', 'required' => false, 'type' => 'text'],
+            ['label' => 'Executive Position (if Executive)', 'key' => 'position', 'required' => false, 'type' => 'text'],
         ];
 
         foreach ($this->customFieldDefs as $cf) {
@@ -962,6 +1161,8 @@ class VirtualCardManager extends Component
             'University of Ghana, School of Law',
             (string)(date('Y') - 3),
             (string)date('Y'),
+            'Executive',
+            'President',
         ];
 
         // Append sample values for custom fields
@@ -1003,6 +1204,8 @@ class VirtualCardManager extends Component
             'institution' => -1,
             'admission_year' => -1,
             'completion_year' => -1,
+            'designation' => -1,
+            'position' => -1,
         ];
 
         $customColMap = []; // key => colIndex
@@ -1021,6 +1224,8 @@ class VirtualCardManager extends Component
             elseif (in_array($clean, ['institution', 'university', 'college', 'school', 'faculty', 'law faculty', 'department', 'institution/faculty of law', 'institution / faculty of law', 'institution/law faculty', 'institution / law faculty'])) $colMap['institution'] = $idx;
             elseif (in_array($clean, ['admission', 'admission year', 'year of admission', 'entry year'])) $colMap['admission_year'] = $idx;
             elseif (in_array($clean, ['completion', 'completion year', 'year of completion', 'graduation year'])) $colMap['completion_year'] = $idx;
+            elseif (in_array($clean, ['designation', 'member type', 'role', 'type', 'designation (member or executive)'])) $colMap['designation'] = $idx;
+            elseif (in_array($clean, ['position', 'executive position', 'title', 'office', 'executive position (if executive)'])) $colMap['position'] = $idx;
 
             // Match Dynamic Custom Field Columns
             foreach ($this->customFieldDefs as $cf) {
@@ -1045,6 +1250,9 @@ class VirtualCardManager extends Component
             $inst = $colMap['institution'] !== -1 && isset($r[$colMap['institution']]) ? trim((string)$r[$colMap['institution']]) : '';
             $adm = $colMap['admission_year'] !== -1 && isset($r[$colMap['admission_year']]) ? trim((string)$r[$colMap['admission_year']]) : '';
             $comp = $colMap['completion_year'] !== -1 && isset($r[$colMap['completion_year']]) ? trim((string)$r[$colMap['completion_year']]) : '';
+            $desig = $colMap['designation'] !== -1 && isset($r[$colMap['designation']]) ? strtolower(trim((string)$r[$colMap['designation']])) : 'member';
+            $desig = str_contains($desig, 'exec') ? 'executive' : 'member';
+            $pos = $colMap['position'] !== -1 && isset($r[$colMap['position']]) ? trim((string)$r[$colMap['position']]) : '';
 
             // Extract values for dynamic custom fields
             $customValues = [];
@@ -1067,6 +1275,8 @@ class VirtualCardManager extends Component
                     'institution' => $inst ?: 'University of Ghana, School of Law',
                     'admission_year' => $adm ?: (string)(date('Y') - 3),
                     'completion_year' => $comp ?: (string)date('Y'),
+                    'designation' => $desig,
+                    'position' => $desig === 'executive' ? $pos : null,
                     'custom_fields' => $customValues,
                 ];
             }
@@ -1091,7 +1301,9 @@ class VirtualCardManager extends Component
                   ->orWhere('email', 'like', '%' . $this->search . '%')
                   ->orWhere('member_id_number', 'like', '%' . $this->search . '%')
                   ->orWhere('institution', 'like', '%' . $this->search . '%')
-                  ->orWhere('law_faculty', 'like', '%' . $this->search . '%');
+                  ->orWhere('law_faculty', 'like', '%' . $this->search . '%')
+                  ->orWhere('designation', 'like', '%' . $this->search . '%')
+                  ->orWhere('position', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -1101,6 +1313,10 @@ class VirtualCardManager extends Component
 
         if (!empty($this->institutionFilter)) {
             $query->where('institution', $this->institutionFilter);
+        }
+
+        if (!empty($this->designationFilter)) {
+            $query->where('designation', $this->designationFilter);
         }
 
         return $query->latest();
@@ -1119,17 +1335,36 @@ class VirtualCardManager extends Component
 
         $totalCount = (clone $baseCountQuery)->count();
         $activeCount = (clone $baseCountQuery)->where('status', 'active')->count();
+        $executiveCount = (clone $baseCountQuery)->where('designation', 'executive')->count();
 
         $institutions = (clone $baseCountQuery)->whereNotNull('institution')
             ->where('institution', '!=', '')
             ->distinct()
             ->pluck('institution');
 
+        $institutionBreakdown = (clone $baseCountQuery)
+            ->whereNotNull('institution')
+            ->where('institution', '!=', '')
+            ->selectRaw('institution, count(*) as member_count, sum(case when designation = "executive" then 1 else 0 end) as executive_count')
+            ->groupBy('institution')
+            ->orderByDesc('member_count')
+            ->get();
+
+        $institutionMembers = (clone $baseCountQuery)
+            ->whereNotNull('institution')
+            ->where('institution', '!=', '')
+            ->latest()
+            ->get()
+            ->groupBy('institution');
+
         return view('livewire.virtual-cards.virtual-card-manager', [
             'members' => $members,
             'totalCount' => $totalCount,
             'activeCount' => $activeCount,
+            'executiveCount' => $executiveCount,
             'institutions' => $institutions,
+            'institutionBreakdown' => $institutionBreakdown,
+            'institutionMembers' => $institutionMembers,
         ]);
     }
 }

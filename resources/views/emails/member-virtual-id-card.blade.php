@@ -179,15 +179,20 @@
                 <div class="id-card">
                     <div class="card-top">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            @if($card->institution_logo_url)
-                                <img src="{{ $card->institution_logo_url }}" alt="Logo" style="width: 26px; height: 26px; object-fit: contain; vertical-align: middle; border-radius: 6px;">
+                            @if($card->main_logo_url)
+                                <img src="{{ $card->main_logo_url }}" alt="Main Logo" style="width: 26px; height: 26px; object-fit: contain; vertical-align: middle; border-radius: 6px;">
                             @endif
                             <div>
-                                <p class="card-title" style="margin: 0; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #60a5fa; line-height: 1.2;">Federation of African Law Students (FALAS)</p>
+                                <p class="card-title" style="margin: 0; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #60a5fa; line-height: 1.2;">{{ $card->organization ? $card->organization->name : 'Federation of African Law Students (FALAS)' }}</p>
                                 <p style="margin: 2px 0 0 0; font-size: 10px; font-weight: bold; color: #f97316;">{{ $card->institution ?: 'University of Ghana, School of Law' }}</p>
                             </div>
                         </div>
-                        <p class="card-id-num">{{ $card->member_id_number }}</p>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            @if($card->association_logo_url)
+                                <img src="{{ $card->association_logo_url }}" alt="Association Logo" style="width: 24px; height: 24px; object-fit: contain; vertical-align: middle; border-radius: 6px;">
+                            @endif
+                            <p class="card-id-num">{{ $card->member_id_number }}</p>
+                        </div>
                     </div>
 
                     <div class="card-body">
@@ -201,6 +206,14 @@
 
                         <div class="member-info">
                             <h2 class="member-name">{{ $card->full_name }}</h2>
+                            <div class="info-row">
+                                <strong>Designation:</strong> 
+                                @if($card->isExecutive())
+                                    <span style="color: #f59e0b; font-weight: bold;">Executive ({{ $card->position ?: 'Officer' }})</span>
+                                @else
+                                    <span>Member</span>
+                                @endif
+                            </div>
                             <div class="info-row"><strong>Institution / Faculty:</strong> {{ $card->institution ?: 'FALAS' }}</div>
                             @if($card->admission_year || $card->completion_year)
                                 <div class="info-row">

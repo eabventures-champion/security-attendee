@@ -59,6 +59,21 @@
             background-color: #ffffff !important;
             color: #0f172a !important;
         }
+        /* Modern Slim Dark Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.25);
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
     </style>
 </head>
 <body class="font-sans antialiased bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
@@ -99,18 +114,32 @@
                class="fixed inset-y-0 left-0 z-30 flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 shadow-xl">
             
             <!-- Logo area -->
+            @php
+                $currentOrg = auth()->check() ? auth()->user()->organization : null;
+                $orgName = $currentOrg->name ?? 'Built Studios';
+                $orgLogo = $currentOrg->logo_path ?? null;
+                $orgInitials = collect(preg_split('/\s+/', trim($orgName)))
+                    ->filter()
+                    ->map(fn($w) => mb_substr($w, 0, 1))
+                    ->take(2)
+                    ->join('') ?: 'BS';
+            @endphp
             <div class="flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800">
-                <a href="{{ route('dashboard') ?? '#' }}" @click="if (window.innerWidth < 1024) sidebarOpen = false" class="flex items-center overflow-hidden">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-md tracking-tight">
-                        BS
+                <a href="{{ route('dashboard') ?? '#' }}" @click="if (window.innerWidth < 1024) sidebarOpen = false" class="flex items-center overflow-hidden min-w-0" title="{{ $orgName }}">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-md tracking-tight overflow-hidden p-0.5 border border-white/10">
+                        @if($orgLogo)
+                            <img src="{{ str_starts_with($orgLogo, 'http') ? $orgLogo : asset('storage/' . $orgLogo) }}" alt="{{ $orgName }}" class="w-full h-full object-contain rounded-lg">
+                        @else
+                            <span class="tracking-tighter uppercase font-mono">{{ strtoupper($orgInitials) }}</span>
+                        @endif
                     </div>
                     <span x-show="sidebarOpen" 
                           x-transition.opacity.duration.300ms
-                          class="ml-3 text-xl font-bold text-slate-800 dark:text-white whitespace-nowrap">
-                        Built Studios
+                          class="ml-3 text-lg font-black text-slate-800 dark:text-white whitespace-nowrap truncate max-w-[175px]">
+                        {{ $orgName }}
                     </span>
                 </a>
-                <button @click="sidebarOpen = false" class="lg:hidden text-slate-400 hover:text-white">
+                <button @click="sidebarOpen = false" class="lg:hidden text-slate-400 hover:text-white cursor-pointer">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>

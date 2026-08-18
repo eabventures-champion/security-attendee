@@ -3,21 +3,27 @@
 namespace App\Livewire\Settings;
 
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\Organization;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.app')]
 #[Title('Organization Settings')]
 class OrganizationSettings extends Component
 {
+    use WithFileUploads;
+
     // Brand Preferences
     public string $name = '';
     public string $description = '';
     public string $brand_color = '#3b82f6';
     public string $website = '';
     public string $timezone = 'UTC';
+    public $logo = null;
+    public ?string $existing_logo_path = null;
 
     // Domain & Whitelabel
     public string $subdomain = '';
@@ -30,17 +36,30 @@ class OrganizationSettings extends Component
     public string $webhook_url = '';
     public bool $webhook_active = true;
 
+    protected function getOrganization(): ?Organization
+    {
+        $user = auth()->user();
+        if ($user && $user->organization) {
+            return $user->organization;
+        }
+        $orgId = $user ? $user->organization_id : session('current_organization_id');
+        if ($orgId) {
+            return Organization::find($orgId);
+        }
+        return Organization::first();
+    }
+
     public function mount(): void
     {
-        $orgId = auth()->user()->organization_id ?? session('current_organization_id');
-        $org = Organization::find($orgId);
+        $org = $this->getOrganization();
 
         if ($org) {
-            $this->name = $org->name ?? 'TechConf Global';
+            $this->name = $org->name ?? 'Federation of African Law Students';
             $this->description = $org->description ?? 'Event Attendance Management System';
             $this->brand_color = $org->brand_color ?? '#3b82f6';
             $this->website = $org->website ?? 'https://attendflow.com';
             $this->timezone = $org->timezone ?? 'UTC';
+            $this->existing_logo_path = $org->logo_path ?? null;
             $this->subdomain = $org->slug ?? 'techconf';
             $this->custom_domain = $org->settings['custom_domain'] ?? 'events.techconf.com';
             $this->enable_qr_watermark = $org->settings['qr_watermark'] ?? true;
@@ -48,7 +67,7 @@ class OrganizationSettings extends Component
             $this->webhook_url = $org->settings['webhook_url'] ?? 'https://api.techconf.com/webhooks/checkin';
             $this->api_key = $org->settings['api_key'] ?? 'af_live_' . Str::random(24);
         } else {
-            $this->name = 'TechConf Global';
+            $this->name = 'Federation of African Law Students';
             $this->api_key = 'af_live_' . Str::random(24);
         }
     }
@@ -57,23 +76,49 @@ class OrganizationSettings extends Component
     {
         $this->validate([
             'name' => 'required|string|min:2|max:255',
-            'brand_color' => 'required|string|max:7',
-            'website' => 'nullable|url',
+            'brand_color' => 'required|string|max:20',
+            'website' => 'nullable|string|max:255',
+            'logo' => 'nullable|image|max:5120',
         ]);
 
-        $orgId = auth()->user()->organization_id ?? session('current_organization_id');
-        $org = Organization::find($orgId);
+        $org = $this->getOrganization();
 
         if ($org) {
-            $org->name = $this->name;
+            $org->name = trim($this->name);
             $org->description = $this->description;
             $org->brand_color = $this->brand_color;
             $org->website = $this->website;
             $org->timezone = $this->timezone;
+
+            if ($this->logo) {
+                $logoPath = $this->logo->store('organizations/logos', 'public');
+                $org->logo_path = $logoPath;
+                $this->existing_logo_path = $logoPath;
+                $this->logo = null;
+            }
+
             $org->save();
         }
 
-        session()->flash('brand_success', 'Brand preferences updated successfully.');
+        session()->flash('brand_success', 'Brand preferences and logo updated successfully!');
+    }
+
+    public function removeLogo(): void
+    {
+        $orgId = auth()->user()->organization_id ?? session('current_organization_id');
+        $org = Organization::find($orgId);
+
+        if ($org) {
+            if ($org->logo_path && !str_starts_with($org->logo_path, 'http')) {
+                Storage::disk('public')->delete($org->logo_path);
+            }
+            $org->logo_path = null;
+            $org->save();
+            $this->existing_logo_path = null;
+            $this->logo = null;
+        }
+
+        session()->flash('brand_success', 'Organization logo removed.');
     }
 
     public function saveDomainSettings(): void

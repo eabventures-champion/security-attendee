@@ -3,11 +3,19 @@
         
         <!-- Header & Branding -->
         <div class="text-center space-y-3">
-            <div class="inline-flex items-center justify-center p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-lg shadow-blue-500/10 mb-1">
-                @if($institution_logo_url)
-                    <img src="{{ $institution_logo_url }}" alt="Logo" class="w-12 h-12 object-contain rounded-xl">
-                @else
-                    <div class="w-12 h-12 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-black text-xl">
+            <div class="inline-flex items-center justify-center gap-3 p-2 rounded-2xl bg-white/10 border border-white/20 shadow-lg mb-1">
+                @if(!empty($main_logo_url))
+                    <div class="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border border-white/80 overflow-hidden">
+                        <img src="{{ $main_logo_url }}" alt="Main Logo" class="max-w-full max-h-full object-contain" title="Main Logo">
+                    </div>
+                @endif
+                @if(!empty($association_logo_url))
+                    <div class="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border border-white/80 overflow-hidden">
+                        <img src="{{ $association_logo_url }}" alt="Association Logo" class="max-w-full max-h-full object-contain" title="Association Logo">
+                    </div>
+                @endif
+                @if(empty($main_logo_url) && empty($association_logo_url))
+                    <div class="w-12 h-12 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-black text-xl">
                         🪪
                     </div>
                 @endif
@@ -59,6 +67,42 @@
                         @error('full_name') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
                     </div>
 
+                    <!-- Designation Selection (Member / Executive) -->
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">Designation *</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="flex items-center gap-2.5 p-3 rounded-2xl border {{ $designation === 'member' ? 'border-blue-500 bg-blue-500/15 text-white ring-1 ring-blue-500/40' : 'border-white/10 bg-slate-800/80 text-slate-300 hover:border-white/20' }} cursor-pointer transition-all">
+                                <input type="radio" wire:model.live="designation" value="member" class="text-blue-600 focus:ring-blue-500 h-4 w-4">
+                                <div>
+                                    <span class="font-black text-xs block">👤 Member</span>
+                                    <span class="text-[10px] text-slate-400">Regular member</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2.5 p-3 rounded-2xl border {{ $designation === 'executive' ? 'border-amber-500 bg-amber-500/15 text-white ring-1 ring-amber-500/40' : 'border-white/10 bg-slate-800/80 text-slate-300 hover:border-white/20' }} cursor-pointer transition-all">
+                                <input type="radio" wire:model.live="designation" value="executive" class="text-amber-500 focus:ring-amber-500 h-4 w-4">
+                                <div>
+                                    <span class="font-black text-xs block text-amber-400">⭐ Executive</span>
+                                    <span class="text-[10px] text-slate-400">Leadership / Officer</span>
+                                </div>
+                            </label>
+                        </div>
+                        @error('designation') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Executive Exact Position Field (Shown only if Executive is chosen) -->
+                    @if($designation === 'executive')
+                        <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 animate-fadeIn">
+                            <label class="block font-bold text-amber-400 uppercase tracking-wider text-[11px]">Executive Position / Title *</label>
+                            <input type="text" 
+                                   wire:model="position" 
+                                   required
+                                   placeholder="e.g. President, Vice President, General Secretary, PRO..." 
+                                   class="w-full bg-slate-800/90 border border-amber-500/30 rounded-xl px-4 py-2.5 text-white font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none placeholder-slate-500">
+                            <p class="text-[10.5px] text-amber-300/70">Specify your executive leadership portfolio or office.</p>
+                            @error('position') <span class="text-rose-400 text-[11px] block mt-1">{{ $message }}</span> @enderror
+                        </div>
+                    @endif
+
                     <!-- Email & Phone -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         <div>
@@ -92,14 +136,39 @@
                             @error('email') <span class="text-rose-400 text-[11px] block mt-1">{{ $message }}</span> @enderror
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">WhatsApp / Phone</label>
-                            <input type="text" wire:model="phone" placeholder="+233..." class="w-full bg-slate-800/80 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">WhatsApp / Phone</label>
+                                @if($isDuplicatePhone)
+                                    <span class="text-[10px] font-bold text-rose-400 flex items-center gap-1 animate-pulse">
+                                        ⚠️ Already Registered
+                                    </span>
+                                @elseif($phone && strlen(preg_replace('/[^0-9]/', '', $phone)) >= 6)
+                                    <span class="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                                        ✓ Available
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="relative">
+                                <input type="text" 
+                                       wire:model.live.debounce.300ms="phone" 
+                                       placeholder="+233..." 
+                                       class="w-full bg-slate-800/80 border {{ $isDuplicatePhone ? 'border-rose-500 ring-2 ring-rose-500/30' : 'border-white/10' }} rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
+                                <div wire:loading wire:target="phone" class="absolute right-3 top-3 text-slate-400 text-xs">
+                                    <svg class="animate-spin h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                </div>
+                            </div>
+                            @if($duplicatePhoneWarning)
+                                <div class="mt-1.5 p-2 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[10.5px] font-semibold">
+                                    {{ $duplicatePhoneWarning }}
+                                </div>
+                            @endif
+                            @error('phone') <span class="text-rose-400 text-[11px] block mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
                     <!-- Institution/Faculty of Law Dropdown -->
                     <div>
-                        <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">Institution/Faculty of Law</label>
+                        <label class="block font-bold text-slate-300 uppercase tracking-wider mb-1">Faculty of Law</label>
                         <select wire:model="institution" class="w-full bg-slate-800/80 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-semibold text-xs">
                             <option value="">-- Select Institution / Faculty --</option>
                             @foreach($institutionList as $inst)
@@ -182,14 +251,15 @@
                         @endif
                     </div>
 
-                    <!-- Card Top Header with Institution Logo & Member ID Badge -->
-                    <div class="flex items-start justify-between border-b border-white/10 pb-3.5 relative z-10 gap-3">
+                    <!-- Card Top Header with Main Logo, Association Logo & Member ID Badge -->
+                    <div class="flex items-start justify-between border-b border-white/10 pb-3.5 relative z-10 gap-2.5">
                         <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                            @if($generatedCard->institution_logo_url)
-                                <img src="{{ $generatedCard->institution_logo_url }}" alt="Logo" class="w-10 h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10 shrink-0 shadow-sm mt-0.5">
+                            <!-- 1. Main Logo -->
+                            @if($generatedCard->main_logo_url)
+                                <img src="{{ $generatedCard->main_logo_url }}" alt="Main Logo" class="w-10 h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10 shrink-0 shadow-sm mt-0.5" title="Institution Main Logo">
                             @else
                                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/30 border border-blue-400/30 text-blue-300 flex items-center justify-center font-black text-sm shrink-0 shadow-inner mt-0.5">
-                                    ⚖️
+                                    🏛️
                                 </div>
                             @endif
                             <div class="flex-1 min-w-0 space-y-1">
@@ -201,8 +271,13 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="shrink-0 text-right">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-blue-300 font-mono text-[11px] font-bold shadow-sm whitespace-nowrap">
+
+                        <!-- Right: Association Logo & Member ID Badge -->
+                        <div class="shrink-0 flex items-center gap-2">
+                            @if($generatedCard->association_logo_url)
+                                <img src="{{ $generatedCard->association_logo_url }}" alt="Association Logo" class="w-9 h-9 object-contain rounded-xl bg-white/5 p-1 border border-amber-500/30 shadow-sm" title="Association Logo">
+                            @endif
+                            <span class="inline-flex items-center px-2 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-blue-300 font-mono text-[10.5px] font-bold shadow-sm whitespace-nowrap">
                                 {{ $generatedCard->member_id_number }}
                             </span>
                         </div>
@@ -232,9 +307,23 @@
 
                         <!-- Cardholder Details -->
                         <div class="flex-1 text-center sm:text-left space-y-2.5 w-full">
-                            <div>
-                                <span class="text-[9.5px] font-extrabold uppercase tracking-widest text-slate-400 block mb-0.5">Cardholder Name</span>
+                            <div class="space-y-1">
+                                <span class="text-[9.5px] font-extrabold uppercase tracking-widest text-slate-400 block">Cardholder Name</span>
                                 <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">{{ $generatedCard->full_name }}</h2>
+                                <div>
+                                    @if($generatedCard->isExecutive())
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase tracking-wider shadow-sm">
+                                            <span>⭐ EXECUTIVE</span>
+                                            @if(!empty($generatedCard->position))
+                                                <span>• {{ strtoupper($generatedCard->position) }}</span>
+                                            @endif
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-400/30 text-[9.5px] font-bold uppercase tracking-wider">
+                                            <span>MEMBER</span>
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
 
                             <!-- Clean Frosted Chips Grid -->
