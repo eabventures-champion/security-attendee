@@ -46,6 +46,19 @@
                 <span>Share Link</span>
             </button>
 
+            <!-- Download All Photos (.ZIP) -->
+            <button wire:click="downloadAllPhotos" 
+                    wire:loading.attr="disabled"
+                    class="h-10 px-3.5 rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95" 
+                    title="Download ZIP package of all member profile photos">
+                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span wire:loading.remove wire:target="downloadAllPhotos">Download All Photos (.ZIP)</span>
+                <span wire:loading wire:target="downloadAllPhotos" class="flex items-center gap-1">
+                    <svg class="animate-spin h-3.5 w-3.5 text-orange-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    <span>Zipping Photos...</span>
+                </span>
+            </button>
+
             <!-- Import Excel / CSV -->
             <button wire:click="openUploadModal" 
                     class="h-10 px-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95" 
@@ -145,6 +158,30 @@
             </div>
         </div>
     </div>
+
+    <!-- Bulk Selection Bar -->
+    @if(!empty($selectedMembers))
+        <div class="p-3.5 px-5 rounded-2xl bg-slate-900 border border-blue-500/40 shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fadeIn text-xs">
+            <div class="flex items-center gap-2 font-bold text-white">
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono text-xs border border-blue-500/30">
+                    {{ count($selectedMembers) }}
+                </span>
+                <span>member(s) selected</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button wire:click="downloadSelectedPhotos" 
+                        wire:loading.attr="disabled"
+                        class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-all cursor-pointer active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span wire:loading.remove wire:target="downloadSelectedPhotos">Download Selected Photos (.ZIP)</span>
+                    <span wire:loading wire:target="downloadSelectedPhotos">Zipping...</span>
+                </button>
+                <button wire:click="$set('selectedMembers', [])" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-bold text-xs transition-all cursor-pointer">
+                    Deselect All
+                </button>
+            </div>
+        </div>
+    @endif
 
     <!-- Members & Virtual ID Cards Table -->
     <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 shadow-sm overflow-hidden">

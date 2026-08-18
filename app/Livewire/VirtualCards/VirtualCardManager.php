@@ -651,6 +651,116 @@ class VirtualCardManager extends Component
         session()->flash('error', 'Photo file not found on server.');
     }
 
+    public function downloadAllPhotos()
+    {
+        $members = $this->queryMembers()
+            ->where(function ($q) {
+                $q->whereNotNull('photo_path')->where('photo_path', '!=', '')
+                  ->orWhere(function ($sq) {
+                      $sq->whereNotNull('photo_url')->where('photo_url', '!=', '');
+                  });
+            })
+            ->get();
+
+        if ($members->isEmpty()) {
+            session()->flash('error', 'No members with uploaded profile photos found to download.');
+            return null;
+        }
+
+        return $this->generatePhotosZip($members, 'All_Member_Photos_' . date('Y-m-d'));
+    }
+
+    public function downloadSelectedPhotos()
+    {
+        if (empty($this->selectedMembers)) {
+            session()->flash('error', 'Please select at least one member.');
+            return null;
+        }
+
+        $members = VirtualIdCard::whereIn('id', $this->selectedMembers)
+            ->where(function ($q) {
+                $q->whereNotNull('photo_path')->where('photo_path', '!=', '')
+                  ->orWhere(function ($sq) {
+                      $sq->whereNotNull('photo_url')->where('photo_url', '!=', '');
+                  });
+            })
+            ->get();
+
+        if ($members->isEmpty()) {
+            session()->flash('error', 'None of the selected members have uploaded profile photos.');
+            return null;
+        }
+
+        return $this->generatePhotosZip($members, 'Selected_Member_Photos_' . date('Y-m-d'));
+    }
+
+    protected function generatePhotosZip($members, string $zipBaseName)
+    {
+        $zipFileName = $zipBaseName . '.zip';
+        $tempDir = storage_path('app/temp');
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir . '/' . uniqid('photos_') . '.zip';
+        $zip = new \ZipArchive();
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            session()->flash('error', 'Failed to create ZIP archive.');
+            return null;
+        }
+
+        $addedCount = 0;
+        $usedFileNames = [];
+
+        foreach ($members as $member) {
+            $fileContents = null;
+            $ext = 'jpg';
+
+            if ($member->photo_path && Storage::disk('public')->exists($member->photo_path)) {
+                $fileContents = Storage::disk('public')->get($member->photo_path);
+                $ext = pathinfo($member->photo_path, PATHINFO_EXTENSION) ?: 'jpg';
+            } elseif ($member->photo_path && file_exists(public_path('storage/' . $member->photo_path))) {
+                $fileContents = file_get_contents(public_path('storage/' . $member->photo_path));
+                $ext = pathinfo($member->photo_path, PATHINFO_EXTENSION) ?: 'jpg';
+            } elseif ($member->photo_url && str_starts_with($member->photo_url, 'http')) {
+                try {
+                    $fileContents = @file_get_contents($member->photo_url);
+                    $ext = pathinfo(parse_url($member->photo_url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
+                } catch (\Exception $e) {
+                    $fileContents = null;
+                }
+            }
+
+            if ($fileContents) {
+                $cleanName = Str::slug($member->full_name, '_');
+                $idNumber = Str::slug($member->member_id_number, '_');
+                $entryName = "{$cleanName}_{$idNumber}.{$ext}";
+
+                // Ensure unique name in zip
+                if (isset($usedFileNames[$entryName])) {
+                    $usedFileNames[$entryName]++;
+                    $entryName = "{$cleanName}_{$idNumber}_(" . $usedFileNames[$entryName] . ").{$ext}";
+                } else {
+                    $usedFileNames[$entryName] = 1;
+                }
+
+                $zip->addFromString($entryName, $fileContents);
+                $addedCount++;
+            }
+        }
+
+        $zip->close();
+
+        if ($addedCount === 0) {
+            @unlink($zipPath);
+            session()->flash('error', 'Could not locate any valid photo files on disk to package.');
+            return null;
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    }
+
     public function updatedSelectAll($value): void
     {
         if ($value) {
