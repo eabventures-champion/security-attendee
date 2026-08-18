@@ -800,15 +800,27 @@
                 </div>
 
                 <!-- Quick Action Buttons -->
-                <div class="grid grid-cols-2 gap-2 pt-2 text-xs">
-                    <button type="button" wire:click="sendCardEmail({{ $previewCard->id }})" class="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center justify-center gap-1.5 shadow cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        <span>Send Email</span>
+                <div class="space-y-2 pt-2 text-xs">
+                    <!-- Download Card Image (PNG) Primary Button -->
+                    <button type="button" 
+                            id="admin-download-card-btn"
+                            onclick="downloadAdminCardImage()" 
+                            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Download Card Image (PNG)</span>
                     </button>
-                    <button type="button" wire:click="sendCardWhatsApp({{ $previewCard->id }})" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-1.5 shadow cursor-pointer">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.97.581 1.936.945 2.795.945 3.179 0 5.766-2.587 5.767-5.766.001-3.18-2.585-5.766-5.767-5.766zm10.009 5.766c-.002 5.51-4.484 9.991-9.996 9.991-1.748 0-3.377-.45-4.814-1.242L2 22l1.523-5.568C2.693 14.972 2.21 13.35 2.21 11.938c.002-5.51 4.484-9.992 9.997-9.992 5.513 0 9.995 4.482 9.996 9.992z"/></svg>
-                        <span>Send WhatsApp</span>
-                    </button>
+
+                    <!-- Send Email & Send WhatsApp Grid -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" wire:click="sendCardEmail({{ $previewCard->id }})" class="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center justify-center gap-1.5 shadow transition-all cursor-pointer active:scale-95">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <span>Send Email</span>
+                        </button>
+                        <button type="button" wire:click="sendCardWhatsApp({{ $previewCard->id }})" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-1.5 shadow transition-all cursor-pointer active:scale-95">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.97.581 1.936.945 2.795.945 3.179 0 5.766-2.587 5.767-5.766.001-3.18-2.585-5.766-5.767-5.766zm10.009 5.766c-.002 5.51-4.484 9.991-9.996 9.991-1.748 0-3.377-.45-4.814-1.242L2 22l1.523-5.568C2.693 14.972 2.21 13.35 2.21 11.938c.002-5.51 4.484-9.992 9.997-9.992 5.513 0 9.995 4.482 9.996 9.992z"/></svg>
+                            <span>Send WhatsApp</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1001,6 +1013,60 @@
     @endif
 
         <script>
+            function loadHtml2Canvas(callback) {
+                if (window.html2canvas) {
+                    callback();
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                script.onload = callback;
+                script.onerror = () => {
+                    alert('Failed to load image generation library. Please check your internet connection.');
+                };
+                document.head.appendChild(script);
+            }
+
+            function downloadAdminCardImage() {
+                const btn = document.getElementById('admin-download-card-btn');
+                if (!btn) return;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<svg class="animate-spin w-4 h-4 text-white inline-block mr-1.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Rendering Image...</span>';
+                btn.disabled = true;
+
+                loadHtml2Canvas(() => {
+                    const element = document.getElementById('admin-preview-card-canvas');
+                    if (!element) {
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    html2canvas(element, {
+                        scale: 3,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#090d16',
+                        logging: false,
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = 'Virtual_ID_Card_{{ $previewCard ? Str::slug($previewCard->full_name) : "pass" }}_{{ $previewCard ? $previewCard->member_id_number : "card" }}.png';
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                        btn.innerHTML = '<span class="text-emerald-300 font-black">✓ Downloaded!</span>';
+                        setTimeout(() => {
+                            btn.innerHTML = originalHtml;
+                            btn.disabled = false;
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Snapshot failed:', err);
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                        alert('Could not render image snapshot. Please try again.');
+                    });
+                });
+            }
+
             function copyShareUrl() {
                 const input = document.getElementById('shareable-app-url-input');
                 if (!input) return;
