@@ -98,7 +98,7 @@
             <!-- Background Institution Logo / Law Watermark -->
             <div class="absolute inset-0 opacity-[0.06] pointer-events-none flex items-center justify-center overflow-hidden p-6 select-none">
                 @if($card->institution_logo_url)
-                    <img src="{{ $card->institution_logo_url }}" alt="Institution Emblem" class="w-72 h-72 object-contain filter grayscale contrast-150 invert">
+                    <img src="{{ $card->institution_logo_url }}" crossorigin="anonymous" alt="Institution Emblem" class="w-72 h-72 object-contain filter grayscale contrast-150 invert">
                 @else
                     <svg class="w-72 h-72 text-white" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m0-18l-8 4m8-4l8 4M4 7l-2 6h8L8 7m8 0l-2 6h8l-2-6M6 21h12"/>
@@ -111,7 +111,7 @@
                 <!-- 1. Main Logo (Left) -->
                 <div class="w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
                     @if($card->main_logo_url)
-                        <img src="{{ $card->main_logo_url }}" alt="Main Logo" class="max-w-full max-h-full object-contain" title="Main Logo">
+                        <img src="{{ $card->main_logo_url }}" crossorigin="anonymous" alt="Main Logo" class="max-w-full max-h-full object-contain" title="Main Logo">
                     @else
                         <div class="w-full h-full rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-base shrink-0 shadow-inner">
                             🏛️
@@ -147,7 +147,7 @@
                 <!-- 2. Association Logo (Right) -->
                 <div class="w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
                     @if($card->association_logo_url)
-                        <img src="{{ $card->association_logo_url }}" alt="Association Logo" class="max-w-full max-h-full object-contain" title="Association Logo">
+                        <img src="{{ $card->association_logo_url }}" crossorigin="anonymous" alt="Association Logo" class="max-w-full max-h-full object-contain" title="Association Logo">
                     @else
                         <div class="w-full h-full rounded-lg bg-emerald-700 flex items-center justify-center text-white font-black text-xs">
                             FALAS
@@ -164,7 +164,7 @@
                     <div class="w-28 h-36 sm:w-32 sm:h-40 rounded-2xl p-1 bg-gradient-to-b from-white via-emerald-300 to-yellow-400/80 shadow-xl shadow-black/30">
                         <div class="w-full h-full rounded-[14px] overflow-hidden bg-slate-900 flex items-center justify-center relative">
                             @if($card->photo_url)
-                                <img src="{{ $card->photo_url }}" alt="{{ $card->full_name }}" class="w-full h-full object-cover">
+                                <img src="{{ $card->photo_url }}" crossorigin="anonymous" alt="{{ $card->full_name }}" class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-950 text-slate-500">
                                     <svg class="w-14 h-14 text-slate-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -244,7 +244,7 @@
             <div class="pt-3.5 border-t border-white/20 flex items-center justify-between gap-3 relative z-10">
                 <div class="flex items-center gap-3">
                     <div class="p-1 rounded-xl bg-white shadow shrink-0 flex items-center justify-center">
-                        <img src="{{ $card->qr_code_url }}" alt="QR Verification" class="w-12 h-12 sm:w-14 sm:h-14 rounded block">
+                        <img src="{{ $card->qr_code_url }}" crossorigin="anonymous" alt="QR Verification" class="w-12 h-12 sm:w-14 sm:h-14 rounded block">
                     </div>
                     <div class="text-left space-y-0.5">
                         <div class="text-[10.5px] font-black uppercase tracking-wide text-white flex items-center gap-1.5 whitespace-nowrap">
@@ -311,7 +311,7 @@
                     html2canvas(element, {
                         scale: 3,
                         useCORS: true,
-                        allowTaint: true,
+                        allowTaint: false,
                         backgroundColor: null,
                         logging: false,
                     }).then(canvas => {

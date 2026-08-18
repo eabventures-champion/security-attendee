@@ -1063,7 +1063,7 @@
                     <!-- Background Institution Logo / Law Watermark -->
                     <div class="absolute inset-0 opacity-[0.06] pointer-events-none flex items-center justify-center overflow-hidden p-6 select-none">
                         @if($previewCard->main_logo_url)
-                            <img src="{{ $previewCard->main_logo_url }}" class="w-72 h-72 object-contain filter grayscale contrast-200 invert">
+                            <img src="{{ $previewCard->main_logo_url }}" crossorigin="anonymous" class="w-72 h-72 object-contain filter grayscale contrast-200 invert">
                         @else
                             <svg class="w-72 h-72 text-white" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 10h2v4h-2zm0 6h2v2h-2z"/>
@@ -1076,7 +1076,7 @@
                         <!-- 1. Main Logo (Left) -->
                         <div class="w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
                             @if($previewCard->main_logo_url)
-                                <img src="{{ $previewCard->main_logo_url }}" alt="Main Logo" class="max-w-full max-h-full object-contain" title="Main Logo">
+                                <img src="{{ $previewCard->main_logo_url }}" crossorigin="anonymous" alt="Main Logo" class="max-w-full max-h-full object-contain" title="Main Logo">
                             @else
                                 <div class="w-full h-full rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-base shrink-0 shadow-inner">
                                     🏛️
@@ -1112,7 +1112,7 @@
                         <!-- 2. Association Logo (Right) -->
                         <div class="w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
                             @if($previewCard->association_logo_url)
-                                <img src="{{ $previewCard->association_logo_url }}" alt="Association Logo" class="max-w-full max-h-full object-contain" title="Association Logo">
+                                <img src="{{ $previewCard->association_logo_url }}" crossorigin="anonymous" alt="Association Logo" class="max-w-full max-h-full object-contain" title="Association Logo">
                             @else
                                 <div class="w-full h-full rounded-lg bg-emerald-700 flex items-center justify-center text-white font-black text-xs">
                                     FALAS
@@ -1128,7 +1128,7 @@
                             <div class="w-28 h-36 sm:w-32 sm:h-40 rounded-2xl p-1 bg-gradient-to-b from-white via-emerald-300 to-yellow-400/80 shadow-xl shadow-black/30">
                                 <div class="w-full h-full rounded-[14px] overflow-hidden bg-slate-900 flex items-center justify-center relative group">
                                     @if($previewCard->photo_url)
-                                        <img src="{{ $previewCard->photo_url }}" alt="{{ $previewCard->full_name }}" class="w-full h-full object-cover">
+                                        <img src="{{ $previewCard->photo_url }}" crossorigin="anonymous" alt="{{ $previewCard->full_name }}" class="w-full h-full object-cover">
                                         <!-- Interactive Hover to Download Photo directly -->
                                         <button type="button" 
                                                 wire:click="downloadPhoto({{ $previewCard->id }})" 
@@ -1215,7 +1215,7 @@
                     <div class="pt-3.5 border-t border-white/20 flex items-center justify-between gap-3 relative z-10">
                         <div class="flex items-center gap-3">
                             <div class="p-1 rounded-xl bg-white shadow shrink-0 flex items-center justify-center">
-                                <img src="{{ $previewCard->qr_code_url }}" alt="QR" class="w-12 h-12 sm:w-14 sm:h-14 rounded block">
+                                <img src="{{ $previewCard->qr_code_url }}" crossorigin="anonymous" alt="QR" class="w-12 h-12 sm:w-14 sm:h-14 rounded block">
                             </div>
                             <div class="space-y-0.5 text-left">
                                 <div class="text-[10.5px] font-black uppercase tracking-wide text-white flex items-center gap-1.5 whitespace-nowrap">
@@ -1236,29 +1236,34 @@
                 </div>
 
                 <!-- Quick Action Buttons -->
-                <div class="space-y-2 pt-2 text-xs">
-                    @if($previewCard->photo_path || $previewCard->photo_url)
-                        <!-- Download Profile Photo (Primary Button) -->
-                        <button type="button" 
-                                wire:click="downloadPhoto({{ $previewCard->id }})" 
-                                class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer active:scale-95">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span>Download Profile Photo</span>
-                        </button>
-                    @else
-                        <div class="p-2.5 rounded-xl bg-slate-800/80 border border-white/10 text-center text-slate-400 text-xs">
-                            <span>No profile photo uploaded for this member</span>
-                        </div>
-                    @endif
+                <div class="space-y-2.5 pt-2 text-xs">
+                    <!-- Primary Action: Download Full Student ID Card Pass -->
+                    <button type="button" 
+                            id="admin-download-card-btn" 
+                            onclick="downloadAdminCardImage()" 
+                            class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Save / Download Student ID Card (PNG)</span>
+                    </button>
 
-                    <!-- Send Email & Send WhatsApp Grid -->
-                    <div class="grid grid-cols-2 gap-2">
+                    <!-- Secondary Dispatch & Photo Actions -->
+                    <div class="grid grid-cols-1 {{ ($previewCard->photo_path || $previewCard->photo_url) ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }} gap-2">
+                        @if($previewCard->photo_path || $previewCard->photo_url)
+                            <button type="button" 
+                                    wire:click="downloadPhoto({{ $previewCard->id }})" 
+                                    class="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 dark:text-amber-400 border border-amber-500/20 font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95" 
+                                    title="Download Profile Picture only">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                <span>Profile Photo</span>
+                            </button>
+                        @endif
+
                         <button type="button" wire:click="sendCardEmail({{ $previewCard->id }})" class="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center justify-center gap-1.5 shadow transition-all cursor-pointer active:scale-95">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                             <span>Send Email</span>
                         </button>
                         <button type="button" wire:click="sendCardWhatsApp({{ $previewCard->id }})" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-1.5 shadow transition-all cursor-pointer active:scale-95">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.97.581 1.936.945 2.795.945 3.179 0 5.766-2.587 5.767-5.766.001-3.18-2.585-5.766-5.767-5.766zm10.009 5.766c-.002 5.51-4.484 9.991-9.996 9.991-1.748 0-3.377-.45-4.814-1.242L2 22l1.523-5.568C2.693 14.972 2.21 13.35 2.21 11.938c.002-5.51 4.484-9.992 9.997-9.992 5.513 0 9.995 4.482 9.996 9.992z"/></svg>
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.97.581 1.936.945 2.795.945 3.179 0 5.766-2.587 5.767-5.766.001-3.18-2.585-5.766-5.767-5.766zm10.009 5.766c-.002 5.51-4.484 9.991-9.996 9.991-1.748 0-3.377-.45-4.814-1.242L2 22l1.523-5.568C2.693 14.972 2.21 13.35 2.21 11.938c.002-5.51 4.484-9.992 9.997-9.992 5.513 0 9.995 4.482 9.996 9.992z"/></svg>
                             <span>Send WhatsApp</span>
                         </button>
                     </div>
@@ -1771,41 +1776,73 @@
                         }, 2000);
                     };
 
-                    if (window.html2canvas) {
-                        html2canvas(element, {
-                            scale: 3,
-                            useCORS: true,
-                            allowTaint: true,
-                            backgroundColor: null,
-                            logging: false,
-                        }).then(canvas => {
-                            onComplete(canvas.toDataURL('image/png'));
-                        }).catch(err => {
-                            console.warn('html2canvas failed, falling back:', err);
+                    const executeCapture = () => {
+                        if (window.html2canvas) {
+                            html2canvas(element, {
+                                scale: 3,
+                                useCORS: true,
+                                allowTaint: false,
+                                backgroundColor: '#064e3b',
+                                logging: false,
+                                scrollX: 0,
+                                scrollY: 0,
+                                ignoreElements: (el) => el.tagName === 'BUTTON',
+                            }).then(canvas => {
+                                try {
+                                    onComplete(canvas.toDataURL('image/png'));
+                                } catch (e) {
+                                    console.warn('toDataURL failed, attempting blob:', e);
+                                    canvas.toBlob((blob) => {
+                                        if (blob) {
+                                            const url = URL.createObjectURL(blob);
+                                            onComplete(url);
+                                        } else {
+                                            fallbackToHtmlToImage();
+                                        }
+                                    }, 'image/png');
+                                }
+                            }).catch(err => {
+                                console.warn('html2canvas failed, falling back:', err);
+                                fallbackToHtmlToImage();
+                            });
+                        } else {
                             fallbackToHtmlToImage();
-                        });
-                    } else {
-                        fallbackToHtmlToImage();
-                    }
+                        }
+                    };
 
                     function fallbackToHtmlToImage() {
                         if (window.htmlToImage) {
                             window.htmlToImage.toPng(element, {
                                 pixelRatio: 3,
-                                backgroundColor: null,
+                                backgroundColor: '#064e3b',
                                 cacheBust: true,
                                 skipFonts: true,
+                                filter: (node) => node.tagName !== 'BUTTON',
                             }).then(onComplete).catch(finalErr => {
                                 console.error('Snapshot failed:', finalErr);
                                 btn.innerHTML = originalHtml;
                                 btn.disabled = false;
-                                alert('Could not render image snapshot: ' + (finalErr.message || 'Rendering error'));
+                                @if($previewCard)
+                                    window.open('{{ route("virtual-cards.public.view", ["uuid" => $previewCard->uuid]) }}', '_blank');
+                                @else
+                                    alert('Could not render image snapshot automatically. Please use the Print option.');
+                                @endif
                             });
                         } else {
                             btn.innerHTML = originalHtml;
                             btn.disabled = false;
-                            alert('Snapshot library not available.');
+                            @if($previewCard)
+                                window.open('{{ route("virtual-cards.public.view", ["uuid" => $previewCard->uuid]) }}', '_blank');
+                            @else
+                                alert('Snapshot library not available.');
+                            @endif
                         }
+                    }
+
+                    if (document.fonts && document.fonts.ready) {
+                        document.fonts.ready.then(executeCapture).catch(executeCapture);
+                    } else {
+                        executeCapture();
                     }
                 });
             }
