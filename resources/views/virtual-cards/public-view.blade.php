@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script>
         tailwind.config = {
@@ -35,7 +36,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white font-sans antialiased py-8 px-4">
 
-    <div class="max-w-xl mx-auto w-full space-y-6">
+    <div class="max-w-2xl mx-auto w-full space-y-6">
         
         <!-- Header -->
         <div class="text-center space-y-2">
@@ -212,7 +213,7 @@
 
                         <!-- 2. Role / Designation (In Between - Pinch of Yellow Accent) -->
                         <div class="flex-1 rounded-xl py-1.5 px-2 text-center flex items-center justify-center shadow-sm min-w-0 {{ $card->isExecutive() ? 'bg-gradient-to-b from-yellow-500/20 via-yellow-500/10 to-transparent border border-yellow-400/60 text-yellow-300 shadow-yellow-500/10' : 'bg-white/15 border border-white/30 text-white' }}">
-                            <span class="font-black text-[9.5px] sm:text-[10.5px] leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis {{ $card->isExecutive() ? 'text-yellow-300' : 'text-white' }}" title="{{ !empty($card->position) ? strtoupper($card->position) : ($card->isExecutive() ? 'EXECUTIVE' : 'MEMBER') }}">
+                            <span class="font-black text-[9px] sm:text-[10px] leading-tight tracking-tight whitespace-nowrap {{ $card->isExecutive() ? 'text-yellow-300' : 'text-white' }}">
                                 {{ $card->isExecutive() ? '⭐ ' . (!empty($card->position) ? strtoupper($card->position) : 'EXECUTIVE') : '👤 MEMBER' }}
                             </span>
                         </div>
@@ -241,25 +242,25 @@
 
             <!-- Card Bottom Bar with QR Code Verification -->
             <div class="pt-3.5 border-t border-white/20 flex items-center justify-between gap-3 relative z-10">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="p-1 rounded-xl bg-white shadow shrink-0">
-                        <img src="{{ $card->qr_code_url }}" alt="QR Verification" class="w-12 h-12 sm:w-14 sm:h-14 rounded">
+                <div class="flex items-center gap-3">
+                    <div class="p-1 rounded-xl bg-white shadow shrink-0 flex items-center justify-center">
+                        <img src="{{ $card->qr_code_url }}" alt="QR Verification" class="w-12 h-12 sm:w-14 sm:h-14 rounded block">
                     </div>
-                    <div class="space-y-0.5 text-left min-w-0">
-                        <span class="text-[10px] font-black uppercase tracking-wider text-white flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    <div class="text-left space-y-0.5">
+                        <div class="text-[10.5px] font-black uppercase tracking-wide text-white flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="text-emerald-400 font-bold">✓</span>
                             <span>Digitally Verified</span>
-                        </span>
-                        <div class="text-[9.5px] text-emerald-100 font-mono truncate">Token: {{ $card->qr_token }}</div>
-                        <div class="text-[8.5px] text-emerald-200/80">Scan code with camera to verify</div>
+                        </div>
+                        <div class="text-[9.5px] text-emerald-100 font-mono tracking-tight whitespace-nowrap">Token: {{ $card->qr_token }}</div>
+                        <div class="text-[8.5px] text-emerald-200/80 whitespace-nowrap">Scan code with camera to verify</div>
                     </div>
                 </div>
 
-                <div class="shrink-0 text-right">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider {{ $card->status === 'active' ? 'bg-white/20 text-white border border-white/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40' }}">
-                        <span class="w-1.5 h-1.5 rounded-full {{ $card->status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400' }}"></span>
-                        <span>{{ strtoupper($card->status) }} ID</span>
-                    </span>
+                <div class="shrink-0 flex items-center">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap {{ $card->status === 'active' ? 'bg-white/20 text-white border border-white/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40' }}">
+                        <span class="w-2 h-2 rounded-full shrink-0 {{ $card->status === 'active' ? 'bg-emerald-400' : 'bg-rose-400' }}"></span>
+                        <span class="whitespace-nowrap">{{ strtoupper($card->status) }} ID</span>
+                    </div>
                 </div>
             </div>
 
@@ -292,23 +293,62 @@
             btn.disabled = true;
 
             const element = document.getElementById('virtual-id-card-element');
-            window.htmlToImage.toPng(element, {
-                pixelRatio: 3,
-                backgroundColor: '#090d16',
-                cacheBust: true,
-            }).then(dataUrl => {
+            const filename = 'Virtual_ID_{{ Str::slug($card->full_name) }}_{{ $card->member_id_number }}.png';
+
+            const triggerDownload = (dataUrl) => {
                 const link = document.createElement('a');
-                link.download = 'Virtual_ID_{{ Str::slug($card->full_name) }}_{{ $card->member_id_number }}.png';
+                link.download = filename;
                 link.href = dataUrl;
+                document.body.appendChild(link);
                 link.click();
+                document.body.removeChild(link);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-            }).catch(err => {
-                console.error(err);
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                alert('Could not generate image snapshot. Please use Print button.');
-            });
+            };
+
+            const runDownload = () => {
+                if (window.html2canvas) {
+                    html2canvas(element, {
+                        scale: 3,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        logging: false,
+                    }).then(canvas => {
+                        triggerDownload(canvas.toDataURL('image/png'));
+                    }).catch(err => {
+                        console.warn('html2canvas error, falling back to htmlToImage:', err);
+                        fallbackHtmlToImage();
+                    });
+                } else {
+                    fallbackHtmlToImage();
+                }
+            };
+
+            function fallbackHtmlToImage() {
+                if (window.htmlToImage) {
+                    window.htmlToImage.toPng(element, {
+                        pixelRatio: 3,
+                        cacheBust: true,
+                        skipFonts: true,
+                    }).then(triggerDownload).catch(err => {
+                        console.error('Snapshot error:', err);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        alert('Could not generate image snapshot automatically. Please use the Print button to save as PDF or image.');
+                    });
+                } else {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    alert('Snapshot engine could not load. Please use the Print button.');
+                }
+            }
+
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(runDownload).catch(runDownload);
+            } else {
+                runDownload();
+            }
         }
     </script>
 </body>

@@ -1046,7 +1046,7 @@
     @if($showCardPreviewModal && $previewCard)
         @teleport('body')
         <div class="fixed inset-0 z-[9999] w-screen h-screen flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl space-y-5 max-h-[95vh] overflow-y-auto custom-scrollbar">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl space-y-5 max-h-[95vh] overflow-y-auto custom-scrollbar">
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
                     <div class="space-y-0.5">
                         <h3 class="text-base font-black text-slate-900 dark:text-white">Virtual ID Card Pass</h3>
@@ -1177,20 +1177,20 @@
                             <!-- 3-Pill Tier: Admission | Country Director / Executive Role | Completion -->
                             <div class="flex items-stretch gap-1.5 pt-2">
                                 <!-- 1. Admission -->
-                                <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-2 text-center shrink-0 min-w-[60px] sm:min-w-[70px] flex flex-col justify-center">
+                                <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-2.5 text-center shrink-0 min-w-[65px] sm:min-w-[75px] flex flex-col justify-center">
                                     <span class="text-[7.5px] sm:text-[8px] text-emerald-200 block font-extrabold uppercase tracking-wider leading-none">Admission</span>
                                     <span class="font-bold text-white font-mono text-[10.5px] sm:text-[11px] block mt-1 leading-tight">{{ $previewCard->admission_year ?: 'N/A' }}</span>
                                 </div>
 
                                 <!-- 2. Role / Designation (In Between - Pinch of Yellow Accent) -->
                                 <div class="flex-1 rounded-xl py-1.5 px-2 text-center flex items-center justify-center shadow-sm min-w-0 {{ $previewCard->isExecutive() ? 'bg-gradient-to-b from-yellow-500/20 via-yellow-500/10 to-transparent border border-yellow-400/60 text-yellow-300 shadow-yellow-500/10' : 'bg-white/15 border border-white/30 text-white' }}">
-                                    <span class="font-black text-[9.5px] sm:text-[10.5px] leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis {{ $previewCard->isExecutive() ? 'text-yellow-300' : 'text-white' }}" title="{{ !empty($previewCard->position) ? strtoupper($previewCard->position) : ($previewCard->isExecutive() ? 'EXECUTIVE' : 'MEMBER') }}">
+                                    <span class="font-black text-[9px] sm:text-[10px] leading-tight tracking-tight whitespace-nowrap {{ $previewCard->isExecutive() ? 'text-yellow-300' : 'text-white' }}">
                                         {{ $previewCard->isExecutive() ? '⭐ ' . (!empty($previewCard->position) ? strtoupper($previewCard->position) : 'EXECUTIVE') : '👤 MEMBER' }}
                                     </span>
                                 </div>
 
                                 <!-- 3. Completion -->
-                                <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-2 text-center shrink-0 min-w-[60px] sm:min-w-[70px] flex flex-col justify-center">
+                                <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-2.5 text-center shrink-0 min-w-[65px] sm:min-w-[75px] flex flex-col justify-center">
                                     <span class="text-[7.5px] sm:text-[8px] text-emerald-200 block font-extrabold uppercase tracking-wider leading-none">Completion</span>
                                     <span class="font-bold text-white font-mono text-[10.5px] sm:text-[11px] block mt-1 leading-tight">{{ $previewCard->completion_year ?: 'Present' }}</span>
                                 </div>
@@ -1213,24 +1213,24 @@
 
                     <!-- Card Footer Bar with QR Code -->
                     <div class="pt-3.5 border-t border-white/20 flex items-center justify-between gap-3 relative z-10">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="p-1 rounded-xl bg-white shadow shrink-0">
-                                <img src="{{ $previewCard->qr_code_url }}" alt="QR" class="w-12 h-12 sm:w-14 sm:h-14 rounded">
+                        <div class="flex items-center gap-3">
+                            <div class="p-1 rounded-xl bg-white shadow shrink-0 flex items-center justify-center">
+                                <img src="{{ $previewCard->qr_code_url }}" alt="QR" class="w-12 h-12 sm:w-14 sm:h-14 rounded block">
                             </div>
-                            <div class="space-y-0.5 text-left min-w-0">
-                                <span class="text-[10px] font-black uppercase tracking-wider text-white flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <div class="space-y-0.5 text-left">
+                                <div class="text-[10.5px] font-black uppercase tracking-wide text-white flex items-center gap-1.5 whitespace-nowrap">
+                                    <span class="text-emerald-400 font-bold">✓</span>
                                     <span>Digitally Verified</span>
-                                </span>
-                                <div class="text-[9.5px] text-emerald-100 font-mono truncate">Token: {{ $previewCard->qr_token }}</div>
-                                <div class="text-[8.5px] text-emerald-200/80">Scan code with camera to verify</div>
+                                </div>
+                                <div class="text-[9.5px] text-emerald-100 font-mono tracking-tight whitespace-nowrap">Token: {{ $previewCard->qr_token }}</div>
+                                <div class="text-[8.5px] text-emerald-200/80 whitespace-nowrap">Scan code with camera to verify</div>
                             </div>
                         </div>
-                        <div class="shrink-0 text-right">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider {{ $previewCard->status === 'active' ? 'bg-white/20 text-white border border-white/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40' }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $previewCard->status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400' }}"></span>
-                                <span>{{ strtoupper($previewCard->status) }} ID</span>
-                            </span>
+                        <div class="shrink-0 flex items-center">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap {{ $previewCard->status === 'active' ? 'bg-white/20 text-white border border-white/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40' }}">
+                                <span class="w-2 h-2 rounded-full shrink-0 {{ $previewCard->status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400' }}"></span>
+                                <span class="whitespace-nowrap">{{ strtoupper($previewCard->status) }} ID</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1716,16 +1716,26 @@
     @endif
 
         <script>
-            function loadHtmlToImage(callback) {
-                if (window.htmlToImage) {
+            function loadSnapshotLibraries(callback) {
+                if (window.html2canvas) {
                     callback();
                     return;
                 }
                 const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
                 script.onload = callback;
                 script.onerror = () => {
-                    alert('Failed to load image generation library. Please check your internet connection.');
+                    if (window.htmlToImage) {
+                        callback();
+                    } else {
+                        const fallbackScript = document.createElement('script');
+                        fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
+                        fallbackScript.onload = callback;
+                        fallbackScript.onerror = () => {
+                            alert('Failed to load image generation library. Please check your internet connection.');
+                        };
+                        document.head.appendChild(fallbackScript);
+                    }
                 };
                 document.head.appendChild(script);
             }
@@ -1737,7 +1747,7 @@
                 btn.innerHTML = '<svg class="animate-spin w-4 h-4 text-white inline-block mr-1.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Rendering High-Res Image...</span>';
                 btn.disabled = true;
 
-                loadHtmlToImage(() => {
+                loadSnapshotLibraries(() => {
                     const element = document.getElementById('admin-preview-card-canvas');
                     if (!element) {
                         btn.innerHTML = originalHtml;
@@ -1745,43 +1755,58 @@
                         return;
                     }
 
-                    window.htmlToImage.toPng(element, {
-                        pixelRatio: 3,
-                        backgroundColor: '#090d16',
-                        cacheBust: true,
-                    }).then(dataUrl => {
+                    const filename = 'Virtual_ID_Card_{{ $previewCard ? Str::slug($previewCard->full_name) : "pass" }}_{{ $previewCard ? $previewCard->member_id_number : "card" }}.png';
+
+                    const onComplete = (dataUrl) => {
                         const link = document.createElement('a');
-                        link.download = 'Virtual_ID_Card_{{ $previewCard ? Str::slug($previewCard->full_name) : "pass" }}_{{ $previewCard ? $previewCard->member_id_number : "card" }}.png';
+                        link.download = filename;
                         link.href = dataUrl;
+                        document.body.appendChild(link);
                         link.click();
+                        document.body.removeChild(link);
                         btn.innerHTML = '<span class="text-emerald-300 font-black">✓ Downloaded!</span>';
                         setTimeout(() => {
                             btn.innerHTML = originalHtml;
                             btn.disabled = false;
                         }, 2000);
-                    }).catch(err => {
-                        console.warn('PNG capture fallback to JPEG:', err);
-                        window.htmlToImage.toJpeg(element, {
-                            pixelRatio: 2,
-                            backgroundColor: '#090d16',
-                            quality: 0.95
-                        }).then(dataUrl => {
-                            const link = document.createElement('a');
-                            link.download = 'Virtual_ID_Card_{{ $previewCard ? Str::slug($previewCard->full_name) : "pass" }}_{{ $previewCard ? $previewCard->member_id_number : "card" }}.jpg';
-                            link.href = dataUrl;
-                            link.click();
-                            btn.innerHTML = '<span class="text-emerald-300 font-black">✓ Downloaded!</span>';
-                            setTimeout(() => {
+                    };
+
+                    if (window.html2canvas) {
+                        html2canvas(element, {
+                            scale: 3,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: null,
+                            logging: false,
+                        }).then(canvas => {
+                            onComplete(canvas.toDataURL('image/png'));
+                        }).catch(err => {
+                            console.warn('html2canvas failed, falling back:', err);
+                            fallbackToHtmlToImage();
+                        });
+                    } else {
+                        fallbackToHtmlToImage();
+                    }
+
+                    function fallbackToHtmlToImage() {
+                        if (window.htmlToImage) {
+                            window.htmlToImage.toPng(element, {
+                                pixelRatio: 3,
+                                backgroundColor: null,
+                                cacheBust: true,
+                                skipFonts: true,
+                            }).then(onComplete).catch(finalErr => {
+                                console.error('Snapshot failed:', finalErr);
                                 btn.innerHTML = originalHtml;
                                 btn.disabled = false;
-                            }, 2000);
-                        }).catch(finalErr => {
-                            console.error('Snapshot failed completely:', finalErr);
+                                alert('Could not render image snapshot: ' + (finalErr.message || 'Rendering error'));
+                            });
+                        } else {
                             btn.innerHTML = originalHtml;
                             btn.disabled = false;
-                            alert('Could not render image snapshot: ' + (finalErr.message || 'Rendering error'));
-                        });
-                    });
+                            alert('Snapshot library not available.');
+                        }
+                    }
                 });
             }
 
