@@ -1165,11 +1165,10 @@
                                     </span>
                                 </div>
 
-                                <!-- School: Institution under Name -->
+                                <!-- Institution under Name -->
                                 @if($previewCard->institution)
-                                    <div class="text-[11px] sm:text-xs text-slate-100 font-medium leading-snug pt-0.5">
-                                        <span class="text-emerald-200 font-bold">School:</span>
-                                        <span class="text-white font-semibold">{{ $previewCard->institution }}</span>
+                                    <div class="text-[11px] sm:text-xs text-white font-medium leading-snug pt-0.5">
+                                        {{ $previewCard->institution }}
                                     </div>
                                 @endif
 
@@ -1184,11 +1183,8 @@
                                 </div>
 
                                 <!-- 2. Role / Designation (In Between - Pinch of Yellow Accent) -->
-                                <div class="flex-1 rounded-xl py-1.5 px-2 text-center flex flex-col justify-center shadow-sm min-w-0 {{ $previewCard->isExecutive() ? 'bg-gradient-to-b from-yellow-500/20 via-yellow-500/10 to-transparent border border-yellow-400/60 text-yellow-300 shadow-yellow-500/10' : 'bg-white/15 border border-white/30 text-white' }}">
-                                    <span class="text-[7.5px] sm:text-[8px] {{ $previewCard->isExecutive() ? 'text-yellow-300' : 'text-emerald-200' }} block font-black uppercase tracking-wider leading-none">
-                                        {{ $previewCard->isExecutive() ? 'Designation' : 'Status' }}
-                                    </span>
-                                    <span class="font-black text-[9px] sm:text-[10px] block mt-1 leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis {{ $previewCard->isExecutive() ? 'text-yellow-300' : 'text-white' }}" title="{{ !empty($previewCard->position) ? strtoupper($previewCard->position) : ($previewCard->isExecutive() ? 'EXECUTIVE' : 'MEMBER') }}">
+                                <div class="flex-1 rounded-xl py-1.5 px-2 text-center flex items-center justify-center shadow-sm min-w-0 {{ $previewCard->isExecutive() ? 'bg-gradient-to-b from-yellow-500/20 via-yellow-500/10 to-transparent border border-yellow-400/60 text-yellow-300 shadow-yellow-500/10' : 'bg-white/15 border border-white/30 text-white' }}">
+                                    <span class="font-black text-[9.5px] sm:text-[10.5px] leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis {{ $previewCard->isExecutive() ? 'text-yellow-300' : 'text-white' }}" title="{{ !empty($previewCard->position) ? strtoupper($previewCard->position) : ($previewCard->isExecutive() ? 'EXECUTIVE' : 'MEMBER') }}">
                                         {{ $previewCard->isExecutive() ? '⭐ ' . (!empty($previewCard->position) ? strtoupper($previewCard->position) : 'EXECUTIVE') : '👤 MEMBER' }}
                                     </span>
                                 </div>
