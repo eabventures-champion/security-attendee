@@ -654,12 +654,8 @@ class VirtualCardManager extends Component
     public function downloadAllPhotos()
     {
         $members = $this->queryMembers()
-            ->where(function ($q) {
-                $q->whereNotNull('photo_path')->where('photo_path', '!=', '')
-                  ->orWhere(function ($sq) {
-                      $sq->whereNotNull('photo_url')->where('photo_url', '!=', '');
-                  });
-            })
+            ->whereNotNull('photo_path')
+            ->where('photo_path', '!=', '')
             ->get();
 
         if ($members->isEmpty()) {
@@ -678,12 +674,8 @@ class VirtualCardManager extends Component
         }
 
         $members = VirtualIdCard::whereIn('id', $this->selectedMembers)
-            ->where(function ($q) {
-                $q->whereNotNull('photo_path')->where('photo_path', '!=', '')
-                  ->orWhere(function ($sq) {
-                      $sq->whereNotNull('photo_url')->where('photo_url', '!=', '');
-                  });
-            })
+            ->whereNotNull('photo_path')
+            ->where('photo_path', '!=', '')
             ->get();
 
         if ($members->isEmpty()) {
