@@ -630,6 +630,27 @@ class VirtualCardManager extends Component
         session()->flash('success', "📱 Opening WhatsApp to deliver Virtual ID Card to {$card->full_name}!");
     }
 
+    public function downloadPhoto($cardId)
+    {
+        $card = VirtualIdCard::find($cardId);
+        if (!$card || (!$card->photo_path && !$card->photo_url)) {
+            session()->flash('error', 'No profile photo uploaded for this member.');
+            return null;
+        }
+
+        if ($card->photo_path && Storage::disk('public')->exists($card->photo_path)) {
+            $ext = pathinfo($card->photo_path, PATHINFO_EXTENSION) ?: 'jpg';
+            $filename = 'Photo_' . Str::slug($card->full_name) . '_' . $card->member_id_number . '.' . $ext;
+            return Storage::disk('public')->download($card->photo_path, $filename);
+        }
+
+        if ($card->photo_url) {
+            return redirect()->away($card->photo_url);
+        }
+
+        session()->flash('error', 'Photo file not found on server.');
+    }
+
     public function updatedSelectAll($value): void
     {
         if ($value) {

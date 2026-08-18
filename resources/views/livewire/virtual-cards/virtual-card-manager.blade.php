@@ -220,8 +220,15 @@
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     
+                                    <!-- Download Member Photo (If uploaded) -->
+                                    @if($m->photo_path || $m->photo_url)
+                                        <button wire:click="downloadPhoto({{ $m->id }})" class="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-bold transition-all cursor-pointer" title="Download Member Profile Photo">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        </button>
+                                    @endif
+
                                     <!-- Live Card Preview -->
-                                    <button wire:click="openCardPreview({{ $m->id }})" class="p-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-bold transition-all cursor-pointer" title="View & Download Virtual ID Card">
+                                    <button wire:click="openCardPreview({{ $m->id }})" class="p-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-bold transition-all cursor-pointer" title="View Virtual ID Card Pass">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                     </button>
 
@@ -738,9 +745,17 @@
                     <!-- Card Body -->
                     <div class="flex items-start gap-4 relative z-10">
                         <!-- Photo or Silhouette -->
-                        <div class="w-24 h-32 rounded-xl border-2 border-blue-400/50 bg-slate-800 overflow-hidden flex items-center justify-center shrink-0 shadow">
+                        <div class="relative group w-24 h-32 rounded-xl border-2 border-blue-400/50 bg-slate-800 overflow-hidden flex items-center justify-center shrink-0 shadow">
                             @if($previewCard->photo_url)
                                 <img src="{{ $previewCard->photo_url }}" alt="{{ $previewCard->full_name }}" class="w-full h-full object-cover">
+                                <!-- Interactive Hover to Download Photo directly -->
+                                <button type="button" 
+                                        wire:click="downloadPhoto({{ $previewCard->id }})" 
+                                        title="Click to Download Profile Photo"
+                                        class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-all cursor-pointer">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    <span class="text-[9px] font-bold mt-1">Download</span>
+                                </button>
                             @else
                                 <div class="flex flex-col items-center justify-center text-slate-500">
                                     <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -801,14 +816,19 @@
 
                 <!-- Quick Action Buttons -->
                 <div class="space-y-2 pt-2 text-xs">
-                    <!-- Download Card Image (PNG) Primary Button -->
-                    <button type="button" 
-                            id="admin-download-card-btn"
-                            onclick="downloadAdminCardImage()" 
-                            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-95">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        <span>Download Card Image (PNG)</span>
-                    </button>
+                    @if($previewCard->photo_path || $previewCard->photo_url)
+                        <!-- Download Profile Photo (Primary Button) -->
+                        <button type="button" 
+                                wire:click="downloadPhoto({{ $previewCard->id }})" 
+                                class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-95">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Download Profile Photo</span>
+                        </button>
+                    @else
+                        <div class="p-2.5 rounded-xl bg-slate-800/80 border border-white/10 text-center text-slate-400 text-xs">
+                            <span>No profile photo uploaded for this member</span>
+                        </div>
+                    @endif
 
                     <!-- Send Email & Send WhatsApp Grid -->
                     <div class="grid grid-cols-2 gap-2">
