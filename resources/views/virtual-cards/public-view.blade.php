@@ -92,80 +92,84 @@
         @endif
 
         <!-- ID Card Container for Snapshot -->
-        <div id="virtual-id-card-element" class="relative overflow-hidden rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-blue-500/40 id-card-glow p-6 sm:p-7 space-y-6">
+        <div id="virtual-id-card-element" class="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0e1628] via-[#0a0f1d] to-[#060a14] border border-blue-500/30 ring-1 ring-white/10 id-card-glow p-5 sm:p-6 space-y-5">
             
             <!-- Background Institution Logo / Law Watermark -->
-            <div class="absolute inset-0 opacity-[0.07] pointer-events-none flex items-center justify-center overflow-hidden p-6 select-none">
+            <div class="absolute inset-0 opacity-[0.06] pointer-events-none flex items-center justify-center overflow-hidden p-6 select-none">
                 @if($card->institution_logo_url)
-                    <img src="{{ $card->institution_logo_url }}" alt="Institution Emblem" class="w-80 h-80 object-contain filter grayscale contrast-150">
+                    <img src="{{ $card->institution_logo_url }}" alt="Institution Emblem" class="w-72 h-72 object-contain filter grayscale contrast-150">
                 @else
-                    <svg class="w-80 h-80 text-white" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+                    <svg class="w-72 h-72 text-white" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m0-18l-8 4m8-4l8 4M4 7l-2 6h8L8 7m8 0l-2 6h8l-2-6M6 21h12"/>
                     </svg>
                 @endif
             </div>
 
-            <!-- Card Top Header with Institution Logo -->
-            <div class="flex items-center justify-between border-b border-white/10 pb-4 relative z-10 gap-3">
-                <div class="flex items-center gap-3 min-w-0">
+            <!-- Card Top Header with Institution Logo & Member ID Badge -->
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5 relative z-10 gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
                     @if($card->institution_logo_url)
-                        <img src="{{ $card->institution_logo_url }}" alt="Logo" class="w-10 h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10 shrink-0">
+                        <img src="{{ $card->institution_logo_url }}" alt="Logo" class="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10 shrink-0 shadow-sm">
                     @else
-                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-black text-sm shrink-0">
-                            🏛️
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/30 border border-blue-400/30 text-blue-300 flex items-center justify-center font-black text-sm shrink-0 shadow-inner">
+                            ⚖️
                         </div>
                     @endif
-                    <div class="space-y-0.5 min-w-0">
-                        <div class="text-xs font-black uppercase tracking-wider text-blue-400 font-sans leading-tight">
-                            Federation of African Law Students (FALAS)
+                    <div class="min-w-0">
+                        <div class="text-[10.5px] sm:text-xs font-black uppercase tracking-wider text-blue-400 font-sans truncate">
+                            Federation of African Law Students
                         </div>
-                        <div class="text-xs font-bold text-orange-400 tracking-wide font-sans">
+                        <div class="text-[10px] sm:text-[11px] font-bold text-amber-400/90 tracking-wide font-sans truncate">
                             {{ $card->institution ?: 'University of Ghana, School of Law' }}
                         </div>
                     </div>
                 </div>
                 <div class="shrink-0 text-right">
-                    <span class="inline-block px-2.5 py-1 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-300 font-mono text-xs font-black tracking-wider whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-blue-300 font-mono text-[11px] font-bold shadow-sm whitespace-nowrap">
                         {{ $card->member_id_number }}
                     </span>
                 </div>
             </div>
 
-            <!-- Main Body: Photo & Credentials -->
-            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5 relative z-10">
+            <!-- Main Body: Framed Portrait & Credentials Spotlight -->
+            <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 relative z-10 py-1">
                 
-                <!-- Photo Container / Silhouette Fallback -->
-                <div class="w-28 h-36 sm:w-32 sm:h-40 rounded-2xl border-2 border-blue-400/50 bg-slate-800/80 overflow-hidden flex items-center justify-center shrink-0 shadow-lg relative group">
-                    @if($card->photo_url)
-                        <img src="{{ $card->photo_url }}" alt="{{ $card->full_name }}" class="w-full h-full object-cover">
-                    @else
-                        <!-- Elegant Silhouette Fallback -->
-                        <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-950 text-slate-500">
-                            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-500 mt-1">Photo on File</span>
+                <!-- Framed Photo Container -->
+                <div class="relative shrink-0">
+                    <div class="w-28 h-36 sm:w-32 sm:h-40 rounded-2xl p-1 bg-gradient-to-b from-blue-400/50 via-indigo-500/30 to-blue-600/40 shadow-xl shadow-blue-500/10">
+                        <div class="w-full h-full rounded-[14px] overflow-hidden bg-slate-900 flex items-center justify-center relative">
+                            @if($card->photo_url)
+                                <img src="{{ $card->photo_url }}" alt="{{ $card->full_name }}" class="w-full h-full object-cover">
+                            @else
+                                <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-950 text-slate-500">
+                                    <svg class="w-14 h-14 text-slate-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                    <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 mt-1">Photo on File</span>
+                                </div>
+                            @endif
                         </div>
-                    @endif
+                    </div>
                     <!-- Verified Holographic Badge Indicator -->
-                    <div class="absolute bottom-1 right-1 p-1 rounded-full bg-blue-600 text-white shadow">
+                    <div class="absolute -bottom-1 -right-1 p-1 rounded-full bg-blue-600 border-2 border-slate-900 text-white shadow">
                         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
                     </div>
                 </div>
 
                 <!-- Member Credentials Info -->
-                <div class="flex-1 text-center sm:text-left space-y-3 w-full">
+                <div class="flex-1 text-center sm:text-left space-y-2.5 w-full">
                     <div>
-                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cardholder Name</div>
-                        <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">{{ $card->full_name }}</h2>
+                        <span class="text-[9.5px] font-extrabold uppercase tracking-widest text-slate-400 block mb-0.5">Cardholder Name</span>
+                        <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">{{ $card->full_name }}</h2>
                     </div>
 
+                    <!-- Clean Frosted Chips Grid -->
                     <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div class="bg-white/5 border border-white/5 rounded-xl p-2">
-                            <span class="text-[10px] text-slate-400 block font-semibold uppercase">Admission</span>
-                            <span class="font-bold text-slate-200">{{ $card->admission_year ?: 'N/A' }}</span>
+                        <div class="bg-white/[0.04] border border-white/10 rounded-xl p-2 text-center sm:text-left">
+                            <span class="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Admission</span>
+                            <span class="font-bold text-slate-200 font-mono text-[11px]">{{ $card->admission_year ?: 'N/A' }}</span>
                         </div>
-                        <div class="bg-white/5 border border-white/5 rounded-xl p-2">
-                            <span class="text-[10px] text-slate-400 block font-semibold uppercase">Completion</span>
-                            <span class="font-bold text-slate-200">{{ $card->completion_year ?: 'Present' }}</span>
+                        <div class="bg-white/[0.04] border border-white/10 rounded-xl p-2 text-center sm:text-left">
+                            <span class="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Completion</span>
+                            <span class="font-bold text-slate-200 font-mono text-[11px]">{{ $card->completion_year ?: 'Present' }}</span>
                         </div>
                     </div>
 
@@ -173,9 +177,9 @@
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             @foreach($card->custom_fields as $cfKey => $cfVal)
                                 @if(!empty($cfVal))
-                                    <div class="bg-white/5 border border-white/5 rounded-xl p-2">
-                                        <span class="text-[10px] text-slate-400 block font-semibold uppercase">{{ ucwords(str_replace('_', ' ', $cfKey)) }}</span>
-                                        <span class="font-bold text-slate-200 truncate block">{{ $cfVal }}</span>
+                                    <div class="bg-white/[0.04] border border-white/10 rounded-xl p-2 text-center sm:text-left">
+                                        <span class="text-[9px] text-slate-400 block font-bold uppercase tracking-wider truncate">{{ ucwords(str_replace('_', ' ', $cfKey)) }}</span>
+                                        <span class="font-bold text-slate-200 truncate block text-[11px]">{{ $cfVal }}</span>
                                     </div>
                                 @endif
                             @endforeach
@@ -185,24 +189,25 @@
             </div>
 
             <!-- Card Bottom Bar with QR Code Verification -->
-            <div class="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
-                <div class="flex items-center gap-3.5">
-                    <div class="p-1.5 rounded-xl bg-white shadow-md shrink-0">
-                        <img src="{{ $card->qr_code_url }}" alt="QR Verification" class="w-16 h-16 rounded-lg">
+            <div class="pt-3.5 border-t border-white/10 flex items-center justify-between gap-3 relative z-10">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="p-1 rounded-xl bg-white shadow shrink-0">
+                        <img src="{{ $card->qr_code_url }}" alt="QR Verification" class="w-12 h-12 sm:w-14 sm:h-14 rounded">
                     </div>
-                    <div class="space-y-0.5 text-left">
+                    <div class="space-y-0.5 text-left min-w-0">
                         <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                            Digitally Verified ID
+                            <svg class="w-3 h-3 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Digitally Verified</span>
                         </span>
-                        <div class="text-[10px] text-slate-400 font-mono">Token: {{ $card->qr_token }}</div>
-                        <div class="text-[9px] text-slate-500">Scan code with any camera to verify validity.</div>
+                        <div class="text-[9.5px] text-slate-400 font-mono truncate">Token: {{ $card->qr_token }}</div>
+                        <div class="text-[8.5px] text-slate-500">Scan code with camera to verify</div>
                     </div>
                 </div>
 
-                <div class="text-right shrink-0">
-                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider {{ $card->status === 'active' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30' }}">
-                        {{ strtoupper($card->status) }}
+                <div class="shrink-0 text-right">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider {{ $card->status === 'active' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30' }}">
+                        <span class="w-1.5 h-1.5 rounded-full {{ $card->status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400' }}"></span>
+                        <span>{{ strtoupper($card->status) }} ID</span>
                     </span>
                 </div>
             </div>

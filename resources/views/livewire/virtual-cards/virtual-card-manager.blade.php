@@ -740,92 +740,100 @@
                 </div>
 
                 <!-- Digital Card Snapshot Canvas Target -->
-                <div id="admin-preview-card-canvas" class="relative overflow-hidden rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-blue-500/40 p-5 sm:p-6 space-y-5 text-white shadow-2xl">
+                <div id="admin-preview-card-canvas" class="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0e1628] via-[#0a0f1d] to-[#060a14] border border-blue-500/30 ring-1 ring-white/10 p-5 sm:p-6 space-y-5 text-white shadow-2xl">
                     
                     <!-- Background Institution Logo / Law Watermark -->
-                    <div class="absolute inset-0 opacity-[0.07] pointer-events-none flex items-center justify-center overflow-hidden p-6 select-none">
+                    <div class="absolute inset-0 opacity-[0.06] pointer-events-none flex items-center justify-center overflow-hidden p-6 select-none">
                         @if($previewCard->institution_logo_url)
-                            <img src="{{ $previewCard->institution_logo_url }}" alt="Watermark" class="w-64 h-64 object-contain filter grayscale contrast-150">
+                            <img src="{{ $previewCard->institution_logo_url }}" alt="Watermark" class="w-72 h-72 object-contain filter grayscale contrast-150">
                         @else
-                            <svg class="w-64 h-64 text-white" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+                            <svg class="w-72 h-72 text-white" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m0-18l-8 4m8-4l8 4M4 7l-2 6h8L8 7m8 0l-2 6h8l-2-6M6 21h12"/>
                             </svg>
                         @endif
                     </div>
 
-                    <!-- Card Top Header with Institution Logo -->
-                    <div class="flex items-center justify-between border-b border-white/10 pb-3.5 relative z-10 gap-3">
+                    <!-- Card Top Header with Institution Logo & ID Badge -->
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3.5 relative z-10 gap-2">
                         <div class="flex items-center gap-2.5 min-w-0">
                             @if($previewCard->institution_logo_url)
-                                <img src="{{ $previewCard->institution_logo_url }}" alt="Logo" class="w-8 h-8 object-contain rounded-lg bg-white/5 p-0.5 shrink-0">
+                                <img src="{{ $previewCard->institution_logo_url }}" alt="Logo" class="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10 shrink-0 shadow-sm">
                             @else
-                                <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-black text-xs shrink-0">
-                                    🏛️
+                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/30 border border-blue-400/30 text-blue-300 flex items-center justify-center font-black text-sm shrink-0 shadow-inner">
+                                    ⚖️
                                 </div>
                             @endif
-                            <div class="space-y-0.5 min-w-0">
-                                <div class="text-[11px] font-black uppercase tracking-wider text-blue-400 font-sans leading-tight">
-                                    Federation of African Law Students (FALAS)
+                            <div class="min-w-0">
+                                <div class="text-[10.5px] sm:text-xs font-black uppercase tracking-wider text-blue-400 font-sans truncate">
+                                    Federation of African Law Students
                                 </div>
-                                <div class="text-[10.5px] font-bold text-orange-400 tracking-wide font-sans">
+                                <div class="text-[10px] sm:text-[11px] font-bold text-amber-400/90 tracking-wide font-sans truncate">
                                     {{ $previewCard->institution ?: 'University of Ghana, School of Law' }}
                                 </div>
                             </div>
                         </div>
                         <div class="shrink-0 text-right">
-                            <span class="inline-block px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 font-mono text-[11px] font-bold whitespace-nowrap border border-blue-500/30">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-blue-300 font-mono text-[11px] font-bold shadow-sm whitespace-nowrap">
                                 {{ $previewCard->member_id_number }}
                             </span>
                         </div>
                     </div>
 
-                    <!-- Card Body -->
-                    <div class="flex items-start gap-4 relative z-10">
-                        <!-- Photo or Silhouette -->
-                        <div class="relative group w-24 h-32 rounded-xl border-2 border-blue-400/50 bg-slate-800 overflow-hidden flex items-center justify-center shrink-0 shadow">
-                            @if($previewCard->photo_url)
-                                <img src="{{ $previewCard->photo_url }}" alt="{{ $previewCard->full_name }}" class="w-full h-full object-cover">
-                                <!-- Interactive Hover to Download Photo directly -->
-                                <button type="button" 
-                                        wire:click="downloadPhoto({{ $previewCard->id }})" 
-                                        title="Click to Download Profile Photo"
-                                        class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-all cursor-pointer">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    <span class="text-[9px] font-bold mt-1">Download</span>
-                                </button>
-                            @else
-                                <div class="flex flex-col items-center justify-center text-slate-500">
-                                    <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                                    <span class="text-[8px] font-bold uppercase mt-1">Photo on File</span>
+                    <!-- Main Body: Framed Portrait & Credentials Spotlight -->
+                    <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 relative z-10 py-1">
+                        <!-- Framed Photo or Silhouette -->
+                        <div class="relative shrink-0">
+                            <div class="w-28 h-36 sm:w-32 sm:h-40 rounded-2xl p-1 bg-gradient-to-b from-blue-400/50 via-indigo-500/30 to-blue-600/40 shadow-xl shadow-blue-500/10">
+                                <div class="w-full h-full rounded-[14px] overflow-hidden bg-slate-900 flex items-center justify-center relative group">
+                                    @if($previewCard->photo_url)
+                                        <img src="{{ $previewCard->photo_url }}" alt="{{ $previewCard->full_name }}" class="w-full h-full object-cover">
+                                        <!-- Interactive Hover to Download Photo directly -->
+                                        <button type="button" 
+                                                wire:click="downloadPhoto({{ $previewCard->id }})" 
+                                                title="Click to Download Profile Photo"
+                                                class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-all cursor-pointer">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            <span class="text-[9px] font-bold mt-1">Download</span>
+                                        </button>
+                                    @else
+                                        <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-950 text-slate-500">
+                                            <svg class="w-14 h-14 text-slate-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                            <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 mt-1">Photo on File</span>
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
+                            </div>
+                            <div class="absolute -bottom-1 -right-1 p-1 rounded-full bg-blue-600 border-2 border-slate-900 text-white shadow">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                            </div>
                         </div>
 
-                        <!-- Info -->
-                        <div class="flex-1 space-y-2 text-xs">
+                        <!-- Cardholder Details -->
+                        <div class="flex-1 text-center sm:text-left space-y-2.5 w-full">
                             <div>
-                                <span class="text-[9px] font-extrabold uppercase text-slate-400 block">Cardholder</span>
-                                <h4 class="text-base font-black text-white leading-tight">{{ $previewCard->full_name }}</h4>
+                                <span class="text-[9.5px] font-extrabold uppercase tracking-widest text-slate-400 block mb-0.5">Cardholder Name</span>
+                                <h4 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">{{ $previewCard->full_name }}</h4>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
-                                <div class="p-1.5 rounded-lg bg-white/5">
-                                    <span class="text-[9px] text-slate-400 block uppercase">Admission</span>
-                                    <span class="font-bold text-slate-200">{{ $previewCard->admission_year ?: 'N/A' }}</span>
+                            <!-- Clean Frosted Chips Grid -->
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="bg-white/[0.04] border border-white/10 rounded-xl p-2 text-center sm:text-left">
+                                    <span class="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Admission</span>
+                                    <span class="font-bold text-slate-200 font-mono text-[11px]">{{ $previewCard->admission_year ?: 'N/A' }}</span>
                                 </div>
-                                <div class="p-1.5 rounded-lg bg-white/5">
-                                    <span class="text-[9px] text-slate-400 block uppercase">Completion</span>
-                                    <span class="font-bold text-slate-200">{{ $previewCard->completion_year ?: 'Present' }}</span>
+                                <div class="bg-white/[0.04] border border-white/10 rounded-xl p-2 text-center sm:text-left">
+                                    <span class="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Completion</span>
+                                    <span class="font-bold text-slate-200 font-mono text-[11px]">{{ $previewCard->completion_year ?: 'Present' }}</span>
                                 </div>
                             </div>
 
                             @if(!empty($previewCard->custom_fields))
-                                <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+                                <div class="grid grid-cols-2 gap-2 text-xs">
                                     @foreach($previewCard->custom_fields as $cfKey => $cfVal)
                                         @if(!empty($cfVal))
-                                            <div class="p-1 rounded bg-white/5">
-                                                <span class="text-slate-400 block uppercase">{{ ucwords(str_replace('_', ' ', $cfKey)) }}</span>
-                                                <span class="font-bold text-slate-200 truncate block">{{ $cfVal }}</span>
+                                            <div class="bg-white/[0.04] border border-white/10 rounded-xl p-2 text-center sm:text-left">
+                                                <span class="text-[9px] text-slate-400 block font-bold uppercase tracking-wider truncate">{{ ucwords(str_replace('_', ' ', $cfKey)) }}</span>
+                                                <span class="font-bold text-slate-200 truncate block text-[11px]">{{ $cfVal }}</span>
                                             </div>
                                         @endif
                                     @endforeach
@@ -835,19 +843,26 @@
                     </div>
 
                     <!-- Card Footer Bar with QR Code -->
-                    <div class="pt-3 border-t border-white/10 flex items-center justify-between relative z-10">
-                        <div class="flex items-center gap-3">
-                            <div class="p-1 rounded-lg bg-white shadow shrink-0">
-                                <img src="{{ $previewCard->qr_code_url }}" alt="QR" class="w-12 h-12 rounded">
+                    <div class="pt-3.5 border-t border-white/10 flex items-center justify-between gap-3 relative z-10">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="p-1 rounded-xl bg-white shadow shrink-0">
+                                <img src="{{ $previewCard->qr_code_url }}" alt="QR" class="w-12 h-12 sm:w-14 sm:h-14 rounded">
                             </div>
-                            <div class="space-y-0.5">
-                                <span class="text-[9px] font-black uppercase text-emerald-400 block">Digitally Verified</span>
-                                <span class="text-[9px] text-slate-400 font-mono">{{ $previewCard->qr_token }}</span>
+                            <div class="space-y-0.5 text-left min-w-0">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    <span>Digitally Verified</span>
+                                </span>
+                                <div class="text-[9.5px] text-slate-400 font-mono truncate">Token: {{ $previewCard->qr_token }}</div>
+                                <div class="text-[8.5px] text-slate-500">Scan code with camera to verify</div>
                             </div>
                         </div>
-                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            Active ID
-                        </span>
+                        <div class="shrink-0 text-right">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider {{ $previewCard->status === 'active' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $previewCard->status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400' }}"></span>
+                                <span>{{ strtoupper($previewCard->status) }} ID</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
