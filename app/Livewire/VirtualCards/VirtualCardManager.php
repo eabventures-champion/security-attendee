@@ -844,6 +844,53 @@ class VirtualCardManager extends Component
         session()->flash('error', 'Photo file not found on server.');
     }
 
+    public function triggerBulkCardsDownload(bool $selectedOnly = false): void
+    {
+        $query = $this->queryMembers();
+        if ($selectedOnly && !empty($this->selectedMembers)) {
+            $query = VirtualIdCard::whereIn('id', $this->selectedMembers);
+        }
+
+        $cards = $query->get();
+
+        if ($cards->isEmpty()) {
+            session()->flash('error', 'No member ID cards found to download.');
+            return;
+        }
+
+        $cardsData = $cards->map(function ($c) {
+            $rawOrgName = $c->organization ? $c->organization->name : 'Federation of African Law Students';
+            $hasIdCardSuffix = stripos($rawOrgName, 'IDENTITY CARD') !== false;
+            $orgTitle = $hasIdCardSuffix ? trim(preg_replace('/[-–—]?\s*identity\s*card/i', '', $rawOrgName)) : $rawOrgName;
+
+            return [
+                'id' => $c->id,
+                'full_name' => $c->full_name,
+                'member_id_number' => $c->member_id_number,
+                'institution' => $c->institution ?: '',
+                'admission_year' => $c->admission_year ?: 'N/A',
+                'completion_year' => $c->completion_year ?: 'Present',
+                'designation' => $c->designation,
+                'position' => $c->position ?: '',
+                'is_executive' => $c->isExecutive(),
+                'status' => $c->status ?: 'active',
+                'qr_token' => $c->qr_token,
+                'photo_url' => $c->photo_url,
+                'qr_code_url' => $c->qr_code_url,
+                'main_logo_url' => $c->main_logo_url,
+                'association_logo_url' => $c->association_logo_url,
+                'org_title' => $orgTitle,
+                'has_id_card_suffix' => $hasIdCardSuffix,
+            ];
+        })->values()->toArray();
+
+        $org = $this->getOrganization();
+        $orgName = $org ? Str::slug($org->name, '_') : 'FALAS';
+        $zipName = ($selectedOnly ? "Selected_Student_ID_Cards_" : "All_Student_ID_Cards_") . "{$orgName}_" . date('Y-m-d') . ".zip";
+
+        $this->dispatch('start-bulk-cards-zip', cards: $cardsData, zipName: $zipName);
+    }
+
     public function downloadAllPhotos()
     {
         $members = $this->queryMembers()

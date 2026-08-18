@@ -14,6 +14,13 @@
                     <span>{{ count($institutionList) }} Institutions</span>
                 </button>
                 @if(count($selectedMembers) > 0)
+                    <button wire:click="triggerBulkCardsDownload(true)" 
+                            wire:loading.attr="disabled"
+                            class="px-3 py-1 rounded-full border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm"
+                            title="Download full Student ID Cards for selected members in a ZIP package">
+                        <svg class="w-3.5 h-3.5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Download Cards ({{ count($selectedMembers) }})</span>
+                    </button>
                     <button wire:click="bulkDelete" 
                             wire:confirm="Are you sure you want to delete {{ count($selectedMembers) }} selected virtual ID card(s)?"
                             class="px-2.5 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95">
@@ -30,6 +37,19 @@
         <!-- Action Toolbar -->
         <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
             
+            <!-- Download All ID Cards (.ZIP) -->
+            <button wire:click="triggerBulkCardsDownload(false)" 
+                    wire:loading.attr="disabled"
+                    class="h-10 px-3 sm:px-3.5 rounded-xl border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
+                    title="Render and download high-resolution ID cards for all members in a ZIP package">
+                <svg class="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span wire:loading.remove wire:target="triggerBulkCardsDownload(false)">ID Cards (.ZIP)</span>
+                <span wire:loading wire:target="triggerBulkCardsDownload(false)" class="flex items-center gap-1">
+                    <svg class="animate-spin h-3.5 w-3.5 text-teal-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    <span>Preparing...</span>
+                </span>
+            </button>
+
             <!-- Customize Fields & Logo -->
             <button wire:click="$set('showFieldCustomizerModal', true)" 
                     class="h-10 px-3 sm:px-3.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
@@ -1720,36 +1740,336 @@
         @endteleport
     @endif
 
+    <!-- ==================== BULK ID CARD DOWNLOAD PROGRESS MODAL & HIDDEN STAGE ==================== -->
+    <div id="bulk-download-progress-modal" class="fixed inset-0 z-[99999] hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-5 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center mx-auto text-2xl shadow-inner">
+                <svg class="w-7 h-7 animate-bounce text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            </div>
+            
+            <div class="space-y-1">
+                <h3 class="text-base font-black text-slate-900 dark:text-white">Generating Student ID Cards (.ZIP)</h3>
+                <p id="bulk-progress-member" class="text-xs text-teal-400 font-semibold truncate px-2">Preparing generation queue...</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200 dark:border-white/10">
+                    <div id="bulk-progress-bar" class="bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 h-full rounded-full transition-all duration-150" style="width: 0%;"></div>
+                </div>
+                <div class="flex justify-between text-[11px] font-bold text-slate-400">
+                    <span id="bulk-progress-text">0% Completed</span>
+                    <span id="bulk-progress-count">0 / 0</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="cancelBulkDownload()" class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all cursor-pointer">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Offscreen Render Stage for Bulk Processing -->
+    <div style="position: fixed; top: 0; left: 0; width: 620px; z-index: 99998; pointer-events: none; opacity: 0.01;" aria-hidden="true">
+        <div id="bulk-card-stage" class="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#064e3b] via-[#033b2c] to-[#02241b] border-2 border-emerald-400/40 p-6 space-y-5 text-white shadow-2xl" style="width: 620px;">
+            
+            <!-- Header: Dual Logos & Centered Org Details -->
+            <div class="relative z-10 flex items-center justify-between gap-3 border-b border-white/20 pb-4">
+                <div class="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
+                    <img id="b-card-main-logo" src="" crossorigin="anonymous" alt="Main Logo" class="max-w-full max-h-full object-contain">
+                </div>
+                <div class="text-center flex-1 min-w-0 space-y-0.5 px-1">
+                    <div id="b-card-org-title" class="text-sm font-black uppercase tracking-wider text-white font-sans leading-tight"></div>
+                    <div id="b-card-id-suffix" class="text-[11px] font-black uppercase tracking-widest text-yellow-300 font-sans leading-tight">IDENTITY CARD</div>
+                    <div class="text-[9.5px] font-extrabold uppercase tracking-[0.18em] text-emerald-100/80 font-sans pt-0.5">Official Student Pass</div>
+                </div>
+                <div class="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
+                    <img id="b-card-assoc-logo" src="" crossorigin="anonymous" alt="Association Logo" class="max-w-full max-h-full object-contain">
+                </div>
+            </div>
+
+            <!-- Main Body: Framed Portrait & Credentials -->
+            <div class="flex items-center gap-5 relative z-10 py-1">
+                <div class="relative shrink-0">
+                    <div class="w-32 h-40 rounded-2xl p-1 bg-gradient-to-b from-white via-emerald-300 to-yellow-400/80 shadow-xl">
+                        <div class="w-full h-full rounded-[14px] overflow-hidden bg-slate-900 flex items-center justify-center">
+                            <img id="b-card-photo" src="" crossorigin="anonymous" alt="Photo" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 p-1 rounded-full bg-emerald-500 border-2 border-white text-white shadow">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                    </div>
+                </div>
+
+                <div class="flex-1 text-left space-y-2.5 w-full min-w-0">
+                    <div class="space-y-1.5">
+                        <div>
+                            <span class="text-[9.5px] font-extrabold uppercase tracking-widest text-emerald-200/90 block">Cardholder Name</span>
+                            <h4 id="b-card-name" class="text-2xl font-black text-white tracking-tight leading-snug truncate"></h4>
+                        </div>
+                        <div>
+                            <span id="b-card-member-id" class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-white/15 border border-white/30 text-white font-mono text-[11px] font-bold shadow-sm tracking-wider"></span>
+                        </div>
+                        <div id="b-card-institution" class="text-xs text-white font-medium leading-snug pt-0.5 truncate"></div>
+                    </div>
+
+                    <div class="flex items-stretch gap-1.5 pt-2">
+                        <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-3 text-center shrink-0 min-w-[75px] flex flex-col justify-center">
+                            <span class="text-[8px] text-emerald-200 block font-extrabold uppercase tracking-wider leading-none">Admission</span>
+                            <span id="b-card-admission" class="font-bold text-white font-mono text-[11px] block mt-1 leading-tight"></span>
+                        </div>
+                        <div id="b-card-role-pill" class="flex-1 rounded-xl py-1.5 px-2 text-center flex items-center justify-center shadow-sm min-w-0">
+                            <span id="b-card-role-text" class="font-black text-[10px] leading-tight tracking-tight whitespace-nowrap"></span>
+                        </div>
+                        <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-3 text-center shrink-0 min-w-[75px] flex flex-col justify-center">
+                            <span class="text-[8px] text-emerald-200 block font-extrabold uppercase tracking-wider leading-none">Completion</span>
+                            <span id="b-card-completion" class="font-bold text-white font-mono text-[11px] block mt-1 leading-tight"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bar with QR Code -->
+            <div class="pt-3.5 border-t border-white/20 flex items-center justify-between gap-3 relative z-10">
+                <div class="flex items-center gap-3">
+                    <div class="p-1 rounded-xl bg-white shadow shrink-0 flex items-center justify-center">
+                        <img id="b-card-qr" src="" crossorigin="anonymous" alt="QR" class="w-14 h-14 rounded block">
+                    </div>
+                    <div class="space-y-0.5 text-left">
+                        <div class="text-[10.5px] font-black uppercase tracking-wide text-white flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Digitally Verified</span>
+                        </div>
+                        <div id="b-card-token" class="text-[9.5px] text-emerald-100 font-mono tracking-tight whitespace-nowrap"></div>
+                        <div class="text-[8.5px] text-emerald-200/80 whitespace-nowrap">Scan code with camera to verify</div>
+                    </div>
+                </div>
+                <div class="shrink-0 flex items-center">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap bg-white/20 text-white border border-white/30">
+                        <span class="w-2 h-2 rounded-full shrink-0 bg-emerald-400 animate-pulse"></span>
+                        <span id="b-card-status-text" class="whitespace-nowrap">ACTIVE ID</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
         <script>
             function loadSnapshotLibraries(callback) {
-                if (window.html2canvas) {
+                if (window.html2canvas && window.JSZip && window.saveAs) {
                     callback();
                     return;
                 }
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                script.onload = callback;
-                script.onerror = () => {
-                    if (window.htmlToImage) {
-                        callback();
-                    } else {
-                        const fallbackScript = document.createElement('script');
-                        fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
-                        fallbackScript.onload = callback;
-                        fallbackScript.onerror = () => {
-                            alert('Failed to load image generation library. Please check your internet connection.');
-                        };
-                        document.head.appendChild(fallbackScript);
-                    }
+                let pending = 0;
+                const checkDone = () => {
+                    pending--;
+                    if (pending <= 0) callback();
                 };
-                document.head.appendChild(script);
+
+                if (!window.html2canvas) {
+                    pending++;
+                    const s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    s.onload = checkDone;
+                    s.onerror = checkDone;
+                    document.head.appendChild(s);
+                }
+                if (!window.JSZip) {
+                    pending++;
+                    const s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                    s.onload = checkDone;
+                    s.onerror = checkDone;
+                    document.head.appendChild(s);
+                }
+                if (!window.saveAs) {
+                    pending++;
+                    const s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js';
+                    s.onload = checkDone;
+                    s.onerror = checkDone;
+                    document.head.appendChild(s);
+                }
+                if (pending === 0) callback();
             }
+
+            let bulkCancelled = false;
+            function cancelBulkDownload() {
+                bulkCancelled = true;
+                const modal = document.getElementById('bulk-download-progress-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
+            }
+
+            window.addEventListener('start-bulk-cards-zip', (event) => {
+                const cards = (event.detail && event.detail.cards) ? event.detail.cards : (event.detail && event.detail[0] ? event.detail[0].cards : []);
+                const zipName = (event.detail && event.detail.zipName) ? event.detail.zipName : ((event.detail && event.detail[0]) ? event.detail[0].zipName : 'Student_ID_Cards.zip');
+
+                if (!cards || !cards.length) {
+                    alert('No card records found to package.');
+                    return;
+                }
+
+                loadSnapshotLibraries(async () => {
+                    bulkCancelled = false;
+                    const modal = document.getElementById('bulk-download-progress-modal');
+                    const progressBar = document.getElementById('bulk-progress-bar');
+                    const progressText = document.getElementById('bulk-progress-text');
+                    const progressCount = document.getElementById('bulk-progress-count');
+                    const progressMember = document.getElementById('bulk-progress-member');
+                    const stage = document.getElementById('bulk-card-stage');
+
+                    if (!modal || !stage) {
+                        alert('Could not initialize rendering stage.');
+                        return;
+                    }
+
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+
+                    const zip = new JSZip();
+                    let processed = 0;
+                    const total = cards.length;
+
+                    for (let i = 0; i < total; i++) {
+                        if (bulkCancelled) return;
+
+                        const card = cards[i];
+                        const percent = Math.round(((i + 1) / total) * 100);
+
+                        if (progressBar) progressBar.style.width = percent + '%';
+                        if (progressText) progressText.innerText = `${percent}% Completed`;
+                        if (progressCount) progressCount.innerText = `${i + 1} / ${total}`;
+                        if (progressMember) progressMember.innerText = `Card ${i + 1} of ${total}: ${card.full_name} (${card.member_id_number})`;
+
+                        // Inject card data into stage
+                        document.getElementById('b-card-org-title').innerText = card.org_title || 'Federation of African Law Students';
+                        const idSuffix = document.getElementById('b-card-id-suffix');
+                        if (idSuffix) idSuffix.style.display = card.has_id_card_suffix ? 'block' : 'none';
+
+                        const mainLogo = document.getElementById('b-card-main-logo');
+                        const assocLogo = document.getElementById('b-card-assoc-logo');
+                        const photoImg = document.getElementById('b-card-photo');
+                        const qrImg = document.getElementById('b-card-qr');
+
+                        document.getElementById('b-card-name').innerText = card.full_name || '';
+                        document.getElementById('b-card-member-id').innerText = card.member_id_number || '';
+                        document.getElementById('b-card-institution').innerText = card.institution || '';
+                        document.getElementById('b-card-admission').innerText = card.admission_year || 'N/A';
+                        document.getElementById('b-card-completion').innerText = card.completion_year || 'Present';
+
+                        const rolePill = document.getElementById('b-card-role-pill');
+                        const roleText = document.getElementById('b-card-role-text');
+                        if (card.is_executive) {
+                            rolePill.className = 'flex-1 rounded-xl py-1.5 px-2 text-center flex items-center justify-center shadow-sm min-w-0 bg-gradient-to-b from-yellow-500/20 via-yellow-500/10 to-transparent border border-yellow-400/60 text-yellow-300 shadow-yellow-500/10';
+                            roleText.className = 'font-black text-[10px] leading-tight tracking-tight whitespace-nowrap text-yellow-300';
+                            roleText.innerText = '⭐ ' + (card.position ? card.position.toUpperCase() : 'EXECUTIVE');
+                        } else {
+                            rolePill.className = 'flex-1 rounded-xl py-1.5 px-2 text-center flex items-center justify-center shadow-sm min-w-0 bg-white/15 border border-white/30 text-white';
+                            roleText.className = 'font-black text-[10px] leading-tight tracking-tight whitespace-nowrap text-white';
+                            roleText.innerText = '👤 MEMBER';
+                        }
+
+                        document.getElementById('b-card-token').innerText = 'Token: ' + (card.qr_token || '');
+                        document.getElementById('b-card-status-text').innerText = (card.status || 'ACTIVE').toUpperCase() + ' ID';
+
+                        // Preload and decode images
+                        const loadImg = (imgEl, src) => {
+                            if (!src) {
+                                imgEl.style.display = 'none';
+                                return Promise.resolve();
+                            }
+                            imgEl.style.display = 'block';
+                            if (imgEl.src === src && imgEl.complete) {
+                                return Promise.resolve();
+                            }
+                            return new Promise(resolve => {
+                                imgEl.onload = () => resolve();
+                                imgEl.onerror = () => resolve();
+                                imgEl.src = src;
+                                setTimeout(resolve, 300);
+                            });
+                        };
+
+                        await Promise.all([
+                            loadImg(mainLogo, card.main_logo_url),
+                            loadImg(assocLogo, card.association_logo_url),
+                            loadImg(photoImg, card.photo_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%2364748b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'),
+                            loadImg(qrImg, card.qr_code_url)
+                        ]);
+
+                        let blob = null;
+                        try {
+                            const canvas = await html2canvas(stage, {
+                                scale: 2,
+                                useCORS: true,
+                                allowTaint: false,
+                                backgroundColor: '#064e3b',
+                                logging: false,
+                                scrollX: 0,
+                                scrollY: 0,
+                            });
+                            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                        } catch (renderErr) {
+                            console.warn('html2canvas error, attempting htmlToImage fallback for:', card.full_name, renderErr);
+                            if (window.htmlToImage) {
+                                try {
+                                    blob = await window.htmlToImage.toBlob(stage, {
+                                        pixelRatio: 2,
+                                        backgroundColor: '#064e3b',
+                                        skipFonts: true,
+                                    });
+                                } catch (h2iErr) {
+                                    console.error('Snapshot completely failed for:', card.full_name, h2iErr);
+                                }
+                            }
+                        }
+
+                        if (blob) {
+                            const cleanName = (card.full_name || 'member').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+                            const idNum = (card.member_id_number || '').replace(/[^a-z0-9]+/gi, '_');
+                            zip.file(`Virtual_ID_${cleanName}_${idNum}.png`, blob);
+                            processed++;
+                        }
+                    }
+
+                    if (bulkCancelled) return;
+
+                    if (processed === 0) {
+                        alert('Could not render card images. Please check your browser connection.');
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                        return;
+                    }
+
+                    if (progressMember) progressMember.innerText = `Compressing ${processed} ID Cards into ZIP archive...`;
+                    if (progressText) progressText.innerText = `Generating ZIP file...`;
+
+                    const zipBlob = await zip.generateAsync({
+                        type: 'blob',
+                        compression: 'DEFLATE',
+                        compressionOptions: { level: 6 }
+                    });
+
+                    saveAs(zipBlob, zipName);
+
+                    if (progressMember) progressMember.innerText = `✓ Successfully created ${zipName}!`;
+                    if (progressText) progressText.innerText = `Download starting...`;
+
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }, 1500);
+                });
+            });
 
             function downloadAdminCardImage() {
                 const btn = document.getElementById('admin-download-card-btn');
                 if (!btn) return;
                 const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<svg class="animate-spin w-4 h-4 text-white inline-block mr-1.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Rendering High-Res Image...</span>';
+                btn.innerHTML = '<svg class="animate-spin w-4 h-4 text-white inline-block mr-1.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Rendering Card...</span>';
                 btn.disabled = true;
 
                 loadSnapshotLibraries(() => {
