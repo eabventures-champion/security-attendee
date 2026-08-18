@@ -1,7 +1,9 @@
 @import "tailwindcss";
-@source "../views";
+@config "../../tailwind.config.js";
+@source "../../resources/views/**/*.blade.php";
+@source "../../resources/views";
+@source "../../app/**/*.php";
 @source "../../app";
-@source "../../resources";
 @variant dark (.dark &);
 
 @layer base {
