@@ -183,20 +183,20 @@
                     </div>
 
                     <!-- Card Top Header with Institution Logo & Member ID Badge -->
-                    <div class="flex items-center justify-between border-b border-white/10 pb-3.5 relative z-10 gap-2">
-                        <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="flex items-start justify-between border-b border-white/10 pb-3.5 relative z-10 gap-3">
+                        <div class="flex items-start gap-2.5 min-w-0 flex-1">
                             @if($generatedCard->institution_logo_url)
-                                <img src="{{ $generatedCard->institution_logo_url }}" alt="Logo" class="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10 shrink-0 shadow-sm">
+                                <img src="{{ $generatedCard->institution_logo_url }}" alt="Logo" class="w-10 h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10 shrink-0 shadow-sm mt-0.5">
                             @else
-                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/30 border border-blue-400/30 text-blue-300 flex items-center justify-center font-black text-sm shrink-0 shadow-inner">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/30 border border-blue-400/30 text-blue-300 flex items-center justify-center font-black text-sm shrink-0 shadow-inner mt-0.5">
                                     ⚖️
                                 </div>
                             @endif
-                            <div class="min-w-0">
-                                <div class="text-[10.5px] sm:text-xs font-black uppercase tracking-wider text-blue-400 font-sans truncate">
-                                    Federation of African Law Students
+                            <div class="flex-1 min-w-0 space-y-1">
+                                <div class="text-[11px] sm:text-xs font-black uppercase tracking-wider text-blue-400 font-sans leading-tight">
+                                    {{ $generatedCard->organization ? $generatedCard->organization->name : 'Federation of African Law Students' }}
                                 </div>
-                                <div class="text-[10px] sm:text-[11px] font-bold text-amber-400/90 tracking-wide font-sans truncate">
+                                <div class="text-[10.5px] sm:text-xs font-bold text-amber-400/95 tracking-normal font-sans leading-snug">
                                     {{ $generatedCard->institution ?: 'University of Ghana, School of Law' }}
                                 </div>
                             </div>
