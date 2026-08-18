@@ -37,7 +37,15 @@
         <!-- Action Toolbar -->
         <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
             
-            <!-- Download All ID Cards (.ZIP) -->
+            <!-- 1. Fields & Logo -->
+            <button wire:click="$set('showFieldCustomizerModal', true)" 
+                    class="h-10 px-3 sm:px-3.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
+                    title="Customize card fields, add custom fields, and upload institution logo">
+                <svg class="w-4 h-4 text-purple-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span>Fields &amp; Logo</span>
+            </button>
+
+            <!-- 2. ID CARDS ZIP -->
             <button wire:click="triggerBulkCardsDownload(false)" 
                     wire:loading.attr="disabled"
                     class="h-10 px-3 sm:px-3.5 rounded-xl border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
@@ -50,23 +58,7 @@
                 </span>
             </button>
 
-            <!-- Customize Fields & Logo -->
-            <button wire:click="$set('showFieldCustomizerModal', true)" 
-                    class="h-10 px-3 sm:px-3.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
-                    title="Customize card fields, add custom fields, and upload institution logo">
-                <svg class="w-4 h-4 text-purple-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                <span>Fields &amp; Logo</span>
-            </button>
-
-            <!-- Share Application Link -->
-            <button wire:click="openShareLinkModal" 
-                    class="h-10 px-3 sm:px-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
-                    title="Generate and copy shareable member registration & card generation link">
-                <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                <span>Share Link</span>
-            </button>
-
-            <!-- Download All Photos (.ZIP) -->
+            <!-- 3. PHOTOS ZIP -->
             <button wire:click="downloadAllPhotos" 
                     wire:loading.attr="disabled"
                     class="h-10 px-3 sm:px-3.5 rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
@@ -79,7 +71,15 @@
                 </span>
             </button>
 
-            <!-- Import Excel / CSV -->
+            <!-- 4. SHARE LINK -->
+            <button wire:click="openShareLinkModal" 
+                    class="h-10 px-3 sm:px-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
+                    title="Generate and copy shareable member registration & card generation link">
+                <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                <span>Share Link</span>
+            </button>
+
+            <!-- 5. IMPORT -->
             <button wire:click="openUploadModal" 
                     class="h-10 px-3 sm:px-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95 whitespace-nowrap" 
                     title="Batch upload members from Excel or CSV spreadsheet">
@@ -89,7 +89,7 @@
                 <span>Import</span>
             </button>
 
-            <!-- Add Member -->
+            <!-- 6. ADD MEMBER -->
             <button wire:click="openAddModal" 
                     class="h-10 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 whitespace-nowrap">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg> 
