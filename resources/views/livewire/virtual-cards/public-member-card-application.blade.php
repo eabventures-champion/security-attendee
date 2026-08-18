@@ -303,7 +303,7 @@
 
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script>
         function downloadMemberCardImage() {
             const btn = document.getElementById('download-png-btn');
@@ -311,15 +311,15 @@
             btn.innerHTML = '<span>Rendering Image...</span>';
             btn.disabled = true;
 
-            const element = document.getElementById('public-virtual-id-card-element');
-            html2canvas(element, {
-                scale: 3,
-                useCORS: true,
-                backgroundColor: '#090d16'
-            }).then(canvas => {
+            const element = document.getElementById('virtual-id-card-element');
+            window.htmlToImage.toPng(element, {
+                pixelRatio: 3,
+                backgroundColor: '#090d16',
+                cacheBust: true,
+            }).then(dataUrl => {
                 const link = document.createElement('a');
-                link.download = 'Virtual_ID_Pass.png';
-                link.href = canvas.toDataURL('image/png');
+                link.download = 'Virtual_ID_Card_{{ $generatedCard ? Str::slug($generatedCard->full_name) : "pass" }}_{{ $generatedCard ? $generatedCard->member_id_number : "card" }}.png';
+                link.href = dataUrl;
                 link.click();
                 btn.innerHTML = originalText;
                 btn.disabled = false;

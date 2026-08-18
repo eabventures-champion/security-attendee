@@ -1013,13 +1013,13 @@
     @endif
 
         <script>
-            function loadHtml2Canvas(callback) {
-                if (window.html2canvas) {
+            function loadHtmlToImage(callback) {
+                if (window.htmlToImage) {
                     callback();
                     return;
                 }
                 const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
                 script.onload = callback;
                 script.onerror = () => {
                     alert('Failed to load image generation library. Please check your internet connection.');
@@ -1031,10 +1031,10 @@
                 const btn = document.getElementById('admin-download-card-btn');
                 if (!btn) return;
                 const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<svg class="animate-spin w-4 h-4 text-white inline-block mr-1.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Rendering Image...</span>';
+                btn.innerHTML = '<svg class="animate-spin w-4 h-4 text-white inline-block mr-1.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Rendering High-Res Image...</span>';
                 btn.disabled = true;
 
-                loadHtml2Canvas(() => {
+                loadHtmlToImage(() => {
                     const element = document.getElementById('admin-preview-card-canvas');
                     if (!element) {
                         btn.innerHTML = originalHtml;
@@ -1042,16 +1042,14 @@
                         return;
                     }
 
-                    html2canvas(element, {
-                        scale: 3,
-                        useCORS: true,
-                        allowTaint: true,
+                    window.htmlToImage.toPng(element, {
+                        pixelRatio: 3,
                         backgroundColor: '#090d16',
-                        logging: false,
-                    }).then(canvas => {
+                        cacheBust: true,
+                    }).then(dataUrl => {
                         const link = document.createElement('a');
                         link.download = 'Virtual_ID_Card_{{ $previewCard ? Str::slug($previewCard->full_name) : "pass" }}_{{ $previewCard ? $previewCard->member_id_number : "card" }}.png';
-                        link.href = canvas.toDataURL('image/png');
+                        link.href = dataUrl;
                         link.click();
                         btn.innerHTML = '<span class="text-emerald-300 font-black">✓ Downloaded!</span>';
                         setTimeout(() => {
@@ -1059,10 +1057,27 @@
                             btn.disabled = false;
                         }, 2000);
                     }).catch(err => {
-                        console.error('Snapshot failed:', err);
-                        btn.innerHTML = originalHtml;
-                        btn.disabled = false;
-                        alert('Could not render image snapshot. Please try again.');
+                        console.warn('PNG capture fallback to JPEG:', err);
+                        window.htmlToImage.toJpeg(element, {
+                            pixelRatio: 2,
+                            backgroundColor: '#090d16',
+                            quality: 0.95
+                        }).then(dataUrl => {
+                            const link = document.createElement('a');
+                            link.download = 'Virtual_ID_Card_{{ $previewCard ? Str::slug($previewCard->full_name) : "pass" }}_{{ $previewCard ? $previewCard->member_id_number : "card" }}.jpg';
+                            link.href = dataUrl;
+                            link.click();
+                            btn.innerHTML = '<span class="text-emerald-300 font-black">✓ Downloaded!</span>';
+                            setTimeout(() => {
+                                btn.innerHTML = originalHtml;
+                                btn.disabled = false;
+                            }, 2000);
+                        }).catch(finalErr => {
+                            console.error('Snapshot failed completely:', finalErr);
+                            btn.innerHTML = originalHtml;
+                            btn.disabled = false;
+                            alert('Could not render image snapshot: ' + (finalErr.message || 'Rendering error'));
+                        });
                     });
                 });
             }

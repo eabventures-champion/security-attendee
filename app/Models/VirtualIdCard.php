@@ -107,6 +107,13 @@ class VirtualIdCard extends Model
     public function getQrCodeUrlAttribute(): string
     {
         $verifyUrl = route('virtual-cards.public.view', ['uuid' => $this->uuid]);
+        try {
+            if (class_exists(\chillerlan\QRCode\QRCode::class)) {
+                return (new \chillerlan\QRCode\QRCode)->render($verifyUrl);
+            }
+        } catch (\Throwable $e) {
+            // fallback if any generation issue
+        }
         return "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" . urlencode($verifyUrl);
     }
 }

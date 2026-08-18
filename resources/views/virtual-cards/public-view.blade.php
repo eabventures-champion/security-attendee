@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -236,14 +236,14 @@
             btn.disabled = true;
 
             const element = document.getElementById('virtual-id-card-element');
-            html2canvas(element, {
-                scale: 3,
-                useCORS: true,
-                backgroundColor: '#090d16'
-            }).then(canvas => {
+            window.htmlToImage.toPng(element, {
+                pixelRatio: 3,
+                backgroundColor: '#090d16',
+                cacheBust: true,
+            }).then(dataUrl => {
                 const link = document.createElement('a');
                 link.download = 'Virtual_ID_{{ Str::slug($card->full_name) }}_{{ $card->member_id_number }}.png';
-                link.href = canvas.toDataURL('image/png');
+                link.href = dataUrl;
                 link.click();
                 btn.innerHTML = originalText;
                 btn.disabled = false;
