@@ -140,7 +140,12 @@ class VirtualIdCard extends Model
         $verifyUrl = route('virtual-cards.public.view', ['uuid' => $this->uuid]);
         try {
             if (class_exists(\chillerlan\QRCode\QRCode::class)) {
-                return (new \chillerlan\QRCode\QRCode)->render($verifyUrl);
+                $options = new \chillerlan\QRCode\QROptions([
+                    'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+                    'scale' => 8,
+                    'imageBase64' => true,
+                ]);
+                return (new \chillerlan\QRCode\QRCode($options))->render($verifyUrl);
             }
         } catch (\Throwable $e) {
             // fallback if any generation issue

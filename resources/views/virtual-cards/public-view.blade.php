@@ -188,8 +188,8 @@
                         </div>
                         
                         <!-- Member ID Number Badge under Name in Crisp White/Green -->
-                        <div>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-white/15 border border-white/30 text-white font-mono text-[11px] font-bold shadow-sm tracking-wider">
+                        <div class="flex items-center justify-center sm:justify-start">
+                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-lg bg-white/15 border border-white/30 text-white font-mono text-[11px] font-bold shadow-sm tracking-wider leading-none text-center">
                                 {{ $card->member_id_number }}
                             </span>
                         </div>
@@ -206,22 +206,36 @@
                     <!-- 3-Pill Tier: Admission | Country Director / Executive Role | Completion -->
                     <div class="flex items-stretch gap-1.5 pt-2">
                         <!-- 1. Admission -->
-                        <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-2 text-center shrink-0 min-w-[60px] sm:min-w-[70px] flex flex-col justify-center">
-                            <span class="text-[7.5px] sm:text-[8px] text-emerald-200 block font-extrabold uppercase tracking-wider leading-none">Admission</span>
-                            <span class="font-bold text-white font-mono text-[10.5px] sm:text-[11px] block mt-1 leading-tight">{{ $card->admission_year ?: 'N/A' }}</span>
+                        <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-2.5 text-center shrink-0 min-w-[65px] sm:min-w-[75px] flex flex-col items-center justify-center gap-1">
+                            <span class="text-[7.5px] sm:text-[8px] text-emerald-200 block font-extrabold uppercase tracking-wider leading-none text-center">Admission</span>
+                            <span class="font-bold text-white font-mono text-[10.5px] sm:text-[11px] block leading-none text-center">{{ $card->admission_year ?: 'N/A' }}</span>
                         </div>
 
                         <!-- 2. Role / Designation (In Between - Pinch of Yellow Accent) -->
-                        <div class="flex-1 rounded-xl py-1.5 px-2 text-center flex items-center justify-center shadow-sm min-w-0 {{ $card->isExecutive() ? 'bg-gradient-to-b from-yellow-500/20 via-yellow-500/10 to-transparent border border-yellow-400/60 text-yellow-300 shadow-yellow-500/10' : 'bg-white/15 border border-white/30 text-white' }}">
-                            <span class="font-black text-[9px] sm:text-[10px] leading-tight tracking-tight whitespace-nowrap {{ $card->isExecutive() ? 'text-yellow-300' : 'text-white' }}">
-                                {{ $card->isExecutive() ? '⭐ ' . (!empty($card->position) ? strtoupper($card->position) : 'EXECUTIVE') : '👤 MEMBER' }}
-                            </span>
+                        <div class="flex-1 rounded-xl py-1.5 px-2.5 text-center flex items-center justify-center shadow-sm min-w-0 {{ $card->isExecutive() ? 'bg-gradient-to-b from-yellow-500/20 via-yellow-500/10 to-transparent border border-yellow-400/60 text-yellow-300 shadow-yellow-500/10' : 'bg-white/15 border border-white/30 text-white' }}">
+                            <div class="inline-flex items-center justify-center gap-1.5 leading-none">
+                                @if($card->isExecutive())
+                                    <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-400 shrink-0 inline-block" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    <span class="font-black text-[9px] sm:text-[10px] uppercase tracking-tight whitespace-nowrap leading-none text-yellow-300">
+                                        {{ !empty($card->position) ? strtoupper($card->position) : 'EXECUTIVE' }}
+                                    </span>
+                                @else
+                                    <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/80 shrink-0 inline-block" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="font-black text-[9px] sm:text-[10px] uppercase tracking-tight whitespace-nowrap leading-none text-white">
+                                        MEMBER
+                                    </span>
+                                @endif
+                            </div>
                         </div>
 
                         <!-- 3. Completion -->
-                        <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-2 text-center shrink-0 min-w-[60px] sm:min-w-[70px] flex flex-col justify-center">
-                            <span class="text-[7.5px] sm:text-[8px] text-emerald-200 block font-extrabold uppercase tracking-wider leading-none">Completion</span>
-                            <span class="font-bold text-white font-mono text-[10.5px] sm:text-[11px] block mt-1 leading-tight">{{ $card->completion_year ?: 'Present' }}</span>
+                        <div class="bg-white/10 border border-white/20 rounded-xl py-1.5 px-2.5 text-center shrink-0 min-w-[65px] sm:min-w-[75px] flex flex-col items-center justify-center gap-1">
+                            <span class="text-[7.5px] sm:text-[8px] text-emerald-200 block font-extrabold uppercase tracking-wider leading-none text-center">Completion</span>
+                            <span class="font-bold text-white font-mono text-[10.5px] sm:text-[11px] block leading-none text-center">{{ $card->completion_year ?: 'Present' }}</span>
                         </div>
                     </div>
 
@@ -244,7 +258,7 @@
             <div class="pt-3.5 border-t border-white/20 flex items-center justify-between gap-3 relative z-10">
                 <div class="flex items-center gap-3">
                     <div class="p-1 rounded-xl bg-white shadow shrink-0 flex items-center justify-center">
-                        <img src="{{ $card->qr_code_url }}" crossorigin="anonymous" alt="QR Verification" class="w-12 h-12 sm:w-14 sm:h-14 rounded block">
+                        <img src="{{ $card->qr_code_url }}" crossorigin="anonymous" alt="QR Verification" class="w-12 h-12 sm:w-14 sm:h-14 rounded block object-contain">
                     </div>
                     <div class="text-left space-y-0.5">
                         <div class="text-[10.5px] font-black uppercase tracking-wide text-white flex items-center gap-1.5 whitespace-nowrap">
@@ -256,10 +270,10 @@
                     </div>
                 </div>
 
-                <div class="shrink-0 flex items-center">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap {{ $card->status === 'active' ? 'bg-white/20 text-white border border-white/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40' }}">
-                        <span class="w-2 h-2 rounded-full shrink-0 {{ $card->status === 'active' ? 'bg-emerald-400' : 'bg-rose-400' }}"></span>
-                        <span class="whitespace-nowrap">{{ strtoupper($card->status) }} ID</span>
+                <div class="shrink-0 flex items-center justify-center">
+                    <div class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap leading-none {{ $card->status === 'active' ? 'bg-white/20 text-white border border-white/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40' }}">
+                        <span class="w-2 h-2 rounded-full shrink-0 inline-block {{ $card->status === 'active' ? 'bg-emerald-400' : 'bg-rose-400' }}"></span>
+                        <span class="whitespace-nowrap leading-none flex items-center">{{ strtoupper($card->status) }} ID</span>
                     </div>
                 </div>
             </div>
@@ -280,13 +294,61 @@
 
     </div>
 
+    <!-- iOS / Safari Long-Press Save Modal Fallback -->
+    <div id="ios-save-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md p-4 flex items-center justify-center animate-fadeIn">
+        <div class="bg-slate-900 border border-emerald-500/30 rounded-3xl p-5 sm:p-6 max-w-md w-full text-center space-y-4 shadow-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase">
+                📱 iPhone / iPad Save Guide
+            </div>
+            <h3 class="text-lg font-black text-white">Save ID Card to Photos</h3>
+            <div class="rounded-2xl overflow-hidden border border-white/10 shadow-lg max-h-[50vh] flex items-center justify-center bg-slate-950">
+                <img id="ios-modal-img" src="" alt="Virtual ID Card" class="max-w-full max-h-[50vh] object-contain rounded-xl select-all">
+            </div>
+            <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs text-left space-y-1">
+                <div class="font-extrabold flex items-center gap-1.5">
+                    <span>👆</span> <span>How to save on iPhone:</span>
+                </div>
+                <p class="text-slate-300 text-[11px] leading-relaxed">
+                    <strong>Press and hold (long-press)</strong> the card image above, then tap <strong>"Save to Photos"</strong> (or "Share" &rarr; "Save Image").
+                </p>
+            </div>
+            <button onclick="closeIOSModal()" class="w-full py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition cursor-pointer">
+                Done / Close
+            </button>
+        </div>
+    </div>
+
     <!-- Footer -->
     <div class="text-center text-xs text-slate-600 pt-8">
         &copy; {{ date('Y') }} {{ $card->organization ? $card->organization->name : config('app.name') }}. All rights reserved.
     </div>
 
     <script>
-        function downloadCardAsImage() {
+        function dataURLtoBlob(dataUrl) {
+            const arr = dataUrl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
+
+        function showIOSPreviewModal(dataUrl) {
+            const modal = document.getElementById('ios-save-modal');
+            const img = document.getElementById('ios-modal-img');
+            img.src = dataUrl;
+            modal.classList.remove('hidden');
+        }
+
+        function closeIOSModal() {
+            const modal = document.getElementById('ios-save-modal');
+            modal.classList.add('hidden');
+        }
+
+        async function downloadCardAsImage() {
             const btn = document.getElementById('download-png-btn');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span>Rendering Image...</span>';
@@ -295,18 +357,85 @@
             const element = document.getElementById('virtual-id-card-element');
             const filename = 'Virtual_ID_{{ Str::slug($card->full_name) }}_{{ $card->member_id_number }}.png';
 
-            const triggerDownload = (dataUrl) => {
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+            const triggerDownload = async (dataUrl) => {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                
+                try {
+                    const blob = dataURLtoBlob(dataUrl);
+                    const file = new File([blob], filename, { type: 'image/png' });
+
+                    // 1. Web Share API (Primary for iPhone / iOS to directly save to Photos or Files)
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Official Virtual ID Card',
+                                text: 'Virtual ID Card - {{ $card->full_name }}'
+                            });
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                            return;
+                        } catch (shareErr) {
+                            if (shareErr.name === 'AbortError') {
+                                // User simply cancelled share dialog
+                                btn.innerHTML = originalText;
+                                btn.disabled = false;
+                                return;
+                            }
+                            console.warn('Share API error, falling back:', shareErr);
+                        }
+                    }
+
+                    // 2. Standard Blob Download for Android / Desktop
+                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = blobUrl;
+                    document.body.appendChild(link);
+                    link.click();
+
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(blobUrl);
+                    }, 100);
+
+                    // 3. If on iOS and browser did not open download/share, show preview modal
+                    if (isIOS) {
+                        showIOSPreviewModal(dataUrl);
+                    }
+                } catch (e) {
+                    console.error('Download handling error:', e);
+                    if (isIOS) {
+                        showIOSPreviewModal(dataUrl);
+                    } else {
+                        const link = document.createElement('a');
+                        link.download = filename;
+                        link.href = dataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
             };
 
             const runDownload = () => {
+                if (window.htmlToImage) {
+                    window.htmlToImage.toPng(element, {
+                        pixelRatio: 3,
+                        cacheBust: true,
+                    }).then(triggerDownload).catch(err => {
+                        console.warn('htmlToImage error, falling back to html2canvas:', err);
+                        fallbackHtml2Canvas();
+                    });
+                } else {
+                    fallbackHtml2Canvas();
+                }
+            };
+
+            function fallbackHtml2Canvas() {
                 if (window.html2canvas) {
                     html2canvas(element, {
                         scale: 3,
@@ -317,21 +446,6 @@
                     }).then(canvas => {
                         triggerDownload(canvas.toDataURL('image/png'));
                     }).catch(err => {
-                        console.warn('html2canvas error, falling back to htmlToImage:', err);
-                        fallbackHtmlToImage();
-                    });
-                } else {
-                    fallbackHtmlToImage();
-                }
-            };
-
-            function fallbackHtmlToImage() {
-                if (window.htmlToImage) {
-                    window.htmlToImage.toPng(element, {
-                        pixelRatio: 3,
-                        cacheBust: true,
-                        skipFonts: true,
-                    }).then(triggerDownload).catch(err => {
                         console.error('Snapshot error:', err);
                         btn.innerHTML = originalText;
                         btn.disabled = false;

@@ -392,33 +392,135 @@
             </div>
         @endif
 
-        <!-- Footer -->
-        <div class="text-center text-xs text-slate-600 pt-6">
-            &copy; {{ date('Y') }} {{ $organization->name }}. All rights reserved.
+    <!-- iOS / Safari Long-Press Save Modal Fallback -->
+    <div id="ios-save-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md p-4 flex items-center justify-center animate-fadeIn">
+        <div class="bg-slate-900 border border-blue-500/30 rounded-3xl p-5 sm:p-6 max-w-md w-full text-center space-y-4 shadow-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-black uppercase">
+                📱 iPhone / iPad Save Guide
+            </div>
+            <h3 class="text-lg font-black text-white">Save ID Card to Photos</h3>
+            <div class="rounded-2xl overflow-hidden border border-white/10 shadow-lg max-h-[50vh] flex items-center justify-center bg-slate-950">
+                <img id="ios-modal-img" src="" alt="Virtual ID Card" class="max-w-full max-h-[50vh] object-contain rounded-xl select-all">
+            </div>
+            <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs text-left space-y-1">
+                <div class="font-extrabold flex items-center gap-1.5">
+                    <span>👆</span> <span>How to save on iPhone:</span>
+                </div>
+                <p class="text-slate-300 text-[11px] leading-relaxed">
+                    <strong>Press and hold (long-press)</strong> the card image above, then tap <strong>"Save to Photos"</strong> (or "Share" &rarr; "Save Image").
+                </p>
+            </div>
+            <button onclick="closeIOSModal()" class="w-full py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition cursor-pointer">
+                Done / Close
+            </button>
         </div>
+    </div>
 
+    <!-- Footer -->
+    <div class="text-center text-xs text-slate-600 pt-6">
+        &copy; {{ date('Y') }} {{ $organization->name }}. All rights reserved.
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script>
-        function downloadMemberCardImage() {
+        function dataURLtoBlob(dataUrl) {
+            const arr = dataUrl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
+
+        function showIOSPreviewModal(dataUrl) {
+            const modal = document.getElementById('ios-save-modal');
+            const img = document.getElementById('ios-modal-img');
+            img.src = dataUrl;
+            modal.classList.remove('hidden');
+        }
+
+        function closeIOSModal() {
+            const modal = document.getElementById('ios-save-modal');
+            modal.classList.add('hidden');
+        }
+
+        async function downloadMemberCardImage() {
             const btn = document.getElementById('download-png-btn');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span>Rendering Image...</span>';
             btn.disabled = true;
 
             const element = document.getElementById('virtual-id-card-element');
+            const filename = 'Virtual_ID_Card_{{ $generatedCard ? Str::slug($generatedCard->full_name) : "pass" }}_{{ $generatedCard ? $generatedCard->member_id_number : "card" }}.png';
+
             window.htmlToImage.toPng(element, {
                 pixelRatio: 3,
                 backgroundColor: '#090d16',
                 cacheBust: true,
-            }).then(dataUrl => {
-                const link = document.createElement('a');
-                link.download = 'Virtual_ID_Card_{{ $generatedCard ? Str::slug($generatedCard->full_name) : "pass" }}_{{ $generatedCard ? $generatedCard->member_id_number : "card" }}.png';
-                link.href = dataUrl;
-                link.click();
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+            }).then(async dataUrl => {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                
+                try {
+                    const blob = dataURLtoBlob(dataUrl);
+                    const file = new File([blob], filename, { type: 'image/png' });
+
+                    // 1. Web Share API (Primary for iPhone / iOS to directly save to Photos or Files)
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Official Virtual ID Card',
+                                text: 'Virtual ID Card - {{ $generatedCard ? $generatedCard->full_name : "" }}'
+                            });
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                            return;
+                        } catch (shareErr) {
+                            if (shareErr.name === 'AbortError') {
+                                btn.innerHTML = originalText;
+                                btn.disabled = false;
+                                return;
+                            }
+                            console.warn('Share API error, falling back:', shareErr);
+                        }
+                    }
+
+                    // 2. Standard Blob Download for Android / Desktop
+                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = blobUrl;
+                    document.body.appendChild(link);
+                    link.click();
+
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(blobUrl);
+                    }, 100);
+
+                    // 3. If on iOS and browser did not open download/share, show preview modal
+                    if (isIOS) {
+                        showIOSPreviewModal(dataUrl);
+                    }
+                } catch (e) {
+                    console.error('Download handling error:', e);
+                    if (isIOS) {
+                        showIOSPreviewModal(dataUrl);
+                    } else {
+                        const link = document.createElement('a');
+                        link.download = filename;
+                        link.href = dataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
             }).catch(err => {
                 console.error(err);
                 btn.innerHTML = originalText;
