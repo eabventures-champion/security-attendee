@@ -109,11 +109,11 @@
             <!-- Card Top Header: Centered Organization & Subtitle with Left & Right Balanced Logos -->
             <div class="flex items-center justify-between border-b border-white/20 pb-3.5 relative z-10 gap-3">
                 <!-- 1. Main Logo (Left) -->
-                <div class="w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 min-w-[52px] min-h-[52px] shrink-0 flex items-center justify-center">
                     @if($card->main_logo_url)
-                        <img src="{{ $card->main_logo_url }}" crossorigin="anonymous" alt="Main Logo" class="max-w-full max-h-full object-contain" title="Main Logo">
+                        <img src="{{ $card->main_logo_url }}" crossorigin="anonymous" alt="Main Logo" class="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]" title="Main Logo">
                     @else
-                        <div class="w-full h-full rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-base shrink-0 shadow-inner">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-800/80 border border-emerald-500/30 text-white flex items-center justify-center font-black text-base shrink-0 shadow-md">
                             🏛️
                         </div>
                     @endif
@@ -145,11 +145,11 @@
                 </div>
 
                 <!-- 2. Association Logo (Right) -->
-                <div class="w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 min-w-[52px] min-h-[52px] shrink-0 flex items-center justify-center">
                     @if($card->association_logo_url)
-                        <img src="{{ $card->association_logo_url }}" crossorigin="anonymous" alt="Association Logo" class="max-w-full max-h-full object-contain" title="Association Logo">
+                        <img src="{{ $card->association_logo_url }}" crossorigin="anonymous" alt="Association Logo" class="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]" title="Association Logo">
                     @else
-                        <div class="w-full h-full rounded-lg bg-emerald-700 flex items-center justify-center text-white font-black text-xs">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-800/80 border border-emerald-500/30 flex items-center justify-center text-white font-black text-xs shadow-md">
                             FALAS
                         </div>
                     @endif

@@ -1094,11 +1094,11 @@
                     <!-- Header: Dual Logos & Centered Organization Details -->
                     <div class="relative z-10 flex items-center justify-between gap-3 border-b border-white/20 pb-4">
                         <!-- 1. Main Logo (Left) -->
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 min-w-[52px] min-h-[52px] shrink-0 flex items-center justify-center">
                             @if($previewCard->main_logo_url)
-                                <img src="{{ $previewCard->main_logo_url }}" crossorigin="anonymous" alt="Main Logo" class="max-w-full max-h-full object-contain" title="Main Logo">
+                                <img src="{{ $previewCard->main_logo_url }}" crossorigin="anonymous" alt="Main Logo" class="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]" title="Main Logo">
                             @else
-                                <div class="w-full h-full rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-base shrink-0 shadow-inner">
+                                <div class="w-12 h-12 rounded-xl bg-emerald-800/80 border border-emerald-500/30 text-white flex items-center justify-center font-black text-base shrink-0 shadow-md">
                                     🏛️
                                 </div>
                             @endif
@@ -1130,11 +1130,11 @@
                         </div>
 
                         <!-- 2. Association Logo (Right) -->
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 min-w-[52px] min-h-[52px] shrink-0 flex items-center justify-center">
                             @if($previewCard->association_logo_url)
-                                <img src="{{ $previewCard->association_logo_url }}" crossorigin="anonymous" alt="Association Logo" class="max-w-full max-h-full object-contain" title="Association Logo">
+                                <img src="{{ $previewCard->association_logo_url }}" crossorigin="anonymous" alt="Association Logo" class="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]" title="Association Logo">
                             @else
-                                <div class="w-full h-full rounded-lg bg-emerald-700 flex items-center justify-center text-white font-black text-xs">
+                                <div class="w-12 h-12 rounded-xl bg-emerald-800/80 border border-emerald-500/30 flex items-center justify-center text-white font-black text-xs shadow-md">
                                     FALAS
                                 </div>
                             @endif
@@ -1775,16 +1775,16 @@
             
             <!-- Header: Dual Logos & Centered Org Details -->
             <div class="relative z-10 flex items-center justify-between gap-3 border-b border-white/20 pb-4">
-                <div class="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
-                    <img id="b-card-main-logo" src="" crossorigin="anonymous" alt="Main Logo" class="max-w-full max-h-full object-contain">
+                <div class="w-16 h-16 min-w-[60px] min-h-[60px] shrink-0 flex items-center justify-center">
+                    <img id="b-card-main-logo" src="" crossorigin="anonymous" alt="Main Logo" class="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
                 </div>
                 <div class="text-center flex-1 min-w-0 space-y-0.5 px-1">
                     <div id="b-card-org-title" class="text-sm font-black uppercase tracking-wider text-white font-sans leading-tight"></div>
                     <div id="b-card-id-suffix" class="text-[11px] font-black uppercase tracking-widest text-yellow-300 font-sans leading-tight">IDENTITY CARD</div>
                     <div class="text-[9.5px] font-extrabold uppercase tracking-[0.18em] text-emerald-100/80 font-sans pt-0.5">Official Student Pass</div>
                 </div>
-                <div class="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border-2 border-white/90 overflow-hidden">
-                    <img id="b-card-assoc-logo" src="" crossorigin="anonymous" alt="Association Logo" class="max-w-full max-h-full object-contain">
+                <div class="w-16 h-16 min-w-[60px] min-h-[60px] shrink-0 flex items-center justify-center">
+                    <img id="b-card-assoc-logo" src="" crossorigin="anonymous" alt="Association Logo" class="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
                 </div>
             </div>
 

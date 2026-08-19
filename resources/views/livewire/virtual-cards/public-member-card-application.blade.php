@@ -5,13 +5,13 @@
         <div class="text-center space-y-3">
             <div class="inline-flex items-center justify-center gap-3 p-2 rounded-2xl bg-white/10 border border-white/20 shadow-lg mb-1">
                 @if(!empty($main_logo_url))
-                    <div class="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border border-white/80 overflow-hidden">
-                        <img src="{{ $main_logo_url }}" alt="Main Logo" class="max-w-full max-h-full object-contain" title="Main Logo">
+                    <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-md border border-white/80 overflow-hidden">
+                        <img src="{{ $main_logo_url }}" alt="Main Logo" class="w-full h-full object-cover" title="Main Logo">
                     </div>
                 @endif
                 @if(!empty($association_logo_url))
-                    <div class="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-md border border-white/80 overflow-hidden">
-                        <img src="{{ $association_logo_url }}" alt="Association Logo" class="max-w-full max-h-full object-contain" title="Association Logo">
+                    <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-md border border-white/80 overflow-hidden">
+                        <img src="{{ $association_logo_url }}" alt="Association Logo" class="w-full h-full object-cover" title="Association Logo">
                     </div>
                 @endif
                 @if(empty($main_logo_url) && empty($association_logo_url))
@@ -256,7 +256,7 @@
                         <div class="flex items-start gap-2.5 min-w-0 flex-1">
                             <!-- 1. Main Logo -->
                             @if($generatedCard->main_logo_url)
-                                <img src="{{ $generatedCard->main_logo_url }}" alt="Main Logo" class="w-10 h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10 shrink-0 shadow-sm mt-0.5" title="Institution Main Logo">
+                                <img src="{{ $generatedCard->main_logo_url }}" alt="Main Logo" class="w-10 h-10 object-cover rounded-xl border border-white/10 shrink-0 shadow-sm mt-0.5 overflow-hidden" title="Institution Main Logo">
                             @else
                                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/30 border border-blue-400/30 text-blue-300 flex items-center justify-center font-black text-sm shrink-0 shadow-inner mt-0.5">
                                     🏛️
@@ -275,7 +275,7 @@
                         <!-- Right: Association Logo & Member ID Badge -->
                         <div class="shrink-0 flex items-center gap-2">
                             @if($generatedCard->association_logo_url)
-                                <img src="{{ $generatedCard->association_logo_url }}" alt="Association Logo" class="w-9 h-9 object-contain rounded-xl bg-white/5 p-1 border border-amber-500/30 shadow-sm" title="Association Logo">
+                                <img src="{{ $generatedCard->association_logo_url }}" alt="Association Logo" class="w-9 h-9 object-cover rounded-xl border border-amber-500/30 shadow-sm overflow-hidden" title="Association Logo">
                             @endif
                             <span class="inline-flex items-center px-2 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-blue-300 font-mono text-[10.5px] font-bold shadow-sm whitespace-nowrap">
                                 {{ $generatedCard->member_id_number }}
