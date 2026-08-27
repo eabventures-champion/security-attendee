@@ -50,6 +50,12 @@ class AttendeeList extends Component
     public ?string $currentBatchId = null;
     public int $batchChunkSize = 6;
 
+    // Deletion Vault State & Restoration System
+    public bool $showVaultModal = false;
+    public array $selectedVaultAttendees = [];
+    public bool $selectAllVault = false;
+    public string $vaultSearch = '';
+
     public function toggleExpandOrg(int $orgId): void
     {
         if (in_array($orgId, $this->expandedOrgs)) {
@@ -1353,13 +1359,9 @@ class AttendeeList extends Component
     {
         $attendee = Attendee::where('uuid', $uuid)->first();
         if ($attendee) {
-            DB::transaction(function () use ($attendee) {
-                \App\Models\CheckIn::where('attendee_id', $attendee->id)->delete();
-                \App\Models\QrCode::where('attendee_id', $attendee->id)->delete();
-                \App\Models\NotificationLog::where('attendee_id', $attendee->id)->delete();
-                $attendee->forceDelete();
-            });
-            session()->flash('success', 'Attendee permanently deleted from the database.');
+            $name = $attendee->full_name;
+            $attendee->delete();
+            session()->flash('success', "📦 Attendee '{$name}' moved to Deletion Vault. Records can be restored anytime or approved for final purge by an Org Admin.");
         }
     }
 
@@ -1552,7 +1554,184 @@ class AttendeeList extends Component
     {
         if (empty($this->selectedAttendees)) return;
 
-        $attendees = Attendee::whereIn('uuid', $this->selectedAttendees)->get();
+        $count = Attendee::whereIn('uuid', $this->selectedAttendees)->delete();
+
+        $this->selectedAttendees = [];
+        $this->selectAllOnPage = false;
+        $this->selectAll = false;
+        session()->flash('success', "📦 {$count} attendee(s) moved to the Deletion Vault. They can be restored anytime or approved for final purge by an Org Admin.");
+    }
+
+    public function deleteAllFilteredAttendees(): void
+    {
+        $query = $this->getFilteredAttendeesQuery();
+        $count = (clone $query)->count();
+        if ($count === 0) return;
+
+        $query->delete();
+
+        $this->selectedAttendees = [];
+        $this->selectAllOnPage = false;
+        $this->selectAll = false;
+        session()->flash('success', "📦 All {$count} attendee(s) moved to the Deletion Vault. Records can be restored or approved for final purge by an Org Admin.");
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       DELETION VAULT & RESTORATION SYSTEM
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    public function openVaultModal(): void
+    {
+        $this->showVaultModal = true;
+        $this->selectedVaultAttendees = [];
+        $this->selectAllVault = false;
+        $this->vaultSearch = '';
+    }
+
+    public function closeVaultModal(): void
+    {
+        $this->showVaultModal = false;
+        $this->selectedVaultAttendees = [];
+        $this->selectAllVault = false;
+    }
+
+    public function getVaultAttendeesQuery()
+    {
+        $query = Attendee::onlyTrashed()
+            ->with(['event', 'qrCode']);
+
+        $isSuperAdmin = auth()->user()->hasRole('super_admin') || auth()->user()->email === 'superadmin@attendflow.com';
+        if (!$isSuperAdmin && auth()->user()->organization_id) {
+            $query->where(function ($q) {
+                $q->where('organization_id', auth()->user()->organization_id)
+                  ->orWhereHas('event', fn($eq) => $eq->where('organization_id', auth()->user()->organization_id));
+            });
+        }
+
+        if ($this->eventUuid) {
+            $event = Event::where('uuid', $this->eventUuid)->first();
+            if ($event) {
+                $query->where('event_id', $event->id);
+            }
+        }
+
+        if ($this->vaultSearch) {
+            $term = trim($this->vaultSearch);
+            $query->where(function ($q) use ($term) {
+                $q->where('full_name', 'like', '%' . $term . '%')
+                  ->orWhere('email', 'like', '%' . $term . '%')
+                  ->orWhere('phone', 'like', '%' . $term . '%');
+            });
+        }
+
+        return $query;
+    }
+
+    public function canPurgeVault(): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+
+        return $user->hasRole('super_admin') 
+            || $user->email === 'superadmin@attendflow.com' 
+            || $user->isSuperAdmin() 
+            || $user->hasRole('organization_admin') 
+            || $user->hasRole('org-admin')
+            || $user->isOrganizationAdmin();
+    }
+
+    public function toggleSelectAllVault(): void
+    {
+        if ($this->selectAllVault) {
+            $this->selectedVaultAttendees = $this->getVaultAttendeesQuery()->pluck('uuid')->map(fn($u) => (string) $u)->toArray();
+        } else {
+            $this->selectedVaultAttendees = [];
+        }
+    }
+
+    public function restoreAttendee($uuid): void
+    {
+        $attendee = Attendee::onlyTrashed()->where('uuid', $uuid)->first();
+        if (!$attendee) return;
+
+        $name = $attendee->full_name;
+        $attendee->restore();
+        if ($attendee->qrCode) {
+            $attendee->qrCode()->update(['is_revoked' => false]);
+        }
+
+        $this->selectedVaultAttendees = array_values(array_filter($this->selectedVaultAttendees, fn($id) => $id !== $uuid));
+        session()->flash('success', "✅ Attendee '{$name}' restored successfully from the vault.");
+    }
+
+    public function restoreSelectedVaultAttendees(): void
+    {
+        if (empty($this->selectedVaultAttendees)) return;
+
+        $attendees = Attendee::onlyTrashed()->whereIn('uuid', $this->selectedVaultAttendees)->get();
+        $count = $attendees->count();
+        foreach ($attendees as $att) {
+            $att->restore();
+            if ($att->qrCode) {
+                $att->qrCode()->update(['is_revoked' => false]);
+            }
+        }
+
+        $this->selectedVaultAttendees = [];
+        $this->selectAllVault = false;
+        session()->flash('success', "✅ {$count} attendee(s) restored successfully from the vault.");
+    }
+
+    public function restoreAllVaultAttendees(): void
+    {
+        $attendees = $this->getVaultAttendeesQuery()->get();
+        $count = $attendees->count();
+        if ($count === 0) return;
+
+        foreach ($attendees as $att) {
+            $att->restore();
+            if ($att->qrCode) {
+                $att->qrCode()->update(['is_revoked' => false]);
+            }
+        }
+
+        $this->selectedVaultAttendees = [];
+        $this->selectAllVault = false;
+        session()->flash('success', "✅ All {$count} attendee(s) in the vault restored successfully.");
+    }
+
+    public function permanentPurgeAttendee($uuid): void
+    {
+        if (!$this->canPurgeVault()) {
+            session()->flash('error', "⚠️ Permission Denied: Permanent database deletion requires approval from an Organization Admin.");
+            return;
+        }
+
+        $attendee = Attendee::onlyTrashed()->where('uuid', $uuid)->first();
+        if (!$attendee) return;
+
+        $name = $attendee->full_name;
+        DB::transaction(function () use ($attendee) {
+            \App\Models\CheckIn::where('attendee_id', $attendee->id)->delete();
+            \App\Models\QrCode::where('attendee_id', $attendee->id)->delete();
+            \App\Models\NotificationLog::where('attendee_id', $attendee->id)->delete();
+            $attendee->forceDelete();
+        });
+
+        $this->selectedVaultAttendees = array_values(array_filter($this->selectedVaultAttendees, fn($id) => $id !== $uuid));
+        session()->flash('success', "🗑️ Attendee '{$name}' permanently purged from database upon Org Admin approval.");
+    }
+
+    public function permanentPurgeSelectedVaultAttendees(): void
+    {
+        if (!$this->canPurgeVault()) {
+            session()->flash('error', "⚠️ Permission Denied: Permanent database deletion requires approval from an Organization Admin.");
+            return;
+        }
+
+        if (empty($this->selectedVaultAttendees)) return;
+
+        $attendees = Attendee::onlyTrashed()->whereIn('uuid', $this->selectedVaultAttendees)->get();
         $count = $attendees->count();
         $attendeeIds = $attendees->pluck('id')->toArray();
 
@@ -1561,19 +1740,23 @@ class AttendeeList extends Component
                 \App\Models\CheckIn::whereIn('attendee_id', $attendeeIds)->delete();
                 \App\Models\QrCode::whereIn('attendee_id', $attendeeIds)->delete();
                 \App\Models\NotificationLog::whereIn('attendee_id', $attendeeIds)->delete();
-                Attendee::whereIn('id', $attendeeIds)->forceDelete();
+                Attendee::onlyTrashed()->whereIn('id', $attendeeIds)->forceDelete();
             });
         }
 
-        $this->selectedAttendees = [];
-        $this->selectAllOnPage = false;
-        $this->selectAll = false;
-        session()->flash('success', "{$count} attendee(s) permanently deleted from the database.");
+        $this->selectedVaultAttendees = [];
+        $this->selectAllVault = false;
+        session()->flash('success', "🗑️ {$count} attendee(s) permanently purged from database upon Org Admin approval.");
     }
 
-    public function deleteAllFilteredAttendees(): void
+    public function permanentPurgeAllVaultAttendees(): void
     {
-        $attendees = $this->getFilteredAttendeesQuery()->get();
+        if (!$this->canPurgeVault()) {
+            session()->flash('error', "⚠️ Permission Denied: Permanent database deletion requires approval from an Organization Admin.");
+            return;
+        }
+
+        $attendees = $this->getVaultAttendeesQuery()->get();
         $count = $attendees->count();
         if ($count === 0) return;
 
@@ -1584,14 +1767,13 @@ class AttendeeList extends Component
                 \App\Models\CheckIn::whereIn('attendee_id', $attendeeIds)->delete();
                 \App\Models\QrCode::whereIn('attendee_id', $attendeeIds)->delete();
                 \App\Models\NotificationLog::whereIn('attendee_id', $attendeeIds)->delete();
-                Attendee::whereIn('id', $attendeeIds)->forceDelete();
+                Attendee::onlyTrashed()->whereIn('id', $attendeeIds)->forceDelete();
             });
         }
 
-        $this->selectedAttendees = [];
-        $this->selectAllOnPage = false;
-        $this->selectAll = false;
-        session()->flash('success', "All {$count} attendee(s) in the table have been permanently deleted from the database.");
+        $this->selectedVaultAttendees = [];
+        $this->selectAllVault = false;
+        session()->flash('success', "🗑️ All {$count} attendee(s) in the vault permanently purged from database upon Org Admin approval.");
     }
 
     public function bulkChangeRole($newRole)
@@ -2332,6 +2514,11 @@ class AttendeeList extends Component
                 ->get();
         }
 
+        $vaultQuery = $this->getVaultAttendeesQuery();
+        $vaultCount = (clone $vaultQuery)->count();
+        $vaultAttendees = $this->showVaultModal ? (clone $vaultQuery)->latest('deleted_at')->get() : collect();
+        $isOrgAdmin = $this->canPurgeVault();
+
         return view('livewire.attendees.attendee-list', [
             'mobileOrg' => $mobileOrg,
             'mobileEvent' => $mobileEvent,
@@ -2344,6 +2531,9 @@ class AttendeeList extends Component
             'verifiedCount' => $verifiedCount,
             'pendingCount' => $pendingCount,
             'rejectedCount' => $rejectedCount,
+            'vaultCount' => $vaultCount,
+            'vaultAttendees' => $vaultAttendees,
+            'isOrgAdmin' => $isOrgAdmin,
             'isSuperAdmin' => $isSuperAdmin,
             'organizationsTree' => $organizationsTree,
             'eventUuid' => $this->eventUuid,

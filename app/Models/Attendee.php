@@ -23,9 +23,11 @@ class Attendee extends Model
         parent::boot();
 
         static::deleting(function ($attendee) {
-            $attendee->checkIns()->delete();
-            if ($attendee->qrCode) {
-                $attendee->qrCode()->delete();
+            if ($attendee->isForceDeleting()) {
+                $attendee->checkIns()->delete();
+                if ($attendee->qrCode) {
+                    $attendee->qrCode()->delete();
+                }
             }
         });
     }
