@@ -271,60 +271,79 @@
 
     <!-- Bulk Actions Bar -->
     @if(count($selectedAttendees ?? []) > 0)
-        <div class="bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10 border border-blue-500/30 rounded-2xl p-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 animate-fadeIn">
-            <div class="flex items-center gap-3 flex-wrap">
-                <div class="p-2 rounded-xl bg-blue-500/20">
-                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+        <div class="bg-slate-900/95 dark:bg-slate-900/95 border border-blue-500/30 dark:border-blue-500/40 rounded-2xl p-4 shadow-xl backdrop-blur-xl flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 animate-fadeIn">
+            
+            <!-- Left: Selection Info & Quick Selector -->
+            <div class="flex items-center gap-3.5">
+                <div class="p-2.5 rounded-xl bg-blue-500/20 text-blue-400 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                 </div>
                 <div class="space-y-0.5">
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ number_format(count($selectedAttendees)) }} attendee(s) selected</span>
-                        <button wire:click="$set('selectedAttendees', [])" class="text-xs text-rose-500 hover:text-rose-400 font-semibold cursor-pointer underline">Clear selection</button>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-sm font-extrabold text-white">
+                            {{ number_format(count($selectedAttendees)) }} <span class="font-normal text-slate-300">attendee(s) selected</span>
+                        </span>
+                        <span class="text-slate-600 dark:text-slate-500">•</span>
+                        <button type="button" 
+                                wire:click="$set('selectedAttendees', [])" 
+                                class="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1 cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            Clear
+                        </button>
                     </div>
                     @if(count($selectedAttendees) < ($totalCount ?? 0))
-                        <p class="text-xs text-slate-500 dark:text-slate-400">
-                            {{ count($selectedAttendees) }} on this page selected. 
-                            <button type="button" wire:click="selectAllFilteredAttendees" class="text-blue-600 dark:text-blue-400 font-extrabold hover:underline cursor-pointer">Select all {{ number_format($totalCount) }} attendees across all pages</button>
+                        <p class="text-xs text-slate-400">
+                            {{ count($selectedAttendees) }} on this page. 
+                            <button type="button" 
+                                    wire:click="selectAllFilteredAttendees" 
+                                    class="text-blue-400 hover:text-blue-300 font-bold hover:underline cursor-pointer">
+                                Select all {{ number_format($totalCount) }} across all pages →
+                            </button>
                         </p>
                     @else
-                        <p class="text-xs font-bold text-purple-600 dark:text-purple-300">
-                            ✨ All {{ number_format(count($selectedAttendees)) }} attendees matching this view are selected.
+                        <p class="text-xs font-bold text-purple-400 flex items-center gap-1">
+                            ✨ All {{ number_format(count($selectedAttendees)) }} attendees across all pages are selected.
                         </p>
                     @endif
                 </div>
             </div>
-            <div class="flex items-center gap-3 flex-wrap">
-                <!-- Bulk Approve Selected -->
+
+            <!-- Right: Action Buttons Row -->
+            <div class="flex items-center gap-2.5 flex-wrap xl:flex-nowrap w-full xl:w-auto justify-start xl:justify-end">
+                
+                <!-- 1. Approve Selected -->
                 <button wire:click="bulkApproveAttendees" 
                         wire:confirm="Approve and issue digital QR passes to {{ count($selectedAttendees) }} selected attendee(s)? An email delivery report will be shown after completion." 
                         wire:loading.attr="disabled"
                         wire:target="bulkApproveAttendees,approveAllFilteredAttendees"
-                        class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait">
+                        class="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-all shadow-md shadow-emerald-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait shrink-0">
                     <svg wire:loading.remove wire:target="bulkApproveAttendees" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                     <svg wire:loading wire:target="bulkApproveAttendees" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span wire:loading.remove wire:target="bulkApproveAttendees">Approve &amp; Issue Passes</span>
+                    <span wire:loading.remove wire:target="bulkApproveAttendees">Approve &amp; Issue ({{ count($selectedAttendees) }})</span>
                     <span wire:loading wire:target="bulkApproveAttendees">Processing...</span>
                 </button>
 
+                <!-- 2. Approve All Filtered (when not all selected) -->
                 @if(count($selectedAttendees) < ($totalCount ?? 0))
-                <!-- Approve All Filtered Attendees -->
-                <button wire:click="approveAllFilteredAttendees" 
-                        wire:confirm="🚀 Approve ALL {{ number_format($totalCount) }} attendee(s) matching the current filters and send QR passes via email? An email delivery report will be shown after completion."
-                        wire:loading.attr="disabled"
-                        wire:target="bulkApproveAttendees,approveAllFilteredAttendees"
-                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold transition-all shadow-md shadow-emerald-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait border border-emerald-400/30">
-                    <svg wire:loading.remove wire:target="approveAllFilteredAttendees" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                    <svg wire:loading wire:target="approveAllFilteredAttendees" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span wire:loading.remove wire:target="approveAllFilteredAttendees">Approve All ({{ number_format($totalCount) }})</span>
-                    <span wire:loading wire:target="approveAllFilteredAttendees">Processing all...</span>
-                </button>
+                    <button wire:click="approveAllFilteredAttendees" 
+                            wire:confirm="🚀 Approve ALL {{ number_format($totalCount) }} attendee(s) matching the current filters and send QR passes via email? An email delivery report will be shown after completion."
+                            wire:loading.attr="disabled"
+                            wire:target="bulkApproveAttendees,approveAllFilteredAttendees"
+                            class="h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-600/80 to-teal-600/80 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/10 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait border border-emerald-400/30 shrink-0">
+                        <svg wire:loading.remove wire:target="approveAllFilteredAttendees" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        <svg wire:loading wire:target="approveAllFilteredAttendees" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span wire:loading.remove wire:target="approveAllFilteredAttendees">Approve All ({{ number_format($totalCount) }})</span>
+                        <span wire:loading wire:target="approveAllFilteredAttendees">Processing...</span>
+                    </button>
                 @endif
 
-                <!-- Bulk Role Change -->
-                <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open" class="px-4 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
+                <!-- 3. Change Role Dropdown -->
+                <div x-data="{ open: false }" class="relative shrink-0">
+                    <button @click="open = !open" 
+                            type="button" 
+                            class="h-10 px-3.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                        Change Role
+                        <span>Change Role</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div x-show="open" @click.outside="open = false" x-cloak class="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-xl shadow-2xl z-50 py-1 overflow-hidden">
@@ -336,10 +355,12 @@
                     </div>
                 </div>
 
-                <!-- Bulk Delete -->
-                <button wire:click="bulkDeleteAttendees" wire:confirm="⚠️ PERMANENT DATABASE DELETION: Are you sure you want to permanently delete {{ count($selectedAttendees) }} selected attendee(s) from the database? This action will remove all passes, check-ins, and data, and CANNOT be undone." class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold transition-all shadow-md shadow-rose-500/20 flex items-center gap-2 cursor-pointer">
+                <!-- 4. Delete Selected -->
+                <button wire:click="bulkDeleteAttendees" 
+                        wire:confirm="⚠️ PERMANENT DATABASE DELETION: Are you sure you want to permanently delete {{ count($selectedAttendees) }} selected attendee(s) from the database? This action will remove all passes, check-ins, and data, and CANNOT be undone." 
+                        class="h-10 px-3.5 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-md shadow-rose-500/20 flex items-center gap-1.5 cursor-pointer shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    Delete Selected ({{ count($selectedAttendees) }})
+                    <span>Delete ({{ count($selectedAttendees) }})</span>
                 </button>
             </div>
         </div>
