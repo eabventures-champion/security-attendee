@@ -37,12 +37,18 @@ class AttendeeList extends Component
     public bool $selectAll = false;
     public bool $selectAllOnPage = false;
 
-    // Email delivery report modal state
+    // Email delivery report & progressive batch processing state
     public bool $showEmailReportModal = false;
     public array $emailDeliveryResults = [];
     public int $emailSuccessCount = 0;
     public int $emailFailedCount = 0;
     public int $approvedTotalCount = 0;
+    public bool $isProcessingBatch = false;
+    public array $pendingBatchUuids = [];
+    public int $batchTotalCount = 0;
+    public int $batchProcessedCount = 0;
+    public ?string $currentBatchId = null;
+    public int $batchChunkSize = 8;
 
     public function toggleExpandOrg(int $orgId): void
     {
@@ -1073,20 +1079,17 @@ class AttendeeList extends Component
     }
 
     /**
-     * Core method: approve attendees, generate QR codes, send emails, and show delivery report
+     * Core method: approve attendees, generate QR codes, and start progressive email dispatch
      */
     protected function processApproveAndEmail($attendees)
     {
-        $results = [];
-        $successCount = 0;
-        $failedCount = 0;
-        $approvedCount = 0;
-        $batchId = (string) Str::uuid();
-
-        foreach ($attendees as $index => $attendee) {
-            $attendee->verification_status = VerificationStatus::Verified;
-            $attendee->verified_at = now();
-            $attendee->save();
+        // 1. Fast Database Update: Mark all attendees verified & generate any missing QR codes
+        foreach ($attendees as $attendee) {
+            if ($attendee->verification_status !== VerificationStatus::Verified) {
+                $attendee->verification_status = VerificationStatus::Verified;
+                $attendee->verified_at = now();
+                $attendee->save();
+            }
 
             if (!$attendee->qrCode) {
                 $token = \Illuminate\Support\Str::random(32);
@@ -1101,53 +1104,97 @@ class AttendeeList extends Component
                     'expires_at' => ($attendee->event && $attendee->event->ends_at) ? $attendee->event->ends_at->addDays(1) : now()->addYear(),
                     'is_revoked' => false,
                 ]);
-                $attendee->load('qrCode');
-            }
-
-            $approvedCount++;
-
-            // Rate-limiting pause (250ms) to avoid SMTP / Mailtrap 550 rate limit errors
-            if ($index > 0) {
-                usleep(250000);
-            }
-
-            // Send email and track result
-            try {
-                Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
-                $this->logEmailNotification($attendee, 'delivered', null, $batchId);
-                $results[] = [
-                    'uuid' => $attendee->uuid,
-                    'name' => $attendee->full_name,
-                    'email' => $attendee->email,
-                    'status' => 'success',
-                    'error' => null,
-                ];
-                $successCount++;
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to send bulk approval email to {$attendee->email}: " . $e->getMessage());
-                $this->logEmailNotification($attendee, 'failed', $e->getMessage(), $batchId);
-                $results[] = [
-                    'uuid' => $attendee->uuid,
-                    'name' => $attendee->full_name,
-                    'email' => $attendee->email,
-                    'status' => 'failed',
-                    'error' => $e->getMessage(),
-                ];
-                $failedCount++;
             }
         }
 
-        // Store results and show report modal
-        $this->emailDeliveryResults = $results;
-        $this->emailSuccessCount = $successCount;
-        $this->emailFailedCount = $failedCount;
-        $this->approvedTotalCount = $approvedCount;
+        // 2. Setup Progressive Dispatch Batch
+        $allUuids = $attendees->pluck('uuid')->toArray();
+        $this->pendingBatchUuids = $allUuids;
+        $this->batchTotalCount = count($allUuids);
+        $this->batchProcessedCount = 0;
+        $this->approvedTotalCount = $this->batchTotalCount;
+        $this->emailSuccessCount = 0;
+        $this->emailFailedCount = 0;
+        $this->emailDeliveryResults = [];
+        $this->currentBatchId = (string) Str::uuid();
+        $this->isProcessingBatch = true;
         $this->showEmailReportModal = true;
 
         // Reset selection state
         $this->selectedAttendees = [];
         $this->selectAllOnPage = false;
         $this->selectAll = false;
+
+        // 3. Process the first chunk immediately
+        $this->processNextEmailChunk();
+    }
+
+    /**
+     * Process next chunk of emails progressively (prevents 504 Gateway Timeout and handles 451 rate limits)
+     */
+    public function processNextEmailChunk(): void
+    {
+        if (!$this->isProcessingBatch || empty($this->pendingBatchUuids)) {
+            $this->isProcessingBatch = false;
+            return;
+        }
+
+        $chunkUuids = array_splice($this->pendingBatchUuids, 0, $this->batchChunkSize);
+        $attendees = Attendee::with(['event', 'qrCode'])->whereIn('uuid', $chunkUuids)->get();
+
+        foreach ($attendees as $index => $attendee) {
+            // Adaptive pause between sends (300ms) to respect SMTP rate limits
+            if ($index > 0) {
+                usleep(300000);
+            }
+
+            $sent = false;
+            $lastError = null;
+
+            for ($attempt = 1; $attempt <= 2; $attempt++) {
+                try {
+                    Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+                    $this->logEmailNotification($attendee, 'delivered', null, $this->currentBatchId);
+                    $this->emailDeliveryResults[] = [
+                        'uuid' => $attendee->uuid,
+                        'name' => $attendee->full_name,
+                        'email' => $attendee->email,
+                        'status' => 'success',
+                        'error' => null,
+                    ];
+                    $this->emailSuccessCount++;
+                    $sent = true;
+                    break;
+                } catch (\Exception $e) {
+                    $lastError = $e->getMessage();
+                    // If rate limited by SMTP (e.g. Mailtrap 451 4.7.1 Ratelimit / 550 Too many emails), pause 2s and retry once
+                    if ($attempt === 1 && (str_contains($lastError, 'Ratelimit') || str_contains($lastError, '451') || str_contains($lastError, '550') || str_contains($lastError, 'Too many emails'))) {
+                        sleep(2);
+                        continue;
+                    }
+                }
+            }
+
+            if (!$sent) {
+                \Illuminate\Support\Facades\Log::error("Failed to send bulk approval email to {$attendee->email}: " . $lastError);
+                $this->logEmailNotification($attendee, 'failed', $lastError, $this->currentBatchId);
+                $this->emailDeliveryResults[] = [
+                    'uuid' => $attendee->uuid,
+                    'name' => $attendee->full_name,
+                    'email' => $attendee->email,
+                    'status' => 'failed',
+                    'error' => $lastError,
+                ];
+                $this->emailFailedCount++;
+            }
+
+            $this->batchProcessedCount++;
+        }
+
+        if (empty($this->pendingBatchUuids)) {
+            $this->isProcessingBatch = false;
+            session()->flash('success', "🎉 Bulk pass issuance complete for {$this->approvedTotalCount} attendee(s): {$this->emailSuccessCount} sent, {$this->emailFailedCount} failed.");
+        }
     }
 
     /**
@@ -1156,10 +1203,14 @@ class AttendeeList extends Component
     public function closeEmailReportModal()
     {
         $this->showEmailReportModal = false;
+        $this->isProcessingBatch = false;
+        $this->pendingBatchUuids = [];
         $this->emailDeliveryResults = [];
         $this->emailSuccessCount = 0;
         $this->emailFailedCount = 0;
         $this->approvedTotalCount = 0;
+        $this->batchTotalCount = 0;
+        $this->batchProcessedCount = 0;
     }
 
     /**
@@ -1177,60 +1228,88 @@ class AttendeeList extends Component
             return;
         }
 
-        $attendees = Attendee::with(['event', 'qrCode'])->whereIn('uuid', $failedUuids)->get();
-
-        $retryResults = [];
-        $retrySuccess = 0;
-        $retryFailed = 0;
-        $batchId = (string) Str::uuid();
-
-        foreach ($attendees as $index => $attendee) {
-            // Rate-limiting pause (300ms) between retry attempts
-            if ($index > 0) {
-                usleep(300000);
-            }
-
-            try {
-                Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
-                $this->logEmailNotification($attendee, 'delivered', null, $batchId);
-                $retryResults[] = [
-                    'uuid' => $attendee->uuid,
-                    'name' => $attendee->full_name,
-                    'email' => $attendee->email,
-                    'status' => 'success',
-                    'error' => null,
-                ];
-                $retrySuccess++;
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Retry failed for {$attendee->email}: " . $e->getMessage());
-                $this->logEmailNotification($attendee, 'failed', $e->getMessage(), $batchId);
-                $retryResults[] = [
-                    'uuid' => $attendee->uuid,
-                    'name' => $attendee->full_name,
-                    'email' => $attendee->email,
-                    'status' => 'failed',
-                    'error' => $e->getMessage(),
-                ];
-                $retryFailed++;
-            }
-        }
-
-        // Update the results: keep previously successful ones, replace failed ones with retry results
-        $updatedResults = collect($this->emailDeliveryResults)
+        // Keep successful results, clear failed to re-accumulate
+        $this->emailDeliveryResults = collect($this->emailDeliveryResults)
             ->where('status', 'success')
             ->values()
-            ->merge($retryResults)
             ->toArray();
 
-        $this->emailDeliveryResults = $updatedResults;
-        $this->emailSuccessCount = collect($updatedResults)->where('status', 'success')->count();
-        $this->emailFailedCount = collect($updatedResults)->where('status', 'failed')->count();
+        $this->pendingBatchUuids = $failedUuids;
+        $this->batchTotalCount = count($failedUuids);
+        $this->batchProcessedCount = 0;
+        $this->emailFailedCount = 0;
+        $this->isProcessingBatch = true;
+        $this->currentBatchId = (string) Str::uuid();
 
-        if ($retryFailed === 0) {
-            session()->flash('success', "✅ All {$retrySuccess} previously failed email(s) were successfully re-sent!");
-        } else {
-            session()->flash('warning', "Retry complete: {$retrySuccess} email(s) sent successfully, {$retryFailed} still failed.");
+        $this->processNextEmailChunk();
+    }
+
+    /**
+     * Reset Option 1: Reset Delivery Logs Only (Leaves attendee QR codes and status intact)
+     */
+    public function clearDeliveryLogsOnly(): void
+    {
+        $attendeeIds = $this->getFilteredAttendeesQuery()->pluck('id')->toArray();
+        if (!empty($attendeeIds)) {
+            \App\Models\NotificationLog::whereIn('attendee_id', $attendeeIds)->delete();
         }
+
+        if ($this->eventUuid) {
+            $event = Event::where('uuid', $this->eventUuid)->first();
+            if ($event) {
+                \App\Models\NotificationLog::where('event_id', $event->id)->delete();
+            }
+        }
+
+        $this->emailDeliveryResults = [];
+        $this->emailSuccessCount = 0;
+        $this->emailFailedCount = 0;
+        $this->resetPage();
+        session()->flash('success', '🧹 Email & QR delivery logs have been cleared. Attendee QR passes and statuses remain intact.');
+    }
+
+    /**
+     * Reset Option 2: Full Reset: Clear Delivery Logs AND Reset Attendee Verification & QR Codes for fresh testing
+     */
+    public function fullResetLogsAndAttendeeStatus(): void
+    {
+        $attendeeQuery = $this->getFilteredAttendeesQuery();
+        $attendeeIds = (clone $attendeeQuery)->pluck('id')->toArray();
+
+        if (!empty($attendeeIds)) {
+            // 1. Delete notification logs for these attendees
+            \App\Models\NotificationLog::whereIn('attendee_id', $attendeeIds)->delete();
+
+            // 2. Delete QR codes for these attendees
+            QrCode::whereIn('attendee_id', $attendeeIds)->delete();
+
+            // 3. Reset attendee verification statuses to Pending
+            Attendee::whereIn('id', $attendeeIds)->update([
+                'verification_status' => VerificationStatus::Pending,
+                'verified_at' => null,
+            ]);
+        }
+
+        if ($this->eventUuid) {
+            $event = Event::where('uuid', $this->eventUuid)->first();
+            if ($event) {
+                \App\Models\NotificationLog::where('event_id', $event->id)->delete();
+                QrCode::where('event_id', $event->id)->delete();
+                Attendee::where('event_id', $event->id)->update([
+                    'verification_status' => VerificationStatus::Pending,
+                    'verified_at' => null,
+                ]);
+            }
+        }
+
+        $this->emailDeliveryResults = [];
+        $this->emailSuccessCount = 0;
+        $this->emailFailedCount = 0;
+        $this->selectedAttendees = [];
+        $this->selectAll = false;
+        $this->selectAllOnPage = false;
+        $this->resetPage();
+        session()->flash('success', '🔄 Full Reset Complete: All delivery logs cleared, QR passes cleared, and attendees reset to Pending for fresh testing.');
     }
 
     public function resendPassEmail($uuid = null)
@@ -2298,6 +2377,9 @@ class AttendeeList extends Component
             'emailSuccessCount' => $this->emailSuccessCount,
             'emailFailedCount' => $this->emailFailedCount,
             'approvedTotalCount' => $this->approvedTotalCount,
+            'isProcessingBatch' => $this->isProcessingBatch,
+            'batchTotalCount' => $this->batchTotalCount,
+            'batchProcessedCount' => $this->batchProcessedCount,
         ]);
     }
 

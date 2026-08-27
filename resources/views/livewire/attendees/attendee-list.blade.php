@@ -25,33 +25,138 @@
 
         <!-- Right-Aligned Premium Action Toolbar -->
         <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2 sm:gap-2.5 shrink-0">
-            <!-- Export CSV -->
-            <button wire:click="export" wire:loading.attr="disabled" class="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm hover:shadow active:scale-95" title="Export attendee list to CSV">
-                <svg wire:loading.remove wire:target="export" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                <svg wire:loading wire:target="export" class="animate-spin w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <span wire:loading.remove wire:target="export">Export</span>
-                <span wire:loading wire:target="export">Exporting...</span>
-            </button>
+            <!-- 1. Import & Export Dropdown -->
+            <div class="relative" x-data="{ openCsvMenu: false }">
+                <button @click="openCsvMenu = !openCsvMenu" 
+                        type="button" 
+                        class="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <span>Import / Export</span>
+                    <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
 
-            <!-- Import CSV -->
-            <button wire:click="openImportCsvModal" class="h-10 px-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95" title="Import attendee list from CSV">
-                <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path>
-                </svg>
-                <span>Import</span>
-            </button>
+                <!-- Dropdown options -->
+                <div x-show="openCsvMenu" 
+                     @click.away="openCsvMenu = false" 
+                     x-transition 
+                     x-cloak
+                     class="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 p-2 z-50 space-y-1">
+                    
+                    <!-- Import CSV -->
+                    <button type="button"
+                            wire:click="openImportCsvModal"
+                            @click="openCsvMenu = false"
+                            class="w-full text-left p-2.5 rounded-xl hover:bg-emerald-500/10 transition-colors cursor-pointer group">
+                        <div class="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-500">
+                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            <span>Import CSV</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-0.5 ml-6">Upload and import attendees via spreadsheet.</p>
+                    </button>
 
-            <!-- Secure Single-Use Link Generator -->
-            <button wire:click="openLinkGeneratorModal" class="h-10 px-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95" title="Generate single-use private/ticketing invitation pass link">
-                <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                Secure Link
-            </button>
+                    <!-- Export CSV -->
+                    <button type="button"
+                            wire:click="export"
+                            wire:loading.attr="disabled"
+                            @click="openCsvMenu = false"
+                            class="w-full text-left p-2.5 rounded-xl hover:bg-blue-500/10 transition-colors cursor-pointer group border-t border-slate-100 dark:border-white/5">
+                        <div class="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-500">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Export CSV</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-0.5 ml-6">Download current attendees to CSV.</p>
+                    </button>
+                </div>
+            </div>
 
-            <!-- Bulk Invitations -->
-            <button wire:click="openBulkInviteModal" class="h-10 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> 
-                Bulk Invite
-            </button>
+            <!-- 2. Invitations Dropdown (Secure Link & Bulk Invite) -->
+            <div class="relative" x-data="{ openInviteMenu: false }">
+                <button @click="openInviteMenu = !openInviteMenu" 
+                        type="button" 
+                        class="h-10 px-3.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95">
+                    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <span>Invitations</span>
+                    <svg class="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <!-- Dropdown options -->
+                <div x-show="openInviteMenu" 
+                     @click.away="openInviteMenu = false" 
+                     x-transition 
+                     x-cloak
+                     class="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 p-2 z-50 space-y-1">
+                    
+                    <!-- Bulk Invite -->
+                    <button type="button"
+                            wire:click="openBulkInviteModal"
+                            @click="openInviteMenu = false"
+                            class="w-full text-left p-2.5 rounded-xl hover:bg-purple-500/10 transition-colors cursor-pointer group">
+                        <div class="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-purple-500">
+                            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <span>Bulk Invitations</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-0.5 ml-6">Send invitation emails to attendee lists.</p>
+                    </button>
+
+                    <!-- Secure Single-Use Link -->
+                    <button type="button"
+                            wire:click="openLinkGeneratorModal"
+                            @click="openInviteMenu = false"
+                            class="w-full text-left p-2.5 rounded-xl hover:bg-amber-500/10 transition-colors cursor-pointer group border-t border-slate-100 dark:border-white/5">
+                        <div class="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-amber-500">
+                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            <span>Secure Single-Use Link</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-0.5 ml-6">Generate private single-use registration link.</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reset Logs Dropdown -->
+            <div class="relative" x-data="{ openResetMenu: false }">
+                <button @click="openResetMenu = !openResetMenu" 
+                        type="button" 
+                        class="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-95" 
+                        title="Reset delivery logs or reset attendees for testing">
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>Reset</span>
+                    <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <!-- Dropdown options -->
+                <div x-show="openResetMenu" 
+                     @click.away="openResetMenu = false" 
+                     x-transition 
+                     x-cloak
+                     class="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 p-2 z-50 space-y-1">
+                    
+                    <!-- Reset 1: Clean Log Only -->
+                    <button type="button"
+                            wire:click="clearDeliveryLogsOnly"
+                            wire:confirm="🧹 Clear all email delivery logs? Attendee verification statuses and QR passes will NOT be modified."
+                            @click="openResetMenu = false"
+                            class="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
+                        <div class="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-500">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <span>Reset Delivery Log Only</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-0.5 ml-6">Clears log records. Keeps attendee verification and QR passes intact.</p>
+                    </button>
+
+                    <!-- Reset 2: Full Reset (Logs + Attendee Status & QR Codes) -->
+                    <button type="button"
+                            wire:click="fullResetLogsAndAttendeeStatus"
+                            wire:confirm="🔄 FULL RESET WARNING: This will clear all delivery logs, remove generated QR passes, and reset all attendees to 'Pending' so you can freshly test 'Approve All' or bulk passes. Continue?"
+                            @click="openResetMenu = false"
+                            class="w-full text-left p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer group border-t border-slate-100 dark:border-white/5">
+                        <div class="flex items-center gap-2 text-xs font-bold text-rose-600 dark:text-rose-400">
+                            <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <span>Full Reset (Logs + QR Pass Status)</span>
+                        </div>
+                        <p class="text-[10px] text-rose-500/80 dark:text-rose-400/80 mt-0.5 ml-6">Clears logs AND resets attendees to Pending for fresh bulk re-testing.</p>
+                    </button>
+                </div>
+            </div>
 
             <!-- Add Attendee -->
             <button wire:click="openAddModal" class="h-10 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
@@ -746,13 +851,16 @@
 
                                         <!-- Email Delivery Status -->
                                         @php
-                                            $emailLog = $attendee->notificationLogs ? $attendee->notificationLogs->where('channel', \App\Enums\NotificationChannel::Email)->sortByDesc('created_at')->first() : null;
-                                            $emailStatus = $emailLog ? $emailLog->status : null;
+                                            $emailLogs = $attendee->notificationLogs ? $attendee->notificationLogs->where('channel', \App\Enums\NotificationChannel::Email) : collect();
+                                            $hasDeliveredEmail = $emailLogs->whereIn('status', ['delivered', 'sent'])->isNotEmpty();
+                                            $latestEmailLog = $emailLogs->sortByDesc('created_at')->first();
+                                            $emailStatus = $hasDeliveredEmail ? 'delivered' : ($latestEmailLog ? $latestEmailLog->status : null);
+                                            $displayLog = $hasDeliveredEmail ? $emailLogs->whereIn('status', ['delivered', 'sent'])->sortByDesc('created_at')->first() : $latestEmailLog;
                                         @endphp
 
                                         @if($emailStatus === 'delivered' || $emailStatus === 'sent')
                                             <div class="inline-flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400" title="{{ $emailLog->sent_at ? 'Email pass sent ' . $emailLog->sent_at->diffForHumans() : 'Email pass sent' }}">
+                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400" title="{{ ($displayLog && $displayLog->sent_at) ? 'Email pass sent ' . $displayLog->sent_at->diffForHumans() : 'Email pass delivered' }}">
                                                     <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                                     </svg>
@@ -764,7 +872,7 @@
                                             </div>
                                         @elseif($emailStatus === 'failed')
                                             <div class="inline-flex items-center gap-1.5 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">
-                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 dark:text-rose-400" title="{{ $emailLog->error_message ?? 'Email delivery failed' }}">
+                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 dark:text-rose-400" title="{{ ($displayLog && $displayLog->error_message) ? $displayLog->error_message : 'Email delivery failed' }}">
                                                     <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                                                     </svg>
@@ -2203,35 +2311,69 @@ Alex Johnson - alex@tech.org"></textarea>
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- EMAIL DELIVERY REPORT MODAL                                            -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- EMAIL DELIVERY REPORT MODAL (WITH LIVE PROGRESSIVE BATCHING)            -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
     @if($showEmailReportModal)
-        <div class="fixed inset-0 z-[60] flex items-center justify-center p-4" x-data x-init="document.body.classList.add('overflow-hidden')" x-on:remove.window="document.body.classList.remove('overflow-hidden')">
+        <div class="fixed inset-0 z-[60] flex items-center justify-center p-4" 
+             x-data 
+             x-init="document.body.classList.add('overflow-hidden')" 
+             x-on:remove.window="document.body.classList.remove('overflow-hidden')"
+             @if($isProcessingBatch) wire:poll.300ms="processNextEmailChunk" @endif>
             <!-- Backdrop -->
-            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" wire:click="closeEmailReportModal"></div>
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @if(!$isProcessingBatch) wire:click="closeEmailReportModal" @endif></div>
 
             <!-- Modal Content -->
-            <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden animate-fadeIn" x-on:keydown.escape.window="$wire.closeEmailReportModal()">
+            <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden animate-fadeIn" @if(!$isProcessingBatch) x-on:keydown.escape.window="$wire.closeEmailReportModal()" @endif>
 
                 <!-- Header -->
                 <div class="p-6 pb-4 border-b border-slate-100 dark:border-white/10">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <div class="p-3 rounded-2xl {{ $emailFailedCount > 0 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' }}">
-                                @if($emailFailedCount > 0)
+                            <div class="p-3 rounded-2xl {{ $isProcessingBatch ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse' : ($emailFailedCount > 0 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400') }}">
+                                @if($isProcessingBatch)
+                                    <svg class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                @elseif($emailFailedCount > 0)
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
                                 @else
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 @endif
                             </div>
                             <div>
-                                <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Email Delivery Report</h2>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Bulk approval completed for {{ number_format($approvedTotalCount) }} attendee(s)</p>
+                                <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">
+                                    {{ $isProcessingBatch ? 'Dispatching Passes in Progress...' : 'Email Delivery Report' }}
+                                </h2>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    @if($isProcessingBatch)
+                                        Processing chunk batches without timeouts ({{ number_format($batchProcessedCount) }} / {{ number_format($batchTotalCount) }})
+                                    @else
+                                        Bulk approval completed for {{ number_format($approvedTotalCount) }} attendee(s)
+                                    @endif
+                                </p>
                             </div>
                         </div>
-                        <button wire:click="closeEmailReportModal" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer">
-                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
+                        @if(!$isProcessingBatch)
+                            <button wire:click="closeEmailReportModal" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer">
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        @endif
                     </div>
                 </div>
+
+                <!-- Processing Banner (shown while batch dispatching) -->
+                @if($isProcessingBatch)
+                    <div class="px-6 pt-4">
+                        <div class="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping"></span>
+                                <span class="text-xs font-bold text-blue-600 dark:text-blue-400">Paced Batch Delivery Active</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-blue-500">
+                                {{ $batchTotalCount > 0 ? round(($batchProcessedCount / $batchTotalCount) * 100) : 0 }}% Complete
+                            </span>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Summary Stats -->
                 <div class="px-6 pt-4 pb-2">
@@ -2252,13 +2394,17 @@ Alex Johnson - alex@tech.org"></textarea>
 
                     <!-- Progress Bar -->
                     <div class="mt-3">
-                        @php $successPercent = $approvedTotalCount > 0 ? round(($emailSuccessCount / $approvedTotalCount) * 100) : 0; @endphp
+                        @php 
+                            $percent = $batchTotalCount > 0 ? round(($batchProcessedCount / $batchTotalCount) * 100) : ($approvedTotalCount > 0 ? round(($emailSuccessCount / $approvedTotalCount) * 100) : 0);
+                        @endphp
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Delivery Rate</span>
-                            <span class="text-xs font-extrabold {{ $successPercent === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400' }}">{{ $successPercent }}%</span>
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                {{ $isProcessingBatch ? 'Dispatch Progress' : 'Delivery Rate' }}
+                            </span>
+                            <span class="text-xs font-extrabold {{ $percent === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400' }}">{{ $percent }}%</span>
                         </div>
                         <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
-                            <div class="h-full rounded-full transition-all duration-500 {{ $successPercent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-emerald-500 to-amber-500' }}" style="width: {{ $successPercent }}%"></div>
+                            <div class="h-full rounded-full transition-all duration-300 {{ $percent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-blue-500 to-indigo-500' }}" style="width: {{ $percent }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -2326,22 +2472,30 @@ Alex Johnson - alex@tech.org"></textarea>
 
                 <!-- Footer Actions -->
                 <div class="px-6 py-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900/60">
-                    @if($emailFailedCount > 0)
-                        <button wire:click="retryFailedEmails" 
-                                wire:loading.attr="disabled"
-                                wire:target="retryFailedEmails"
-                                class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait">
-                            <svg wire:loading.remove wire:target="retryFailedEmails" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            <svg wire:loading wire:target="retryFailedEmails" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <span wire:loading.remove wire:target="retryFailedEmails">Retry Failed ({{ $emailFailedCount }})</span>
-                            <span wire:loading wire:target="retryFailedEmails">Retrying...</span>
-                        </button>
+                    @if($isProcessingBatch)
+                        <div class="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
+                            <svg class="animate-spin h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Processing chunk batch ({{ $batchProcessedCount }}/{{ $batchTotalCount }})...</span>
+                        </div>
+                        <span class="text-[11px] text-slate-400">Please keep this window open</span>
                     @else
-                        <div></div>
+                        @if($emailFailedCount > 0)
+                            <button wire:click="retryFailedEmails" 
+                                    wire:loading.attr="disabled"
+                                    wire:target="retryFailedEmails"
+                                    class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait">
+                                <svg wire:loading.remove wire:target="retryFailedEmails" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                <svg wire:loading wire:target="retryFailedEmails" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span wire:loading.remove wire:target="retryFailedEmails">Retry Failed ({{ $emailFailedCount }})</span>
+                                <span wire:loading wire:target="retryFailedEmails">Retrying...</span>
+                            </button>
+                        @else
+                            <div></div>
+                        @endif
+                        <button wire:click="closeEmailReportModal" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 font-semibold text-xs transition-all cursor-pointer">
+                            Close
+                        </button>
                     @endif
-                    <button wire:click="closeEmailReportModal" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 font-semibold text-xs transition-all cursor-pointer">
-                        Close
-                    </button>
                 </div>
             </div>
         </div>

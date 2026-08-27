@@ -154,7 +154,7 @@
 
         <div class="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-white/5 backdrop-blur-xl border border-blue-500/20 bg-blue-500/5 shadow-sm dark:shadow-xl">
             <span class="text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">QR &amp; Email Delivery</span>
-            <div class="mt-1 sm:mt-2 text-xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400">{{ number_format($emailSuccessCount) }} <span class="text-xs text-slate-400 font-semibold">/ {{ number_format($totalNotifications) }}</span></div>
+            <div class="mt-1 sm:mt-2 text-xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400">{{ number_format($emailSuccessCount) }} <span class="text-xs text-slate-400 font-semibold">/ {{ number_format($totalAttendeesCount ?? ($event ? $event->attendees()->count() : 0)) }}</span></div>
             <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium">{{ $deliveryRate }}% delivery rate @if($emailFailedCount > 0) · <span class="text-rose-500 font-bold">{{ $emailFailedCount }} failed</span>@endif</p>
         </div>
     </div>
@@ -349,7 +349,15 @@
         <!-- ═══════════════════════════════════════════════════════════════════════ -->
         @if($activeReportTab === 'notifications')
             <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm dark:shadow-2xl overflow-hidden space-y-4 p-6">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
+                <!-- Flash Notification Banner -->
+                @if(session()->has('success'))
+                    <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                @endif
+
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
                     <div>
                         <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
@@ -358,10 +366,23 @@
                         <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Comprehensive audit trail of bulk pass dispatches, delivery timestamps, admin triggers, and error diagnostics.</p>
                     </div>
 
-                    <!-- Filters -->
-                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                        <div class="relative flex-1 sm:w-64">
-                            <input wire:model.live.debounce.300ms="notificationSearch" type="text" placeholder="Search by recipient or email..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <!-- Filters & Reset Actions -->
+                    <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto">
+                        <div class="relative flex-1 sm:w-64 md:w-72">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input wire:model.live.debounce.250ms="notificationSearch" 
+                                   type="text" 
+                                   placeholder="Search recipient, email, admin..." 
+                                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                            @if($notificationSearch)
+                                <button type="button" 
+                                        wire:click="$set('notificationSearch', '')" 
+                                        class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            @endif
                         </div>
 
                         <select wire:model.live="notificationChannel" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -371,10 +392,54 @@
                         </select>
 
                         <select wire:model.live="notificationStatus" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Delivery Statuses</option>
+                            <option value="">All Statuses</option>
                             <option value="delivered">Delivered / Sent</option>
                             <option value="failed">Failed Only</option>
                         </select>
+
+                        <!-- Reset Logs Dropdown Menu -->
+                        <div class="relative" x-data="{ openResetMenu: false }">
+                            <button @click="openResetMenu = !openResetMenu" 
+                                    type="button" 
+                                    class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span>Reset Logs</span>
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+
+                            <!-- Dropdown options -->
+                            <div x-show="openResetMenu" 
+                                 @click.away="openResetMenu = false"
+                                 x-transition
+                                 class="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 p-2 z-50 space-y-1">
+                                
+                                <!-- Reset 1: Clean Log Only -->
+                                <button type="button"
+                                        wire:click="clearDeliveryLogsOnly"
+                                        wire:confirm="🧹 Clear all delivery logs for this event? Attendee QR passes and verification statuses will NOT be modified."
+                                        @click="openResetMenu = false"
+                                        class="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
+                                    <div class="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-500">
+                                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        <span>Reset Delivery Log Only</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-0.5 ml-6">Clears log records. Keeps attendee verification and QR passes intact.</p>
+                                </button>
+
+                                <!-- Reset 2: Full Reset (Logs + Attendee Status & QR Codes) -->
+                                <button type="button"
+                                        wire:click="fullResetLogsAndAttendeeStatus"
+                                        wire:confirm="🔄 FULL RESET WARNING: This will clear all delivery logs, remove QR passes, and reset all attendees in this event to 'Pending' so you can test the bulk approval flow from scratch. Proceed?"
+                                        @click="openResetMenu = false"
+                                        class="w-full text-left p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer group border-t border-slate-100 dark:border-white/5">
+                                    <div class="flex items-center gap-2 text-xs font-bold text-rose-600 dark:text-rose-400">
+                                        <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                        <span>Full Reset (Logs + QR Pass Status)</span>
+                                    </div>
+                                    <p class="text-[10px] text-rose-500/80 dark:text-rose-400/80 mt-0.5 ml-6">Clears logs AND resets attendees to Pending for fresh bulk re-testing.</p>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -462,8 +527,16 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-10 text-center text-slate-400 font-medium">
-                                        No bulk QR pass delivery logs recorded for this event yet.
+                                    <td colspan="5" class="py-12 text-center text-slate-400 font-medium">
+                                        @if($notificationSearch)
+                                            <div class="flex flex-col items-center justify-center gap-2">
+                                                <svg class="w-8 h-8 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400">No delivery logs found matching "<span class="font-bold text-slate-700 dark:text-slate-300">{{ $notificationSearch }}</span>".</p>
+                                                <button wire:click="$set('notificationSearch', '')" type="button" class="mt-1 px-3 py-1 text-xs font-bold text-blue-500 hover:text-blue-600 hover:underline cursor-pointer">Clear search filter</button>
+                                            </div>
+                                        @else
+                                            <span>No bulk QR pass delivery logs recorded for this event yet.</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse

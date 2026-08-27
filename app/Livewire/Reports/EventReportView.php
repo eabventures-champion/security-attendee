@@ -10,8 +10,10 @@ use App\Models\Event;
 use App\Models\CheckIn;
 use App\Models\Attendee;
 use App\Models\Gate;
+use App\Models\QrCode;
 use App\Models\NotificationLog;
 use App\Enums\ScanResult;
+use App\Enums\VerificationStatus;
 use App\Enums\NotificationChannel;
 use App\Enums\NotificationType;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -84,17 +86,52 @@ class EventReportView extends Component
 
     public function updatingNotificationSearch()
     {
-        $this->resetPage();
+        $this->resetPage('notifsPage');
     }
 
     public function updatingNotificationChannel()
     {
-        $this->resetPage();
+        $this->resetPage('notifsPage');
     }
 
     public function updatingNotificationStatus()
     {
-        $this->resetPage();
+        $this->resetPage('notifsPage');
+    }
+
+    /**
+     * Reset Option 1: Reset Delivery Logs Only (Leaves attendee QR codes and status intact)
+     */
+    public function clearDeliveryLogsOnly(): void
+    {
+        if (!$this->event) return;
+
+        NotificationLog::where('event_id', $this->event->id)->delete();
+        $this->resetPage('notifsPage');
+        session()->flash('success', "🧹 Delivery logs cleared successfully for {$this->event->name}. Attendee QR codes and verification statuses remain unchanged.");
+    }
+
+    /**
+     * Reset Option 2: Full Reset: Clear Delivery Logs AND Reset Attendee QR Status / Verification for fresh testing
+     */
+    public function fullResetLogsAndAttendeeStatus(): void
+    {
+        if (!$this->event) return;
+
+        // 1. Clear notification logs
+        NotificationLog::where('event_id', $this->event->id)->delete();
+
+        // 2. Delete QR Codes for this event
+        QrCode::where('event_id', $this->event->id)->delete();
+
+        // 3. Reset attendee verification statuses to Pending
+        Attendee::where('event_id', $this->event->id)->update([
+            'verification_status' => VerificationStatus::Pending,
+            'verified_at' => null,
+        ]);
+
+        $this->resetPage('notifsPage');
+        session()->flash('success', "🔄 Full Reset Complete for {$this->event->name}: Delivery logs cleared, and all attendees reset to Pending with QR codes cleared for fresh re-testing.");
     }
 
     public function exportCsv(string $type): StreamedResponse
@@ -222,32 +259,61 @@ class EventReportView extends Component
         }
 
         if ($this->notificationSearch) {
-            $notifQuery->where(function ($q) {
-                $q->whereHas('attendee', function ($aq) {
-                    $aq->where('full_name', 'like', '%' . $this->notificationSearch . '%')
-                       ->orWhere('email', 'like', '%' . $this->notificationSearch . '%');
-                })->orWhere('metadata->recipient_email', 'like', '%' . $this->notificationSearch . '%');
+            $searchTerm = trim($this->notificationSearch);
+            $notifQuery->where(function ($q) use ($searchTerm) {
+                $q->whereHas('attendee', function ($aq) use ($searchTerm) {
+                    $aq->where('full_name', 'like', '%' . $searchTerm . '%')
+                       ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                       ->orWhere('phone', 'like', '%' . $searchTerm . '%')
+                       ->orWhere('company', 'like', '%' . $searchTerm . '%');
+                })
+                ->orWhereHas('user', function ($uq) use ($searchTerm) {
+                    $uq->where('name', 'like', '%' . $searchTerm . '%')
+                       ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                })
+                ->orWhere('error_message', 'like', '%' . $searchTerm . '%')
+                ->orWhere('metadata->recipient_email', 'like', '%' . $searchTerm . '%');
             });
         }
 
         $notificationLogs = $notifQuery->orderBy('created_at', 'desc')->paginate($this->perPage, ['*'], 'notifsPage');
 
         // Notification Metrics for this event
-        $totalNotifications = NotificationLog::where('event_id', $this->event->id)->count();
-        $emailSuccessCount = NotificationLog::where('event_id', $this->event->id)
+        $totalAttendeesCount = $this->event->attendees()->count();
+
+        // Distinct attendees who have successfully received their email pass
+        $deliveredAttendeeIds = NotificationLog::where('event_id', $this->event->id)
             ->where('channel', NotificationChannel::Email)
             ->whereIn('status', ['delivered', 'sent'])
-            ->count();
-        $emailFailedCount = NotificationLog::where('event_id', $this->event->id)
+            ->pluck('attendee_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $emailSuccessCount = $deliveredAttendeeIds->count();
+
+        // Distinct attendees whose delivery failed and have NOT yet succeeded
+        $failedAttendeeIds = NotificationLog::where('event_id', $this->event->id)
             ->where('channel', NotificationChannel::Email)
             ->where('status', 'failed')
-            ->count();
+            ->whereNotIn('attendee_id', $deliveredAttendeeIds)
+            ->pluck('attendee_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $emailFailedCount = $failedAttendeeIds->count();
+        $totalNotifications = NotificationLog::where('event_id', $this->event->id)->count();
+
         $whatsappCount = NotificationLog::where('event_id', $this->event->id)
             ->where('channel', NotificationChannel::WhatsApp)
+            ->whereIn('status', ['delivered', 'sent'])
+            ->pluck('attendee_id')
+            ->filter()
+            ->unique()
             ->count();
 
-        $totalEmailAttempts = $emailSuccessCount + $emailFailedCount;
-        $deliveryRate = $totalEmailAttempts > 0 ? round(($emailSuccessCount / $totalEmailAttempts) * 100) : 0;
+        $deliveryRate = $totalAttendeesCount > 0 ? round(($emailSuccessCount / $totalAttendeesCount) * 100) : 0;
 
         $gates = Gate::where('event_id', $this->event->id)->get();
 
@@ -278,6 +344,7 @@ class EventReportView extends Component
             'totalScans' => $totalScans,
             'grantedScans' => $grantedScans,
             'deniedScans' => $deniedScans,
+            'totalAttendeesCount' => $totalAttendeesCount,
             'totalNotifications' => $totalNotifications,
             'emailSuccessCount' => $emailSuccessCount,
             'emailFailedCount' => $emailFailedCount,
