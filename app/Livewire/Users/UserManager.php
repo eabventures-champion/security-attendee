@@ -61,6 +61,31 @@ class UserManager extends Component
         $this->resetPage();
     }
 
+    protected function canManageUser(User $targetUser): bool
+    {
+        $currentUser = auth()->user();
+        if ($currentUser->isSuperAdmin()) {
+            return true;
+        }
+
+        // If target is super admin, only super admin can manage
+        if ($targetUser->hasRole('super_admin') || $targetUser->isSuperAdmin()) {
+            return false;
+        }
+
+        // If target is Organization Admin, only Super Admin or Organization Admin can manage
+        if ($targetUser->hasRole('organization_admin') || $targetUser->isOrganizationAdmin()) {
+            return $currentUser->isOrganizationAdmin();
+        }
+
+        // Organization Admin can manage anyone in their organization
+        if ($currentUser->isOrganizationAdmin()) {
+            return true;
+        }
+
+        return true;
+    }
+
     public function openCreateModal(): void
     {
         if (!auth()->user()->isSuperAdmin() && auth()->user()->hasRole('organization_admin') && auth()->user()->invitation_status !== 'confirmed') {
@@ -76,6 +101,12 @@ class UserManager extends Component
     public function openEditModal(int $userId): void
     {
         $user = User::findOrFail($userId);
+
+        if (!$this->canManageUser($user)) {
+            session()->flash('error', '⚠️ Access Restricted: Event Managers cannot edit Organization Administrators.');
+            return;
+        }
+
         $this->editingUserId = $user->id;
         $this->name = $user->name;
         $this->email = $user->email;
@@ -100,9 +131,24 @@ class UserManager extends Component
             return;
         }
 
+        $currentUser = auth()->user();
+        if (!$currentUser->isSuperAdmin() && !$currentUser->isOrganizationAdmin()) {
+            if ($this->selectedRole === 'organization_admin' || $this->selectedRole === 'super_admin') {
+                session()->flash('error', '⚠️ Access Restricted: You do not have permission to assign the Organization Administrator role.');
+                return;
+            }
+        }
+
+        if ($this->editingUserId) {
+            $existingUser = User::findOrFail($this->editingUserId);
+            if (!$this->canManageUser($existingUser)) {
+                session()->flash('error', '⚠️ Access Restricted: You cannot modify an Organization Administrator account.');
+                return;
+            }
+        }
+
         $this->validate();
 
-        $currentUser = auth()->user();
         $orgId = $currentUser->organization_id ?? 1;
 
         if ($this->editingUserId) {
@@ -160,6 +206,12 @@ class UserManager extends Component
     public function resendInvitation(int $userId): void
     {
         $user = User::findOrFail($userId);
+
+        if (!$this->canManageUser($user)) {
+            session()->flash('error', '⚠️ Access Restricted: You cannot manage Organization Administrators.');
+            return;
+        }
+
         if (!$user->invitation_token) {
             $user->invitation_token = (string) Str::uuid();
             $user->save();
@@ -183,6 +235,12 @@ class UserManager extends Component
     public function toggleUserStatus(int $userId): void
     {
         $user = User::findOrFail($userId);
+
+        if (!$this->canManageUser($user)) {
+            session()->flash('error', '⚠️ Access Restricted: You cannot modify an Organization Administrator account.');
+            return;
+        }
+
         $user->is_active = !$user->is_active;
         $user->save();
 
@@ -197,6 +255,12 @@ class UserManager extends Component
         }
 
         $user = User::findOrFail($userId);
+
+        if (!$this->canManageUser($user)) {
+            session()->flash('error', '⚠️ Access Restricted: You cannot delete an Organization Administrator account.');
+            return;
+        }
+
         $orgId = $user->organization_id;
         $user->delete();
 

@@ -72,8 +72,20 @@ class OrganizationSettings extends Component
         }
     }
 
+    protected function authorizeOrgAdmin(): bool
+    {
+        $user = auth()->user();
+        if (!$user || (!$user->isSuperAdmin() && !$user->isOrganizationAdmin())) {
+            session()->flash('error', '⚠️ Access Restricted: Only Organization Administrators can modify workspace settings.');
+            return false;
+        }
+        return true;
+    }
+
     public function saveBrandSettings(): void
     {
+        if (!$this->authorizeOrgAdmin()) return;
+
         $this->validate([
             'name' => 'required|string|min:2|max:255',
             'brand_color' => 'required|string|max:20',
@@ -105,6 +117,8 @@ class OrganizationSettings extends Component
 
     public function removeLogo(): void
     {
+        if (!$this->authorizeOrgAdmin()) return;
+
         $orgId = auth()->user()->organization_id ?? session('current_organization_id');
         $org = Organization::find($orgId);
 
@@ -123,6 +137,8 @@ class OrganizationSettings extends Component
 
     public function saveDomainSettings(): void
     {
+        if (!$this->authorizeOrgAdmin()) return;
+
         $this->validate([
             'subdomain' => 'required|string|min:2|max:50',
             'custom_domain' => 'nullable|string|max:255',
@@ -145,6 +161,8 @@ class OrganizationSettings extends Component
 
     public function saveApiSettings(): void
     {
+        if (!$this->authorizeOrgAdmin()) return;
+
         $this->validate([
             'webhook_url' => 'nullable|url',
         ]);

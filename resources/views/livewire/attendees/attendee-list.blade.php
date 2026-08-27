@@ -189,11 +189,31 @@
                 </div>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
-                <!-- Bulk Approve -->
-                <button wire:click="bulkApproveAttendees" wire:confirm="Approve and issue digital QR passes to {{ count($selectedAttendees) }} selected attendee(s)?" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/20 flex items-center gap-2 cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                    Approve &amp; Issue Passes
+                <!-- Bulk Approve Selected -->
+                <button wire:click="bulkApproveAttendees" 
+                        wire:confirm="Approve and issue digital QR passes to {{ count($selectedAttendees) }} selected attendee(s)? An email delivery report will be shown after completion." 
+                        wire:loading.attr="disabled"
+                        wire:target="bulkApproveAttendees,approveAllFilteredAttendees"
+                        class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait">
+                    <svg wire:loading.remove wire:target="bulkApproveAttendees" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    <svg wire:loading wire:target="bulkApproveAttendees" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span wire:loading.remove wire:target="bulkApproveAttendees">Approve &amp; Issue Passes</span>
+                    <span wire:loading wire:target="bulkApproveAttendees">Processing...</span>
                 </button>
+
+                @if(count($selectedAttendees) < ($totalCount ?? 0))
+                <!-- Approve All Filtered Attendees -->
+                <button wire:click="approveAllFilteredAttendees" 
+                        wire:confirm="🚀 Approve ALL {{ number_format($totalCount) }} attendee(s) matching the current filters and send QR passes via email? An email delivery report will be shown after completion."
+                        wire:loading.attr="disabled"
+                        wire:target="bulkApproveAttendees,approveAllFilteredAttendees"
+                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold transition-all shadow-md shadow-emerald-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait border border-emerald-400/30">
+                    <svg wire:loading.remove wire:target="approveAllFilteredAttendees" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    <svg wire:loading wire:target="approveAllFilteredAttendees" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span wire:loading.remove wire:target="approveAllFilteredAttendees">Approve All ({{ number_format($totalCount) }})</span>
+                    <span wire:loading wire:target="approveAllFilteredAttendees">Processing all...</span>
+                </button>
+                @endif
 
                 <!-- Bulk Role Change -->
                 <div x-data="{ open: false }" class="relative">
@@ -717,12 +737,51 @@
                             </td>
                             <td class="py-4 px-6">
                                 @if($attendee->qrCode)
-                                    <div class="flex flex-col items-start gap-1">
+                                    <div class="flex flex-col items-start gap-1.5">
+                                        <!-- Pass Generated Badge -->
                                         <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                             Generated
                                         </span>
 
+                                        <!-- Email Delivery Status -->
+                                        @php
+                                            $emailLog = $attendee->notificationLogs ? $attendee->notificationLogs->where('channel', \App\Enums\NotificationChannel::Email)->sortByDesc('created_at')->first() : null;
+                                            $emailStatus = $emailLog ? $emailLog->status : null;
+                                        @endphp
+
+                                        @if($emailStatus === 'delivered' || $emailStatus === 'sent')
+                                            <div class="inline-flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400" title="{{ $emailLog->sent_at ? 'Email pass sent ' . $emailLog->sent_at->diffForHumans() : 'Email pass sent' }}">
+                                                    <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span>Email Sent</span>
+                                                </span>
+                                                <button type="button" wire:click="resendPassEmail('{{ $attendee->uuid }}')" title="Resend QR pass via email" class="text-[10px] text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 px-1 py-0.5 rounded font-semibold transition-colors cursor-pointer border-l border-emerald-500/20 pl-1.5">
+                                                    Resend
+                                                </button>
+                                            </div>
+                                        @elseif($emailStatus === 'failed')
+                                            <div class="inline-flex items-center gap-1.5 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">
+                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 dark:text-rose-400" title="{{ $emailLog->error_message ?? 'Email delivery failed' }}">
+                                                    <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span>Email Failed</span>
+                                                </span>
+                                                <button type="button" wire:click="resendPassEmail('{{ $attendee->uuid }}')" title="Retry sending QR pass email" class="text-[10px] text-rose-400 hover:text-white hover:bg-rose-600 px-1.5 py-0.5 rounded font-bold transition-colors cursor-pointer border-l border-rose-500/20 pl-1.5">
+                                                    Retry
+                                                </button>
+                                            </div>
+                                        @else
+                                            <button type="button" wire:click="resendPassEmail('{{ $attendee->uuid }}')" title="Send QR pass to attendee via email" class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                                <span>Send Email</span>
+                                            </button>
+                                        @endif
+
+                                        <!-- WhatsApp Delivery Status -->
                                         @php
                                             $waLog = $attendee->notificationLogs ? $attendee->notificationLogs->where('channel', \App\Enums\NotificationChannel::WhatsApp)->sortByDesc('created_at')->first() : null;
                                             $waStatus = $waLog ? $waLog->status : null;
@@ -2137,6 +2196,153 @@ Alex Johnson - alex@tech.org"></textarea>
                     @endif
                 </div>
 
+            </div>
+        </div>
+    @endif
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- EMAIL DELIVERY REPORT MODAL                                            -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if($showEmailReportModal)
+        <div class="fixed inset-0 z-[60] flex items-center justify-center p-4" x-data x-init="document.body.classList.add('overflow-hidden')" x-on:remove.window="document.body.classList.remove('overflow-hidden')">
+            <!-- Backdrop -->
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" wire:click="closeEmailReportModal"></div>
+
+            <!-- Modal Content -->
+            <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden animate-fadeIn" x-on:keydown.escape.window="$wire.closeEmailReportModal()">
+
+                <!-- Header -->
+                <div class="p-6 pb-4 border-b border-slate-100 dark:border-white/10">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 rounded-2xl {{ $emailFailedCount > 0 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' }}">
+                                @if($emailFailedCount > 0)
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                                @else
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                @endif
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Email Delivery Report</h2>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Bulk approval completed for {{ number_format($approvedTotalCount) }} attendee(s)</p>
+                            </div>
+                        </div>
+                        <button wire:click="closeEmailReportModal" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="px-6 pt-4 pb-2">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
+                            <div class="text-2xl font-extrabold text-blue-600 dark:text-blue-400">{{ number_format($approvedTotalCount) }}</div>
+                            <div class="text-[10px] font-bold text-blue-500 dark:text-blue-400/70 uppercase tracking-wider mt-0.5">Approved</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                            <div class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">{{ number_format($emailSuccessCount) }}</div>
+                            <div class="text-[10px] font-bold text-emerald-500 dark:text-emerald-400/70 uppercase tracking-wider mt-0.5">Emails Sent</div>
+                        </div>
+                        <div class="p-3 rounded-xl {{ $emailFailedCount > 0 ? 'bg-rose-500/10 border-rose-500/20' : 'bg-slate-500/10 border-slate-500/20' }} border text-center">
+                            <div class="text-2xl font-extrabold {{ $emailFailedCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400' }}">{{ number_format($emailFailedCount) }}</div>
+                            <div class="text-[10px] font-bold {{ $emailFailedCount > 0 ? 'text-rose-500 dark:text-rose-400/70' : 'text-slate-400' }} uppercase tracking-wider mt-0.5">Failed</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mt-3">
+                        @php $successPercent = $approvedTotalCount > 0 ? round(($emailSuccessCount / $approvedTotalCount) * 100) : 0; @endphp
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Delivery Rate</span>
+                            <span class="text-xs font-extrabold {{ $successPercent === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400' }}">{{ $successPercent }}%</span>
+                        </div>
+                        <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500 {{ $successPercent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-emerald-500 to-amber-500' }}" style="width: {{ $successPercent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Lists -->
+                <div class="px-6 pb-4 max-h-[40vh] overflow-y-auto space-y-3" style="scrollbar-width: thin;">
+
+                    <!-- Failed Emails (shown first, always expanded if any) -->
+                    @if($emailFailedCount > 0)
+                        <div x-data="{ showFailed: true }">
+                            <button @click="showFailed = !showFailed" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 cursor-pointer hover:bg-rose-500/15 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    <span class="text-xs font-bold text-rose-600 dark:text-rose-400">Failed Deliveries ({{ $emailFailedCount }})</span>
+                                </div>
+                                <svg class="w-4 h-4 text-rose-400 transition-transform" :class="{ 'rotate-180': showFailed }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div x-show="showFailed" x-collapse class="mt-2 space-y-1.5">
+                                @foreach(collect($emailDeliveryResults)->where('status', 'failed') as $result)
+                                    <div class="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                                        <div class="p-1 rounded-full bg-rose-500/20 mt-0.5 shrink-0">
+                                            <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $result['name'] }}</span>
+                                            </div>
+                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ $result['email'] }}</p>
+                                            @if(!empty($result['error']))
+                                                <p class="text-[10px] text-rose-500 dark:text-rose-400 mt-0.5 line-clamp-2">{{ Str::limit($result['error'], 120) }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Successful Emails (collapsible) -->
+                    @if($emailSuccessCount > 0)
+                        <div x-data="{ showSuccess: {{ $emailFailedCount === 0 ? 'true' : 'false' }} }">
+                            <button @click="showSuccess = !showSuccess" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/15 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Emails Delivered Successfully ({{ $emailSuccessCount }})</span>
+                                </div>
+                                <svg class="w-4 h-4 text-emerald-400 transition-transform" :class="{ 'rotate-180': showSuccess }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div x-show="showSuccess" x-collapse class="mt-2 space-y-1">
+                                @foreach(collect($emailDeliveryResults)->where('status', 'success') as $result)
+                                    <div class="flex items-center gap-3 px-3 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                                        <div class="p-1 rounded-full bg-emerald-500/20 shrink-0">
+                                            <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <span class="text-xs font-semibold text-slate-900 dark:text-white truncate block">{{ $result['name'] }}</span>
+                                            <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate block">{{ $result['email'] }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="px-6 py-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900/60">
+                    @if($emailFailedCount > 0)
+                        <button wire:click="retryFailedEmails" 
+                                wire:loading.attr="disabled"
+                                wire:target="retryFailedEmails"
+                                class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait">
+                            <svg wire:loading.remove wire:target="retryFailedEmails" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <svg wire:loading wire:target="retryFailedEmails" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span wire:loading.remove wire:target="retryFailedEmails">Retry Failed ({{ $emailFailedCount }})</span>
+                            <span wire:loading wire:target="retryFailedEmails">Retrying...</span>
+                        </button>
+                    @else
+                        <div></div>
+                    @endif
+                    <button wire:click="closeEmailReportModal" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 font-semibold text-xs transition-all cursor-pointer">
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
     @endif

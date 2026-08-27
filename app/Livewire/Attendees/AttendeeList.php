@@ -37,6 +37,13 @@ class AttendeeList extends Component
     public bool $selectAll = false;
     public bool $selectAllOnPage = false;
 
+    // Email delivery report modal state
+    public bool $showEmailReportModal = false;
+    public array $emailDeliveryResults = [];
+    public int $emailSuccessCount = 0;
+    public int $emailFailedCount = 0;
+    public int $approvedTotalCount = 0;
+
     public function toggleExpandOrg(int $orgId): void
     {
         if (in_array($orgId, $this->expandedOrgs)) {
@@ -763,15 +770,12 @@ class AttendeeList extends Component
                     }
 
                     try {
-                        Mail::to($attendee->email)->queue(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
+                        Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
+                        $this->logEmailNotification($attendee, 'delivered');
                         $sentCount++;
                     } catch (\Exception $e) {
-                        try {
-                            Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
-                            $sentCount++;
-                        } catch (\Exception $ex) {
-                            \Illuminate\Support\Facades\Log::error("Failed to send invitation to {$attendee->email}: " . $ex->getMessage());
-                        }
+                        \Illuminate\Support\Facades\Log::error("Failed to send invitation to {$attendee->email}: " . $e->getMessage());
+                        $this->logEmailNotification($attendee, 'failed', $e->getMessage());
                     }
                 }
                 session()->flash('success', "Bulk invitations dispatched to {$sentCount} existing attendees with unique security passes.");
@@ -858,15 +862,12 @@ class AttendeeList extends Component
             }
 
             try {
-                Mail::to($attendee->email)->queue(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
+                Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
+                $this->logEmailNotification($attendee, 'delivered');
                 $sentCount++;
             } catch (\Exception $e) {
-                try {
-                    Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee, $this->bulk_invite_type));
-                    $sentCount++;
-                } catch (\Exception $ex) {
-                    \Illuminate\Support\Facades\Log::error("Failed to send bulk invitation to {$email}: " . $ex->getMessage());
-                }
+                \Illuminate\Support\Facades\Log::error("Failed to send bulk invitation to {$email}: " . $e->getMessage());
+                $this->logEmailNotification($attendee, 'failed', $e->getMessage());
             }
         }
 
@@ -987,6 +988,28 @@ class AttendeeList extends Component
         $this->closeAddModal();
     }
 
+    protected function logEmailNotification(Attendee $attendee, string $status, ?string $errorMessage = null): void
+    {
+        try {
+            \App\Models\NotificationLog::create([
+                'uuid' => (string) Str::uuid(),
+                'attendee_id' => $attendee->id,
+                'event_id' => $attendee->event_id,
+                'user_id' => auth()->id(),
+                'channel' => \App\Enums\NotificationChannel::Email,
+                'type' => \App\Enums\NotificationType::QrDelivery,
+                'status' => $status,
+                'sent_at' => in_array($status, ['delivered', 'sent']) ? now() : null,
+                'error_message' => $errorMessage,
+                'metadata' => [
+                    'recipient_email' => $attendee->email,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to log email notification: ' . $e->getMessage());
+        }
+    }
+
     public function verifyAttendee($uuid)
     {
         $attendee = Attendee::with(['event', 'qrCode'])->where('uuid', $uuid)->first();
@@ -1015,8 +1038,10 @@ class AttendeeList extends Component
             // Send Confirmation Email with QR Pass upon Org Admin Approval
             try {
                 Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+                $this->logEmailNotification($attendee, 'delivered');
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send approval confirmation email: ' . $e->getMessage());
+                $this->logEmailNotification($attendee, 'failed', $e->getMessage());
             }
 
             session()->flash('success', "Attendee '{$attendee->full_name}' approved & verified! Official QR pass dispatched via email.");
@@ -1028,6 +1053,32 @@ class AttendeeList extends Component
         if (empty($this->selectedAttendees)) return;
 
         $attendees = Attendee::with(['event', 'qrCode'])->whereIn('uuid', $this->selectedAttendees)->get();
+        $this->processApproveAndEmail($attendees);
+    }
+
+    /**
+     * Approve ALL attendees matching the current filters (across all pages)
+     */
+    public function approveAllFilteredAttendees()
+    {
+        $attendees = $this->getFilteredAttendeesQuery()->with(['event', 'qrCode'])->get();
+
+        if ($attendees->isEmpty()) {
+            session()->flash('warning', 'No attendees found matching the current filters.');
+            return;
+        }
+
+        $this->processApproveAndEmail($attendees);
+    }
+
+    /**
+     * Core method: approve attendees, generate QR codes, send emails, and show delivery report
+     */
+    protected function processApproveAndEmail($attendees)
+    {
+        $results = [];
+        $successCount = 0;
+        $failedCount = 0;
         $approvedCount = 0;
 
         foreach ($attendees as $attendee) {
@@ -1051,19 +1102,122 @@ class AttendeeList extends Component
                 $attendee->load('qrCode');
             }
 
+            $approvedCount++;
+
+            // Send email and track result
             try {
                 Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+                $this->logEmailNotification($attendee, 'delivered');
+                $results[] = [
+                    'uuid' => $attendee->uuid,
+                    'name' => $attendee->full_name,
+                    'email' => $attendee->email,
+                    'status' => 'success',
+                    'error' => null,
+                ];
+                $successCount++;
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send bulk approval confirmation email: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error("Failed to send bulk approval email to {$attendee->email}: " . $e->getMessage());
+                $this->logEmailNotification($attendee, 'failed', $e->getMessage());
+                $results[] = [
+                    'uuid' => $attendee->uuid,
+                    'name' => $attendee->full_name,
+                    'email' => $attendee->email,
+                    'status' => 'failed',
+                    'error' => $e->getMessage(),
+                ];
+                $failedCount++;
             }
-
-            $approvedCount++;
         }
 
+        // Store results and show report modal
+        $this->emailDeliveryResults = $results;
+        $this->emailSuccessCount = $successCount;
+        $this->emailFailedCount = $failedCount;
+        $this->approvedTotalCount = $approvedCount;
+        $this->showEmailReportModal = true;
+
+        // Reset selection state
         $this->selectedAttendees = [];
         $this->selectAllOnPage = false;
         $this->selectAll = false;
-        session()->flash('success', "{$approvedCount} attendee(s) approved & verified successfully! Official QR passes emailed to guests.");
+    }
+
+    /**
+     * Close the email delivery report modal
+     */
+    public function closeEmailReportModal()
+    {
+        $this->showEmailReportModal = false;
+        $this->emailDeliveryResults = [];
+        $this->emailSuccessCount = 0;
+        $this->emailFailedCount = 0;
+        $this->approvedTotalCount = 0;
+    }
+
+    /**
+     * Retry sending emails to attendees that previously failed
+     */
+    public function retryFailedEmails()
+    {
+        $failedUuids = collect($this->emailDeliveryResults)
+            ->where('status', 'failed')
+            ->pluck('uuid')
+            ->toArray();
+
+        if (empty($failedUuids)) {
+            session()->flash('info', 'No failed emails to retry.');
+            return;
+        }
+
+        $attendees = Attendee::with(['event', 'qrCode'])->whereIn('uuid', $failedUuids)->get();
+
+        $retryResults = [];
+        $retrySuccess = 0;
+        $retryFailed = 0;
+
+        foreach ($attendees as $attendee) {
+            try {
+                Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+                $this->logEmailNotification($attendee, 'delivered');
+                $retryResults[] = [
+                    'uuid' => $attendee->uuid,
+                    'name' => $attendee->full_name,
+                    'email' => $attendee->email,
+                    'status' => 'success',
+                    'error' => null,
+                ];
+                $retrySuccess++;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Retry failed for {$attendee->email}: " . $e->getMessage());
+                $this->logEmailNotification($attendee, 'failed', $e->getMessage());
+                $retryResults[] = [
+                    'uuid' => $attendee->uuid,
+                    'name' => $attendee->full_name,
+                    'email' => $attendee->email,
+                    'status' => 'failed',
+                    'error' => $e->getMessage(),
+                ];
+                $retryFailed++;
+            }
+        }
+
+        // Update the results: keep previously successful ones, replace failed ones with retry results
+        $updatedResults = collect($this->emailDeliveryResults)
+            ->where('status', 'success')
+            ->values()
+            ->merge($retryResults)
+            ->toArray();
+
+        $this->emailDeliveryResults = $updatedResults;
+        $this->emailSuccessCount = collect($updatedResults)->where('status', 'success')->count();
+        $this->emailFailedCount = collect($updatedResults)->where('status', 'failed')->count();
+
+        if ($retryFailed === 0) {
+            session()->flash('success', "✅ All {$retrySuccess} previously failed email(s) were successfully re-sent!");
+        } else {
+            session()->flash('warning', "Retry complete: {$retrySuccess} email(s) sent successfully, {$retryFailed} still failed.");
+        }
     }
 
     public function resendPassEmail($uuid = null)
@@ -1092,13 +1246,15 @@ class AttendeeList extends Component
         }
 
         try {
-            Mail::to($attendee->email)->send(new AttendeePrivateInvitation($attendee));
+            Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+            $this->logEmailNotification($attendee, 'delivered');
             session()->flash('message', "Pass email re-sent successfully to {$attendee->email}!");
             if ($this->selectedAttendee && $this->selectedAttendee->uuid === $targetUuid) {
                 $this->selectedAttendee = $attendee;
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Failed to resend pass email to {$attendee->email}: " . $e->getMessage());
+            $this->logEmailNotification($attendee, 'failed', $e->getMessage());
             session()->flash('error', "Could not send email: " . $e->getMessage());
         }
     }
@@ -2124,6 +2280,11 @@ class AttendeeList extends Component
             'selectedAttendee' => $this->selectedAttendee,
             'gen_standard_fields' => $this->gen_standard_fields,
             'gen_custom_fields' => $this->gen_custom_fields,
+            'showEmailReportModal' => $this->showEmailReportModal,
+            'emailDeliveryResults' => $this->emailDeliveryResults,
+            'emailSuccessCount' => $this->emailSuccessCount,
+            'emailFailedCount' => $this->emailFailedCount,
+            'approvedTotalCount' => $this->approvedTotalCount,
         ]);
     }
 
