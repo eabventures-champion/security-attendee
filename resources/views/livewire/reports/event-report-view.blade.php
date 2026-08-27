@@ -133,7 +133,7 @@
     @endif
 
     <!-- Stat Summary Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div class="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-xl">
             <span class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Gate Scans</span>
             <div class="mt-1 sm:mt-2 text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($totalScans) }}</div>
@@ -146,155 +146,339 @@
             <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium">Successful check-ins</p>
         </div>
 
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-white/5 backdrop-blur-xl border border-rose-500/20 bg-rose-500/5 shadow-sm dark:shadow-xl col-span-2 sm:col-span-1">
+        <div class="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-white/5 backdrop-blur-xl border border-rose-500/20 bg-rose-500/5 shadow-sm dark:shadow-xl">
             <span class="text-[10px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Denied Attempts</span>
             <div class="mt-1 sm:mt-2 text-xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400">{{ number_format($deniedScans) }}</div>
             <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium">Invalid or revoked passes</p>
         </div>
+
+        <div class="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-white/5 backdrop-blur-xl border border-blue-500/20 bg-blue-500/5 shadow-sm dark:shadow-xl">
+            <span class="text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">QR &amp; Email Delivery</span>
+            <div class="mt-1 sm:mt-2 text-xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400">{{ number_format($emailSuccessCount) }} <span class="text-xs text-slate-400 font-semibold">/ {{ number_format($totalNotifications) }}</span></div>
+            <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium">{{ $deliveryRate }}% delivery rate @if($emailFailedCount > 0) · <span class="text-rose-500 font-bold">{{ $emailFailedCount }} failed</span>@endif</p>
+        </div>
     </div>
 
     <!-- Report Export Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <!-- Attendance Summary Report Card -->
-        <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-2xl hover:border-blue-500/40 transition-all group flex flex-col justify-between">
+        <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-2xl hover:border-blue-500/40 transition-all group flex flex-col justify-between">
             <div>
-                <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3.5 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Attendance Summary</h3>
-                <p class="text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed mb-6">Complete breakdown of verified attendees vs. check-in totals across all gates.</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1.5">Attendance Summary</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed mb-5">Breakdown of verified attendees vs. check-ins.</p>
             </div>
-            <div class="pt-4 border-t border-slate-100 dark:border-white/10 flex gap-2">
-                <button wire:click="exportCsv('attendance')" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer">
+            <div class="pt-3 border-t border-slate-100 dark:border-white/10 flex gap-2">
+                <button wire:click="exportCsv('attendance')" class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer">
                     Export CSV
                 </button>
             </div>
         </div>
 
         <!-- Verification Report Card -->
-        <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-2xl hover:border-emerald-500/40 transition-all group flex flex-col justify-between">
+        <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-2xl hover:border-emerald-500/40 transition-all group flex flex-col justify-between">
             <div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <div class="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3.5 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Pre-Event Verification</h3>
-                <p class="text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed mb-6">Audit log of email verifications, pending approvals, and attendee registrations.</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1.5">Pre-Event Verification</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed mb-5">Audit log of email verification and attendee registrations.</p>
             </div>
-            <div class="pt-4 border-t border-slate-100 dark:border-white/10 flex gap-2">
-                <button wire:click="exportCsv('verification')" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 transition-all cursor-pointer">
+            <div class="pt-3 border-t border-slate-100 dark:border-white/10 flex gap-2">
+                <button wire:click="exportCsv('verification')" class="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 transition-all cursor-pointer">
                     Export CSV
                 </button>
             </div>
         </div>
 
         <!-- Gate Activity Report Card -->
-        <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-2xl hover:border-purple-500/40 transition-all group flex flex-col justify-between">
+        <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-2xl hover:border-purple-500/40 transition-all group flex flex-col justify-between">
             <div>
-                <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                <div class="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3.5 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Gate Activity & Scans</h3>
-                <p class="text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed mb-6">Detailed scan logs including authorized access grants and denied attempts.</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1.5">Gate Activity &amp; Scans</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed mb-5">Access grants and denied attempts at all gates.</p>
             </div>
-            <div class="pt-4 border-t border-slate-100 dark:border-white/10 flex gap-2">
-                <button wire:click="exportCsv('gate')" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+            <div class="pt-3 border-t border-slate-100 dark:border-white/10 flex gap-2">
+                <button wire:click="exportCsv('gate')" class="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+                    Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- Bulk QR Pass & Email Delivery Report Card -->
+        <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-2xl hover:border-indigo-500/40 transition-all group flex flex-col justify-between">
+            <div>
+                <div class="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3.5 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1.5">QR &amp; Email Delivery</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed mb-5">Audit log of bulk QR pass dispatches, delivery times, and errors.</p>
+            </div>
+            <div class="pt-3 border-t border-slate-100 dark:border-white/10 flex gap-2">
+                <button wire:click="exportCsv('email_delivery')" class="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
                     Export CSV
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Live Gate Check-ins & Audit Logs Table -->
-    <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm dark:shadow-2xl overflow-hidden space-y-4 p-6">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
-            <div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                    Gate Check-ins Audit Log
-                </h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Real-time log of every scan attempt during and after the meeting.</p>
-            </div>
+    <!-- Audit Logs Section with Tab Navigation -->
+    <div class="space-y-4">
+        <!-- Tab Navigation Bar -->
+        <div class="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-white/10 w-full sm:w-max">
+            <button type="button" 
+                    wire:click="$set('activeReportTab', 'scans')"
+                    class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 {{ $activeReportTab === 'scans' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                <span>Gate Check-ins Audit Log</span>
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeReportTab === 'scans' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300' }}">{{ number_format($totalScans) }}</span>
+            </button>
 
-            <!-- Filters -->
-            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                <div class="relative flex-1 sm:w-64">
-                    <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search by attendee name or email..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <button type="button" 
+                    wire:click="$set('activeReportTab', 'notifications')"
+                    class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 {{ $activeReportTab === 'notifications' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <span>Bulk QR &amp; Email Delivery Log</span>
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeReportTab === 'notifications' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300' }}">{{ number_format($totalNotifications) }}</span>
+            </button>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- TAB 1: GATE CHECK-INS AUDIT LOG                                         -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        @if($activeReportTab === 'scans')
+            <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm dark:shadow-2xl overflow-hidden space-y-4 p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            Gate Check-ins Audit Log
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Real-time log of every scan attempt during and after the meeting.</p>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search by attendee name or email..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <select wire:model.live="gateFilter" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">All Gates</option>
+                            @foreach($gates as $gt)
+                                <option value="{{ $gt->id }}">{{ $gt->name }}</option>
+                            @endforeach
+                        </select>
+
+                        <select wire:model.live="resultFilter" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">All Scan Results</option>
+                            <option value="granted">Granted Only</option>
+                            <option value="denied">Denied Only</option>
+                        </select>
+                    </div>
                 </div>
 
-                <select wire:model.live="gateFilter" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">All Gates</option>
-                    @foreach($gates as $gt)
-                        <option value="{{ $gt->id }}">{{ $gt->name }}</option>
-                    @endforeach
-                </select>
+                <!-- Scan Logs Data Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-white/10 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                <th class="py-3 px-4">Attendee</th>
+                                <th class="py-3 px-4">Gate Checkpoint</th>
+                                <th class="py-3 px-4">Scan Result</th>
+                                <th class="py-3 px-4">Scanned At</th>
+                                <th class="py-3 px-4 text-right">IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-white/5 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                            @forelse($scanLogs as $log)
+                                @php
+                                    $isGranted = is_object($log->scan_result) ? $log->scan_result->value === 'granted' : $log->scan_result === 'granted';
+                                @endphp
+                                <tr class="hover:bg-slate-50/80 dark:hover:bg-white/5 transition-colors">
+                                    <td class="py-3 px-4">
+                                        <div class="font-bold text-slate-900 dark:text-white">{{ $log->attendee->full_name ?? 'Unknown / Unregistered' }}</div>
+                                        <div class="text-[11px] text-slate-500 dark:text-slate-400">{{ $log->attendee->email ?? '-' }}</div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $log->gate->name ?? 'Main Entrance' }}</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        @if($isGranted)
+                                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                                Granted Access
+                                            </span>
+                                        @else
+                                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                                                Access Denied
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4 text-slate-800 dark:text-slate-200 font-mono">
+                                        {{ $log->scanned_at ? $log->scanned_at->format('M j, Y @ g:i:s A') : $log->created_at->format('M j, Y @ g:i:s A') }}
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-mono text-slate-500 dark:text-slate-400 text-[11px]">
+                                        {{ $log->ip_address ?? '127.0.0.1' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="py-10 text-center text-slate-400 font-medium">
+                                        No check-in scan records found matching your filters.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-                <select wire:model.live="resultFilter" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">All Scan Results</option>
-                    <option value="granted">Granted Only</option>
-                    <option value="denied">Denied Only</option>
-                </select>
+                @if($scanLogs->hasPages())
+                    <div class="pt-4 border-t border-slate-100 dark:border-white/10">
+                        {{ $scanLogs->links('vendor.pagination.tailwind') }}
+                    </div>
+                @endif
             </div>
-        </div>
+        @endif
 
-        <!-- Scan Logs Data Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-white/10 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        <th class="py-3 px-4">Attendee</th>
-                        <th class="py-3 px-4">Gate Checkpoint</th>
-                        <th class="py-3 px-4">Scan Result</th>
-                        <th class="py-3 px-4">Scanned At</th>
-                        <th class="py-3 px-4 text-right">IP Address</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-white/5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                    @forelse($scanLogs as $log)
-                        @php
-                            $isGranted = is_object($log->scan_result) ? $log->scan_result->value === 'granted' : $log->scan_result === 'granted';
-                        @endphp
-                        <tr class="hover:bg-slate-50/80 dark:hover:bg-white/5 transition-colors">
-                            <td class="py-3 px-4">
-                                <div class="font-bold text-slate-900 dark:text-white">{{ $log->attendee->full_name ?? 'Unknown / Unregistered' }}</div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400">{{ $log->attendee->email ?? '-' }}</div>
-                            </td>
-                            <td class="py-3 px-4">
-                                <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $log->gate->name ?? 'Main Entrance' }}</span>
-                            </td>
-                            <td class="py-3 px-4">
-                                @if($isGranted)
-                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                        Granted Access
-                                    </span>
-                                @else
-                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                                        Access Denied
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="py-3 px-4 text-slate-800 dark:text-slate-200 font-mono">
-                                {{ $log->scanned_at ? $log->scanned_at->format('M j, Y @ g:i:s A') : $log->created_at->format('M j, Y @ g:i:s A') }}
-                            </td>
-                            <td class="py-3 px-4 text-right font-mono text-slate-500 dark:text-slate-400 text-[11px]">
-                                {{ $log->ip_address ?? '127.0.0.1' }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="py-10 text-center text-slate-400 font-medium">
-                                No check-in scan records found matching your filters.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- TAB 2: BULK QR PASSES & EMAIL DELIVERY AUDIT LOG                        -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        @if($activeReportTab === 'notifications')
+            <div class="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm dark:shadow-2xl overflow-hidden space-y-4 p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            Bulk QR Codes &amp; Email Delivery Audit Log
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Comprehensive audit trail of bulk pass dispatches, delivery timestamps, admin triggers, and error diagnostics.</p>
+                    </div>
 
-        @if($scanLogs->hasPages())
-            <div class="pt-4 border-t border-slate-100 dark:border-white/10">
-                {{ $scanLogs->links('vendor.pagination.tailwind') }}
+                    <!-- Filters -->
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <input wire:model.live.debounce.300ms="notificationSearch" type="text" placeholder="Search by recipient or email..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <select wire:model.live="notificationChannel" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Channels</option>
+                            <option value="email">Email Only</option>
+                            <option value="whatsapp">WhatsApp Only</option>
+                        </select>
+
+                        <select wire:model.live="notificationStatus" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Delivery Statuses</option>
+                            <option value="delivered">Delivered / Sent</option>
+                            <option value="failed">Failed Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Delivery Logs Data Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-white/10 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                <th class="py-3 px-4">Time Command Issued</th>
+                                <th class="py-3 px-4">Attendee / Recipient</th>
+                                <th class="py-3 px-4">Channel &amp; Type</th>
+                                <th class="py-3 px-4">Delivery Status</th>
+                                <th class="py-3 px-4 text-right">Triggered By</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-white/5 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                            @forelse($notificationLogs as $log)
+                                @php
+                                    $isDelivered = in_array($log->status, ['delivered', 'sent']);
+                                    $channelVal = is_object($log->channel) ? $log->channel->value : $log->channel;
+                                    $recipientEmail = $log->attendee->email ?? ($log->metadata['recipient_email'] ?? '-');
+                                @endphp
+                                <tr class="hover:bg-slate-50/80 dark:hover:bg-white/5 transition-colors">
+                                    <td class="py-3 px-4 whitespace-nowrap">
+                                        <div class="font-bold text-slate-900 dark:text-white font-mono flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            {{ $log->created_at ? $log->created_at->format('M j, Y @ g:i:s A') : '-' }}
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 font-medium ml-5">{{ $log->created_at ? $log->created_at->diffForHumans() : '' }}</div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <div class="font-bold text-slate-900 dark:text-white">{{ $log->attendee->full_name ?? 'Attendee' }}</div>
+                                        <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">{{ $recipientEmail }}</div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        @if($channelVal === 'email')
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                                Email QR Pass
+                                            </span>
+                                        @elseif($channelVal === 'whatsapp')
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                                <span>📱</span>
+                                                WhatsApp Pass
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
+                                                {{ ucfirst($channelVal ?? 'Notification') }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        @if($isDelivered)
+                                            <div class="flex flex-col gap-0.5">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 w-max">
+                                                    <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                                    Delivered
+                                                </span>
+                                                @if($log->sent_at)
+                                                    <span class="text-[10px] text-slate-400 font-mono">{{ $log->sent_at->format('g:i:s A') }}</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="flex flex-col gap-1 max-w-sm">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 w-max">
+                                                    <svg class="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                                                    Failed
+                                                </span>
+                                                @if($log->error_message)
+                                                    <p class="text-[10px] text-rose-500 dark:text-rose-400 leading-snug line-clamp-2" title="{{ $log->error_message }}">
+                                                        {{ Str::limit($log->error_message, 100) }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                                            {{ $log->user->name ?? 'System Admin' }}
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">
+                                            {{ $log->user ? $log->user->role_label : 'Admin Trigger' }}
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="py-10 text-center text-slate-400 font-medium">
+                                        No bulk QR pass delivery logs recorded for this event yet.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($notificationLogs->hasPages())
+                    <div class="pt-4 border-t border-slate-100 dark:border-white/10">
+                        {{ $notificationLogs->links('vendor.pagination.tailwind') }}
+                    </div>
+                @endif
             </div>
         @endif
     </div>
 @endif
 </div>
+

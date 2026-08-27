@@ -988,7 +988,7 @@ class AttendeeList extends Component
         $this->closeAddModal();
     }
 
-    protected function logEmailNotification(Attendee $attendee, string $status, ?string $errorMessage = null): void
+    protected function logEmailNotification(Attendee $attendee, string $status, ?string $errorMessage = null, ?string $batchId = null): void
     {
         try {
             \App\Models\NotificationLog::create([
@@ -1003,6 +1003,7 @@ class AttendeeList extends Component
                 'error_message' => $errorMessage,
                 'metadata' => [
                     'recipient_email' => $attendee->email,
+                    'batch_id' => $batchId,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -1080,8 +1081,9 @@ class AttendeeList extends Component
         $successCount = 0;
         $failedCount = 0;
         $approvedCount = 0;
+        $batchId = (string) Str::uuid();
 
-        foreach ($attendees as $attendee) {
+        foreach ($attendees as $index => $attendee) {
             $attendee->verification_status = VerificationStatus::Verified;
             $attendee->verified_at = now();
             $attendee->save();
@@ -1104,10 +1106,15 @@ class AttendeeList extends Component
 
             $approvedCount++;
 
+            // Rate-limiting pause (250ms) to avoid SMTP / Mailtrap 550 rate limit errors
+            if ($index > 0) {
+                usleep(250000);
+            }
+
             // Send email and track result
             try {
                 Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
-                $this->logEmailNotification($attendee, 'delivered');
+                $this->logEmailNotification($attendee, 'delivered', null, $batchId);
                 $results[] = [
                     'uuid' => $attendee->uuid,
                     'name' => $attendee->full_name,
@@ -1118,7 +1125,7 @@ class AttendeeList extends Component
                 $successCount++;
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to send bulk approval email to {$attendee->email}: " . $e->getMessage());
-                $this->logEmailNotification($attendee, 'failed', $e->getMessage());
+                $this->logEmailNotification($attendee, 'failed', $e->getMessage(), $batchId);
                 $results[] = [
                     'uuid' => $attendee->uuid,
                     'name' => $attendee->full_name,
@@ -1175,11 +1182,17 @@ class AttendeeList extends Component
         $retryResults = [];
         $retrySuccess = 0;
         $retryFailed = 0;
+        $batchId = (string) Str::uuid();
 
-        foreach ($attendees as $attendee) {
+        foreach ($attendees as $index => $attendee) {
+            // Rate-limiting pause (300ms) between retry attempts
+            if ($index > 0) {
+                usleep(300000);
+            }
+
             try {
                 Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
-                $this->logEmailNotification($attendee, 'delivered');
+                $this->logEmailNotification($attendee, 'delivered', null, $batchId);
                 $retryResults[] = [
                     'uuid' => $attendee->uuid,
                     'name' => $attendee->full_name,
@@ -1190,7 +1203,7 @@ class AttendeeList extends Component
                 $retrySuccess++;
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Retry failed for {$attendee->email}: " . $e->getMessage());
-                $this->logEmailNotification($attendee, 'failed', $e->getMessage());
+                $this->logEmailNotification($attendee, 'failed', $e->getMessage(), $batchId);
                 $retryResults[] = [
                     'uuid' => $attendee->uuid,
                     'name' => $attendee->full_name,

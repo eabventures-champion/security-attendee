@@ -10,7 +10,10 @@ use App\Models\Event;
 use App\Models\CheckIn;
 use App\Models\Attendee;
 use App\Models\Gate;
+use App\Models\NotificationLog;
 use App\Enums\ScanResult;
+use App\Enums\NotificationChannel;
+use App\Enums\NotificationType;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 #[Layout('layouts.app')]
@@ -26,6 +29,12 @@ class EventReportView extends Component
     public $search = '';
     public $perPage = 10;
     public array $expandedOrgs = [];
+
+    // Notification / Bulk Pass delivery report filters
+    public string $activeReportTab = 'scans'; // 'scans' or 'notifications'
+    public string $notificationChannel = '';
+    public string $notificationStatus = '';
+    public string $notificationSearch = '';
 
     public function mount($eventUuid = null)
     {
@@ -73,6 +82,21 @@ class EventReportView extends Component
         $this->resetPage();
     }
 
+    public function updatingNotificationSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingNotificationChannel()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingNotificationStatus()
+    {
+        $this->resetPage();
+    }
+
     public function exportCsv(string $type): StreamedResponse
     {
         $fileName = "event-{$type}-report-" . date('Y-m-d') . ".csv";
@@ -108,6 +132,24 @@ class EventReportView extends Component
                         $att->verified_at ? $att->verified_at->format('Y-m-d H:i:s') : 'Unverified'
                     ]);
                 }
+            } elseif ($type === 'email_delivery' || $type === 'notifications') {
+                fputcsv($handle, ['Timestamp / Time Issued', 'Event Name', 'Attendee Name', 'Recipient Email', 'Channel', 'Delivery Status', 'Triggered By / Admin', 'Error Details']);
+                $logs = NotificationLog::with(['attendee', 'user', 'event'])
+                    ->where('event_id', $this->event->id)
+                    ->latest()
+                    ->get();
+                foreach ($logs as $log) {
+                    fputcsv($handle, [
+                        $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : 'N/A',
+                        $log->event->name ?? $this->event->name,
+                        $log->attendee->full_name ?? 'N/A',
+                        $log->attendee->email ?? ($log->metadata['recipient_email'] ?? 'N/A'),
+                        is_object($log->channel) ? $log->channel->value : $log->channel,
+                        $log->status,
+                        $log->user->name ?? 'Admin',
+                        $log->error_message ?? ''
+                    ]);
+                }
             } else {
                 // Attendance Summary
                 fputcsv($handle, ['Event Name', 'Total Registrations', 'Verified Attendees', 'Total Check-ins', 'Checked In %']);
@@ -131,31 +173,81 @@ class EventReportView extends Component
         if (!$this->event) {
             return view('livewire.reports.event-report-view', [
                 'scanLogs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, $this->perPage),
+                'notificationLogs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, $this->perPage),
                 'availableGates' => collect(),
                 'totalScans' => 0,
                 'grantedScans' => 0,
                 'deniedScans' => 0,
+                'totalNotifications' => 0,
+                'emailSuccessCount' => 0,
+                'emailFailedCount' => 0,
+                'whatsappCount' => 0,
+                'deliveryRate' => 0,
             ]);
         }
 
-        $query = CheckIn::with(['attendee', 'gate'])->where('event_id', $this->event->id);
+        // Gate Scan Logs Query
+        $scanQuery = CheckIn::with(['attendee', 'gate'])->where('event_id', $this->event->id);
 
         if ($this->gateFilter) {
-            $query->where('gate_id', $this->gateFilter);
+            $scanQuery->where('gate_id', $this->gateFilter);
         }
 
         if ($this->resultFilter) {
-            $query->where('scan_result', $this->resultFilter);
+            $scanQuery->where('scan_result', $this->resultFilter);
         }
 
         if ($this->search) {
-            $query->whereHas('attendee', function ($q) {
+            $scanQuery->whereHas('attendee', function ($q) {
                 $q->where('full_name', 'like', '%' . $this->search . '%')
                   ->orWhere('email', 'like', '%' . $this->search . '%');
             });
         }
 
-        $scanLogs = $query->orderBy('created_at', 'desc')->paginate($this->perPage);
+        $scanLogs = $scanQuery->orderBy('created_at', 'desc')->paginate($this->perPage, ['*'], 'scansPage');
+
+        // Notification / Pass Delivery Logs Query
+        $notifQuery = NotificationLog::with(['attendee', 'user', 'event'])->where('event_id', $this->event->id);
+
+        if ($this->notificationChannel) {
+            $notifQuery->where('channel', $this->notificationChannel);
+        }
+
+        if ($this->notificationStatus) {
+            if ($this->notificationStatus === 'delivered') {
+                $notifQuery->whereIn('status', ['delivered', 'sent']);
+            } else {
+                $notifQuery->where('status', $this->notificationStatus);
+            }
+        }
+
+        if ($this->notificationSearch) {
+            $notifQuery->where(function ($q) {
+                $q->whereHas('attendee', function ($aq) {
+                    $aq->where('full_name', 'like', '%' . $this->notificationSearch . '%')
+                       ->orWhere('email', 'like', '%' . $this->notificationSearch . '%');
+                })->orWhere('metadata->recipient_email', 'like', '%' . $this->notificationSearch . '%');
+            });
+        }
+
+        $notificationLogs = $notifQuery->orderBy('created_at', 'desc')->paginate($this->perPage, ['*'], 'notifsPage');
+
+        // Notification Metrics for this event
+        $totalNotifications = NotificationLog::where('event_id', $this->event->id)->count();
+        $emailSuccessCount = NotificationLog::where('event_id', $this->event->id)
+            ->where('channel', NotificationChannel::Email)
+            ->whereIn('status', ['delivered', 'sent'])
+            ->count();
+        $emailFailedCount = NotificationLog::where('event_id', $this->event->id)
+            ->where('channel', NotificationChannel::Email)
+            ->where('status', 'failed')
+            ->count();
+        $whatsappCount = NotificationLog::where('event_id', $this->event->id)
+            ->where('channel', NotificationChannel::WhatsApp)
+            ->count();
+
+        $totalEmailAttempts = $emailSuccessCount + $emailFailedCount;
+        $deliveryRate = $totalEmailAttempts > 0 ? round(($emailSuccessCount / $totalEmailAttempts) * 100) : 0;
 
         $gates = Gate::where('event_id', $this->event->id)->get();
 
@@ -180,14 +272,24 @@ class EventReportView extends Component
         return view('livewire.reports.event-report-view', [
             'event' => $this->event,
             'scanLogs' => $scanLogs,
+            'notificationLogs' => $notificationLogs,
             'availableGates' => $gates,
             'gates' => $gates,
             'totalScans' => $totalScans,
             'grantedScans' => $grantedScans,
             'deniedScans' => $deniedScans,
+            'totalNotifications' => $totalNotifications,
+            'emailSuccessCount' => $emailSuccessCount,
+            'emailFailedCount' => $emailFailedCount,
+            'whatsappCount' => $whatsappCount,
+            'deliveryRate' => $deliveryRate,
             'search' => $this->search ?? '',
             'gateFilter' => $this->gateFilter ?? '',
-            'statusFilter' => $this->statusFilter ?? '',
+            'resultFilter' => $this->resultFilter ?? '',
+            'notificationChannel' => $this->notificationChannel ?? '',
+            'notificationStatus' => $this->notificationStatus ?? '',
+            'notificationSearch' => $this->notificationSearch ?? '',
+            'activeReportTab' => $this->activeReportTab ?? 'scans',
             'perPage' => $this->perPage ?? 15,
             'isSuperAdmin' => $isSuperAdmin,
             'organizationsTree' => $organizationsTree,
