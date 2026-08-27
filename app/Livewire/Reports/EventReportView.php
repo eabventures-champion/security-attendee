@@ -311,6 +311,23 @@ class EventReportView extends Component
         $emailFailedCount = $failedAttendeeIds->count();
         $totalNotifications = NotificationLog::where('event_id', $this->event->id)->count();
 
+        // Specific count breakdown for filter dropdowns
+        $deliveredLogCount = NotificationLog::where('event_id', $this->event->id)
+            ->whereIn('status', ['delivered', 'sent'])
+            ->count();
+
+        $failedLogCount = NotificationLog::where('event_id', $this->event->id)
+            ->where('status', 'failed')
+            ->count();
+
+        $emailChannelCount = NotificationLog::where('event_id', $this->event->id)
+            ->where('channel', NotificationChannel::Email)
+            ->count();
+
+        $whatsappChannelCount = NotificationLog::where('event_id', $this->event->id)
+            ->where('channel', NotificationChannel::WhatsApp)
+            ->count();
+
         $whatsappCount = NotificationLog::where('event_id', $this->event->id)
             ->where('channel', NotificationChannel::WhatsApp)
             ->whereIn('status', ['delivered', 'sent'])
@@ -354,6 +371,10 @@ class EventReportView extends Component
             'totalNotifications' => $totalNotifications,
             'emailSuccessCount' => $emailSuccessCount,
             'emailFailedCount' => $emailFailedCount,
+            'deliveredLogCount' => $deliveredLogCount,
+            'failedLogCount' => $failedLogCount,
+            'emailChannelCount' => $emailChannelCount,
+            'whatsappChannelCount' => $whatsappChannelCount,
             'whatsappCount' => $whatsappCount,
             'deliveryRate' => $deliveryRate,
             'search' => $this->search ?? '',

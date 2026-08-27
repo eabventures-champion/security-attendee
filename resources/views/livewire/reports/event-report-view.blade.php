@@ -275,9 +275,9 @@
                         </select>
 
                         <select wire:model.live="resultFilter" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="">All Scan Results</option>
-                            <option value="granted">Granted Only</option>
-                            <option value="denied">Denied Only</option>
+                            <option value="">All Scan Results ({{ number_format($totalScans) }})</option>
+                            <option value="granted">Granted Only ({{ number_format($grantedScans) }})</option>
+                            <option value="denied">Denied Only ({{ number_format($deniedScans) }})</option>
                         </select>
                     </div>
                 </div>
@@ -386,15 +386,15 @@
                         </div>
 
                         <select wire:model.live="notificationChannel" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Channels</option>
-                            <option value="email">Email Only</option>
-                            <option value="whatsapp">WhatsApp Only</option>
+                            <option value="">All Channels ({{ number_format($totalNotifications) }})</option>
+                            <option value="email">Email Only ({{ number_format($emailChannelCount ?? 0) }})</option>
+                            <option value="whatsapp">WhatsApp Only ({{ number_format($whatsappChannelCount ?? 0) }})</option>
                         </select>
 
                         <select wire:model.live="notificationStatus" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Statuses</option>
-                            <option value="delivered">Delivered / Sent</option>
-                            <option value="failed">Failed Only</option>
+                            <option value="">All Statuses ({{ number_format($totalNotifications) }})</option>
+                            <option value="delivered">Delivered / Sent ({{ number_format($deliveredLogCount ?? 0) }})</option>
+                            <option value="failed">Failed Only ({{ number_format($failedLogCount ?? 0) }})</option>
                         </select>
 
                         <!-- Reset Logs Dropdown Menu -->
