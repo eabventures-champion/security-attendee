@@ -48,7 +48,7 @@ class AttendeeList extends Component
     public int $batchTotalCount = 0;
     public int $batchProcessedCount = 0;
     public ?string $currentBatchId = null;
-    public int $batchChunkSize = 6;
+    public int $batchChunkSize = 4;
 
     // Deletion Vault State & Restoration System
     public bool $showVaultModal = false;
@@ -1149,36 +1149,23 @@ class AttendeeList extends Component
         $attendees = Attendee::with(['event', 'qrCode'])->whereIn('uuid', $chunkUuids)->get();
 
         foreach ($attendees as $index => $attendee) {
-            // Adaptive pause between sends (300ms) to respect SMTP rate limits
-            if ($index > 0) {
-                usleep(300000);
-            }
-
             $sent = false;
             $lastError = null;
 
-            for ($attempt = 1; $attempt <= 2; $attempt++) {
-                try {
-                    Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
-                    $this->logEmailNotification($attendee, 'delivered', null, $this->currentBatchId);
-                    $this->emailDeliveryResults[] = [
-                        'uuid' => $attendee->uuid,
-                        'name' => $attendee->full_name,
-                        'email' => $attendee->email,
-                        'status' => 'success',
-                        'error' => null,
-                    ];
-                    $this->emailSuccessCount++;
-                    $sent = true;
-                    break;
-                } catch (\Exception $e) {
-                    $lastError = $e->getMessage();
-                    // If rate limited by SMTP (e.g. Mailtrap 451 4.7.1 Ratelimit / 550 Too many emails), pause 2s and retry once
-                    if ($attempt === 1 && (str_contains($lastError, 'Ratelimit') || str_contains($lastError, '451') || str_contains($lastError, '550') || str_contains($lastError, 'Too many emails'))) {
-                        sleep(2);
-                        continue;
-                    }
-                }
+            try {
+                Mail::to($attendee->email)->send(new \App\Mail\EventRegistrationConfirmation($attendee));
+                $this->logEmailNotification($attendee, 'delivered', null, $this->currentBatchId);
+                $this->emailDeliveryResults[] = [
+                    'uuid' => $attendee->uuid,
+                    'name' => $attendee->full_name,
+                    'email' => $attendee->email,
+                    'status' => 'success',
+                    'error' => null,
+                ];
+                $this->emailSuccessCount++;
+                $sent = true;
+            } catch (\Exception $e) {
+                $lastError = $e->getMessage();
             }
 
             if (!$sent) {
