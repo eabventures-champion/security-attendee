@@ -278,6 +278,12 @@ class EventReportView extends Component
 
         $notificationLogs = $notifQuery->orderBy('created_at', 'desc')->paginate($this->perPage, ['*'], 'notifsPage');
 
+        // Automatically clamp out-of-bounds page numbers (e.g. if URL has ?notifsPage=5 but there are only 2 pages)
+        if ($notificationLogs->currentPage() > $notificationLogs->lastPage() && $notificationLogs->lastPage() > 0) {
+            $this->setPage(1, 'notifsPage');
+            $notificationLogs = $notifQuery->orderBy('created_at', 'desc')->paginate($this->perPage, ['*'], 'notifsPage');
+        }
+
         // Notification Metrics for this event
         $totalAttendeesCount = $this->event->attendees()->count();
 

@@ -48,7 +48,7 @@ class AttendeeList extends Component
     public int $batchTotalCount = 0;
     public int $batchProcessedCount = 0;
     public ?string $currentBatchId = null;
-    public int $batchChunkSize = 8;
+    public int $batchChunkSize = 6;
 
     public function toggleExpandOrg(int $orgId): void
     {
@@ -1125,8 +1125,8 @@ class AttendeeList extends Component
         $this->selectAllOnPage = false;
         $this->selectAll = false;
 
-        // 3. Process the first chunk immediately
-        $this->processNextEmailChunk();
+        // Note: Livewire will render the modal with wire:poll.300ms="processNextEmailChunk"
+        // and immediately begin processing chunk by chunk without blocking the initial HTTP request.
     }
 
     /**
@@ -1240,8 +1240,6 @@ class AttendeeList extends Component
         $this->emailFailedCount = 0;
         $this->isProcessingBatch = true;
         $this->currentBatchId = (string) Str::uuid();
-
-        $this->processNextEmailChunk();
     }
 
     /**
