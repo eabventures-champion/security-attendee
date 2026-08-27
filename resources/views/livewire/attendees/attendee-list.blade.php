@@ -347,18 +347,31 @@
                     <span wire:loading wire:target="bulkApproveAttendees">Processing...</span>
                 </button>
 
-                <!-- 2. Approve All Filtered (when not all selected) -->
+                <!-- 2. Approve Unsent Filtered Attendees -->
                 @if(count($selectedAttendees) < ($totalCount ?? 0))
-                    <button wire:click="approveAllFilteredAttendees" 
-                            wire:confirm="🚀 Approve ALL {{ number_format($totalCount) }} attendee(s) matching the current filters and send QR passes via email? An email delivery report will be shown after completion."
-                            wire:loading.attr="disabled"
-                            wire:target="bulkApproveAttendees,approveAllFilteredAttendees"
-                            class="h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-600/80 to-teal-600/80 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/10 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait border border-emerald-400/30 shrink-0">
-                        <svg wire:loading.remove wire:target="approveAllFilteredAttendees" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                        <svg wire:loading wire:target="approveAllFilteredAttendees" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <span wire:loading.remove wire:target="approveAllFilteredAttendees">Approve All ({{ number_format($totalCount) }})</span>
-                        <span wire:loading wire:target="approveAllFilteredAttendees">Processing...</span>
-                    </button>
+                    @if(($unsentFilteredCount ?? $totalCount) > 0)
+                        <button wire:click="approveAllFilteredAttendees" 
+                                wire:confirm="🚀 Issue and email digital QR passes to the {{ number_format($unsentFilteredCount) }} attendee(s) who have not received them yet? ({{ number_format($deliveredFilteredCount) }} already delivered will be skipped)."
+                                wire:loading.attr="disabled"
+                                wire:target="bulkApproveAttendees,approveAllFilteredAttendees"
+                                class="h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-600/80 to-teal-600/80 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/10 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait border border-emerald-400/30 shrink-0"
+                                title="{{ number_format($deliveredFilteredCount) }} already received emails · Only sending to {{ number_format($unsentFilteredCount) }} remaining">
+                            <svg wire:loading.remove wire:target="approveAllFilteredAttendees" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <svg wire:loading wire:target="approveAllFilteredAttendees" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span wire:loading.remove wire:target="approveAllFilteredAttendees">Approve Unsent ({{ number_format($unsentFilteredCount) }})</span>
+                            <span wire:loading wire:target="approveAllFilteredAttendees">Processing unsent...</span>
+                        </button>
+                    @else
+                        <button wire:click="approveAllFilteredAttendees(true)" 
+                                wire:confirm="All {{ number_format($totalCount) }} attendees have already received their passes. Do you want to force re-send passes to all {{ number_format($totalCount) }} attendees?"
+                                wire:loading.attr="disabled"
+                                wire:target="bulkApproveAttendees,approveAllFilteredAttendees"
+                                class="h-10 px-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                                title="All {{ number_format($totalCount) }} attendees have already received emails. Click to force re-send.">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span>All {{ number_format($totalCount) }} Sent (Re-send)</span>
+                        </button>
+                    @endif
                 @endif
 
                 <!-- 3. Change Role Dropdown -->

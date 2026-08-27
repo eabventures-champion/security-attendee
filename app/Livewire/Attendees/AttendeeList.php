@@ -1070,14 +1070,29 @@ class AttendeeList extends Component
     }
 
     /**
-     * Approve ALL attendees matching the current filters (across all pages)
+     * Approve ALL unsent attendees matching the current filters (skips already delivered by default)
      */
-    public function approveAllFilteredAttendees()
+    public function approveAllFilteredAttendees(bool $forceResendAll = false)
     {
-        $attendees = $this->getFilteredAttendeesQuery()->with(['event', 'qrCode'])->get();
+        $query = $this->getFilteredAttendeesQuery()->with(['event', 'qrCode']);
+
+        if (!$forceResendAll) {
+            $deliveredAttendeeIds = \App\Models\NotificationLog::whereIn('status', ['delivered', 'sent'])
+                ->where('channel', \App\Enums\NotificationChannel::Email->value)
+                ->pluck('attendee_id')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            if (!empty($deliveredAttendeeIds)) {
+                $query->whereNotIn('id', $deliveredAttendeeIds);
+            }
+        }
+
+        $attendees = $query->get();
 
         if ($attendees->isEmpty()) {
-            session()->flash('warning', 'No attendees found matching the current filters.');
+            session()->flash('info', '✨ All attendees matching the current view have already received their email QR passes!');
             return;
         }
 
@@ -2506,6 +2521,17 @@ class AttendeeList extends Component
         $vaultAttendees = $this->showVaultModal ? (clone $vaultQuery)->latest('deleted_at')->get() : collect();
         $isOrgAdmin = $this->canPurgeVault();
 
+        // Calculate unsent attendees for smart bulk dispatching
+        $deliveredAttendeeIds = \App\Models\NotificationLog::whereIn('status', ['delivered', 'sent'])
+            ->where('channel', \App\Enums\NotificationChannel::Email->value)
+            ->pluck('attendee_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $unsentFilteredCount = (clone $countQuery)->whereNotIn('id', $deliveredAttendeeIds)->count();
+        $deliveredFilteredCount = $totalCount - $unsentFilteredCount;
+
         return view('livewire.attendees.attendee-list', [
             'mobileOrg' => $mobileOrg,
             'mobileEvent' => $mobileEvent,
@@ -2521,6 +2547,8 @@ class AttendeeList extends Component
             'vaultCount' => $vaultCount,
             'vaultAttendees' => $vaultAttendees,
             'isOrgAdmin' => $isOrgAdmin,
+            'unsentFilteredCount' => $unsentFilteredCount,
+            'deliveredFilteredCount' => $deliveredFilteredCount,
             'isSuperAdmin' => $isSuperAdmin,
             'organizationsTree' => $organizationsTree,
             'eventUuid' => $this->eventUuid,
